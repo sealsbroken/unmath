@@ -1,6 +1,7 @@
 # Play, count, and add
 
-Ten connected pretend-play adventures, using any five recognizable toys:
+Ten connected pretend-play adventures: lessons 1–5 use five recognizable toys;
+lessons 6–10 use ten.
 
 - [Lesson 1: Five passengers](Lesson-1-Count-to-five): captain a bus or rocket,
   check tickets, and count to five before departing.
