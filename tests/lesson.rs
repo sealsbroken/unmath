@@ -9,7 +9,8 @@ fn lesson() -> CountToFive {
 }
 fn start(s: &mut CountToFive) -> Vec<Effect> {
     s.handle(Event::Start);
-    s.handle(Event::Said("forest".into()))
+    s.handle(Event::Said("forest".into()));
+    s.handle(Event::Table(TableObservation::stable(5)))
 }
 fn count(s: &mut CountToFive, ns: &[u32]) -> Vec<Effect> {
     assert!(s.handle(Event::Numbers(ns.to_vec())).is_empty());
@@ -23,7 +24,7 @@ fn two_independent_counts_separated_by_toy_activity_pass() {
     let mut s = lesson();
     start(&mut s);
     count(&mut s, &[1, 2, 3, 4, 5]);
-    assert_eq!(s.snapshot().phase, PhaseKind::Performing);
+    assert_eq!(s.snapshot().phase, PhaseKind::Asking);
     table(&mut s, 5);
     count(&mut s, &[1, 2, 3, 4, 5]);
     // The preceding Heard(5) answered only the counting question, not the total.
@@ -63,7 +64,7 @@ fn practice_cycles_back_to_an_independent_check() {
         table(&mut s, n);
         count(&mut s, &(1..=n).collect::<Vec<_>>());
     }
-    assert_eq!(s.snapshot().target_count, None);
+    assert_eq!(s.snapshot().target_count, Some(5));
     assert!(s.snapshot().task.unwrap().contains("First"));
     assert_ne!(s.snapshot().phase, PhaseKind::Finished);
 }
@@ -142,9 +143,28 @@ fn russian_prompts_and_repeat_preserve_question() {
     let first = start(&mut s);
     assert!(first
         .iter()
-        .any(|e| matches!(e, Effect::Say(text) if text.contains("пяти"))));
+        .any(|e| matches!(e, Effect::Say(text) if text.contains("по одному"))));
     assert_eq!(first, s.handle(Event::RepeatRequested));
     s.handle(Event::SkipRequested);
     assert_eq!(s.snapshot().correct, 0);
     assert_eq!(s.snapshot().target_count, Some(1));
+}
+
+#[test]
+fn the_first_count_waits_for_real_toys_and_invalidates_when_the_table_changes() {
+    let mut s = lesson();
+    s.handle(Event::Start);
+    s.handle(Event::Heard(1));
+    assert_eq!(s.snapshot().phase, PhaseKind::Performing);
+    count(&mut s, &[1, 2, 3, 4, 5]);
+    assert_eq!(s.snapshot().tasks_completed, 0);
+    table(&mut s, 5);
+    let effects = s.handle(Event::RepeatRequested);
+    assert!(un_core::strategy::spoken(&effects)
+        .join(" ")
+        .contains("one number for each"));
+    s.handle(Event::Numbers(vec![1, 2, 3, 4, 5]));
+    s.handle(Event::Table(TableObservation::default()));
+    s.handle(Event::Heard(5));
+    assert_eq!(s.snapshot().tasks_completed, 0);
 }

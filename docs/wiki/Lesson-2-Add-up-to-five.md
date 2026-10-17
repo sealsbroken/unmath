@@ -10,9 +10,10 @@ a celebration and a pretend action: spread a blanket, pass a basket, pour a drin
 smell the soup, or offer a favorite toy a snack. These actions are invitations,
 not tasks judged by the camera.
 
-Example: “The bears have two snacks and bring three more. How many altogether?”
+Example: “The bears have two snacks and bring three more. Point to the toy
+snacks one by one and say one number for each, starting at one.”
 If the child asks for help, build that basket with toys, count it, explain how
-joining made the total, and return to the missions. Fingers are always allowed.
+joining made the total, and return to the missions. Use the actual toy basket for each count.
 
 ## Directed cyclic question graph
 
@@ -21,20 +22,22 @@ another mission. These are actual directed cycles with completion and rest exits
 
 ```mermaid
 flowchart TD
-    Choose["Forest picnic or moon picnic?"] --> Base["Can you pack a toy snacks? First basket: one"]
-    Base -->|"Stable total a"| Add["A friend brings b more; can you add them?"]
-    Add -->|"Stable total a+b; zero needs no change"| Count["Can you count all the toy snacks aloud?"]
-    Count -->|"Correct"| Explain["a plus b makes this many; joining fills our basket"]
+    Choose["Forest picnic or moon picnic?"] --> Base["Guided basket: prepare a toy snacks"]
+    Base -->|"Stable total a"| Add["Add b more toy snacks"]
+    Add -->|"Stable total a+b"| Count["Point to each toy; say one number per toy"]
+    Count -->|"Full sequence"| Explain["Explain a plus b makes this many"]
     Explain --> Select{"Any picnic missions left?"}
-    Select -->|"Yes: choose an unfinished mission"| Mission["Friends have a snacks and bring b more. How many altogether?"]
-    Mission -->|"Correct without tutor giving the answer"| Play["Celebrate; pretend to spread a blanket or serve a friend"]
+    Select -->|"Yes"| Pack["New basket: prepare a actual toy snacks"]
+    Pack -->|"Stable total a"| Join["Add b more toys; zero needs no change"]
+    Join -->|"Stable total a+b"| Mission["Point to toys one by one; count each aloud without a tutor model"]
+    Mission -->|"Full sequence 1 through a+b"| Play["Name the total; celebrate with a pretend picnic action"]
     Play --> Select
-    Mission -->|"Needs help, incorrect, or skip"| Base
-    Count -->|"Incorrect: model total"| Base
-    Count -->|"Table changed: discard pending answer"| Base
+    Mission -->|"Help, incomplete count, or skip"| Base
+    Mission -->|"Table changed: discard pending answer"| Pack
+    Count -->|"Incorrect: model count and rebuild"| Base
     Select -->|"All seven complete"| Feast["The picnic is ready! Pretend feast"]
-    Count -->|"Three consecutive misses or task limit"| Rest["Rest; save picnic progress"]
-    Mission -->|"Three consecutive misses or task limit"| Rest
+    Count -->|"Three misses or task limit"| Rest["Rest and save progress"]
+    Mission -->|"Three misses or task limit"| Rest
 ```
 
 ## Challenge scope
@@ -56,11 +59,14 @@ possible. Adding zero needs no camera change.
 
 ## What counts as success?
 
-Correctly solve all seven story missions without the tutor supplying the current
-answer. Toy-assisted guided responses do not complete missions. This checks
+Build and count all seven real toy baskets without the tutor modeling the
+current count. Each mission waits for the starting group, the added group, and
+a stable combined total before listening. Toy-assisted guided responses do not complete missions. This checks
 combining quantities, including two ways to make five; it does not claim mastery
-of every addition fact or delayed retention. Independent totals may be spoken or
-tapped. Guided counts require the complete sequence `1..a+b`.
+of every addition fact or delayed retention. Both independent and guided counts require the full sequence `1..a+b`. A lone
+final number, a tap, or a sequence with skipped/repeated numbers cannot complete
+a basket. After a correct count, the tutor names the total to connect counting
+with “how many altogether.”
 
 ## Child controls and engine behavior
 
@@ -73,9 +79,13 @@ timeout. The camera verifies totals, not food identities or pretend actions.
 Default `max_tasks = 10` fits an uninterrupted demonstration plus seven missions.
 Use shorter sessions as needed. Persist `SessionSummary.remember` to keep the
 chosen friends and completed baskets. The redesigned checkpoint is
-`unmath.lesson2.picnic.v2`; old 21-fact scores are not reused. Completion clears
+`unmath.lesson2.one_by_one.v3`; older final-number and 21-fact scores are not reused. Completion clears
 this checkpoint. `final_level` counts completed missions (seven at completion),
 while `correct` also counts guided successes.
 
 Strategy ID remains `unmath-add-to-five`; app title: **Lesson 2: picnic baskets**.
 Prerequisite: count up to five objects. English and Russian are supported.
+
+The camera verifies totals and the recognizer verifies the spoken sequence.
+A grown-up can observe one touch per toy; the strategy API cannot verify unique
+physical touches. Counts can span pauses in `ListenMode::Counting`.

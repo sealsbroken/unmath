@@ -11,7 +11,7 @@ use un_core::language::Language;
 use un_core::strategy::*;
 
 pub const ID: &str = "unmath-count-to-five";
-const PROGRESS: &str = "unmath.lesson1.first_success";
+const PROGRESS: &str = "unmath.lesson1.one_by_one.v2";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Question {
@@ -65,8 +65,7 @@ impl CountToFive {
     fn target(&self) -> Option<u32> {
         match self.question {
             Question::Practice(n) => Some(n),
-            Question::Toys | Question::Total => Some(5),
-            _ => None,
+            Question::First | Question::Final | Question::Toys | Question::Total => Some(5),
         }
     }
     fn expected(&self) -> u32 {
@@ -83,17 +82,17 @@ impl CountToFive {
         let vehicle = self.place.vehicle(self.config.language);
         match self.question {
             Question::First => self.text(
-                &format!("You're the captain of our {vehicle}! Can you count from one to five to open the doors?"),
-                &format!("Ты капитан! Посчитай от одного до пяти, чтобы открыть {vehicle}.")),
+                &format!("You're the captain of our {vehicle}! Point to one toy passenger at a time and say one number for each to open the doors. Start at one and keep going until every toy has a number."),
+                &format!("Ты капитан! Открой {vehicle}: показывай на игрушечных пассажиров по одному и называй по одному числу для каждого. Начни с одного и считай, пока у каждой игрушки не будет числа.")),
             Question::Final => self.text(
-                "Everyone is aboard! Can you count from one to five to start our adventure?",
-                "Все на борту! Посчитай от одного до пяти, чтобы отправиться в путь!"),
+                "Everyone is aboard! Point to each toy passenger, one by one, and say one number for each to start our adventure.",
+                "Все на борту! Показывай на игрушечных пассажиров по одному и называй по одному числу для каждого, чтобы отправиться в путь!"),
             Question::Total => self.text(
                 "How many passengers are coming to our picnic?",
                 "Сколько пассажиров едет на наш пикник?"),
             _ => self.text(
-                "Ticket check! Can you point to each toy passenger and count them aloud?",
-                "Проверяем билеты! Показывай на каждого игрушечного пассажира и считай вслух."),
+                "Ticket check! Point to the toys one by one. Say one number for each toy, starting at one. Keep going until every toy has a ticket.",
+                "Проверяем билеты! Показывай на игрушки по одной. Называй по одному числу для каждой, начиная с одного. Считай, пока у всех не будет билета."),
         }
     }
     fn ask(&mut self) -> Vec<Effect> {
@@ -151,6 +150,9 @@ impl CountToFive {
             paused: !mastered,
             ..Default::default()
         };
+        summary
+            .remember
+            .insert("unmath.lesson1.first_success".into(), String::new());
         summary.remember.insert(
             "unmath.lesson1.place".into(),
             if mastered {

@@ -25,7 +25,8 @@ fn child_chooses_the_counting_adventure_with_words_or_taps() {
         assert!(spoken(&intro).contains("You choose"));
         assert_eq!(s.snapshot().phase, PhaseKind::Meeting);
         assert_eq!(s.snapshot().expected_answer, None);
-        let first = s.handle(choice);
+        s.handle(choice);
+        let first = s.handle(Event::Table(TableObservation::stable(5)));
         assert!(spoken(&first).contains(vehicle));
         assert_eq!(s.snapshot().tasks_completed, 0); // choosing a destination is not a maths answer
         s.handle(Event::Said("help".into()));
@@ -49,10 +50,12 @@ fn picnic_choice_survives_pause_and_legacy_fact_scores_are_not_reused() {
     s.handle(Event::Table(TableObservation::stable(2)));
     s.handle(Event::Numbers(vec![1, 2]));
     s.handle(Event::Heard(2));
+    prepare_picnic(&mut s);
+    s.handle(Event::Numbers(vec![1, 2, 3]));
     let reward = s.handle(Event::Heard(3));
     assert!(reward.contains(&Effect::Celebrate));
     assert!(spoken(&reward).contains("blanket"));
-    assert!(spoken(&reward).contains("aliens"));
+    assert!(spoken(&prepare_picnic(&mut s)).contains("aliens"));
     let end = s
         .handle(Event::Stop)
         .into_iter()
@@ -68,7 +71,9 @@ fn picnic_choice_survives_pause_and_legacy_fact_scores_are_not_reused() {
     end.apply_remembered(&mut config.extra);
     assert!(!config.extra.contains_key("unmath.lesson2.mastered"));
     let mut resumed = AddToFive::new(config);
-    assert!(spoken(&resumed.handle(Event::Start)).contains("aliens"));
+    resumed.handle(Event::Start);
+    let effects = prepare_picnic(&mut resumed);
+    assert!(spoken(&effects).contains("aliens"));
     resumed.handle(Event::Said("help me".into()));
     assert_eq!(resumed.snapshot().phase, PhaseKind::Performing);
     resumed.handle(Event::Said("stop".into()));
@@ -85,15 +90,30 @@ fn a_default_length_picnic_finishes_and_help_can_cycle_back_to_success() {
     s.handle(Event::Numbers(vec![1, 2]));
     s.handle(Event::Heard(2));
     // Ask for help with 1+2; the practice cycle must return to story missions.
+    prepare_picnic(&mut s);
     s.handle(Event::Said("help".into()));
     s.handle(Event::Table(TableObservation::stable(1)));
     s.handle(Event::Table(TableObservation::stable(3)));
     s.handle(Event::Numbers(vec![1, 2, 3]));
     s.handle(Event::Heard(3));
     for _ in 0..7 {
+        prepare_picnic(&mut s);
         let expected = s.snapshot().expected_answer.unwrap();
+        s.handle(Event::Numbers((1..=expected).collect()));
         s.handle(Event::Heard(expected));
     }
     assert_eq!(s.snapshot().phase, PhaseKind::Finished);
     assert_eq!(s.snapshot().tasks_completed, 9); // two guided baskets plus seven missions
+}
+
+fn prepare_picnic(s: &mut AddToFive) -> Vec<Effect> {
+    let mut effects = vec![];
+    for _ in 0..3 {
+        if s.snapshot().phase != PhaseKind::Performing {
+            break;
+        }
+        let n = s.snapshot().target_count.unwrap();
+        effects.extend(s.handle(Event::Table(TableObservation::stable(n))));
+    }
+    effects
 }

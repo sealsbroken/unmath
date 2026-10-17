@@ -71,20 +71,21 @@ the engine does not render story scenes or judge pretend play.
 
 Open the doors by counting, check each passenger's ticket, let the toys choose
 new seats, and count again to start the engine. Passing still requires two
-independent exact sequences `[1, 2, 3, 4, 5]` separated by the five-toy activity
+independent exact sequences `[1, 2, 3, 4, 5]`, with one number per real toy,
+separated by the five-toy activity
 and its total. Guided practice never earns an independent sequence check.
 
 ```mermaid
 flowchart TD
-    Choose["Where shall we go: forest or moon?"] --> Doors["Captain, count from one to five to open the doors"]
-    Doors -->|"Full sequence"| Setup["Can you bring five toy passengers?"]
+    Choose["Where shall we go: forest or moon?"] --> Setup["Can you bring five toy passengers?"]
+    Setup -->|"Stable total five"| Doors["Point to one toy at a time; say one number per toy to open the doors"]
+    Doors -->|"Full sequence"| Tickets["Point to the toys one by one; count each ticket aloud"]
     Doors -->|"Needs help"| Small["Prepare n toy passengers; first practice starts at one"]
-    Setup -->|"Stable total five"| Tickets["Can you count each passenger's ticket aloud?"]
     Tickets -->|"Full sequence"| Total["How many passengers are coming to our picnic?"]
     Tickets -->|"Needs help"| Small
     Total -->|"Five"| Seats["Let the five passengers choose new seats"]
     Total -->|"Other answer"| Tickets
-    Seats --> Engine["Can you count from one to five to start our adventure?"]
+    Seats --> Engine["Point to each passenger again; count one by one to start our adventure"]
     Engine -->|"Full sequence and earlier independent success"| Picnic["Off to the picnic! Lesson complete"]
     Engine -->|"Needs help"| Small
     Small -->|"Required toys ready"| Model["Tutor counts the tickets; can you try by yourself?"]
@@ -99,27 +100,29 @@ flowchart TD
 ### Lesson 2: Picnic baskets
 
 Pack a guided basket, then solve seven story missions: `1+1`, `1+2`, `2+2`,
-`2+3`, `3+1`, `1+4`, and `3+0`. Independent answers earn pretend picnic actions
+`2+3`, `3+1`, `1+4`, and `3+0`. Independent one-by-one toy counts earn pretend picnic actions
 and move to the next basket. Help returns to combining toys, counting, and a
 fresh mission. Two different ways to make five are included. Completion checks
 these seven challenges; it does not claim recall of every addition fact.
 
 ```mermaid
 flowchart TD
-    Choose["Forest picnic or moon picnic?"] --> Base["Can you pack a toy snacks? First basket: one"]
-    Base -->|"Stable total a"| Add["A friend brings b more; can you add them?"]
-    Add -->|"Stable total a+b; zero needs no change"| Count["Can you count all the toy snacks aloud?"]
-    Count -->|"Correct"| Explain["a plus b makes this many; joining fills our basket"]
+    Choose["Forest picnic or moon picnic?"] --> Base["Guided basket: prepare a toy snacks"]
+    Base -->|"Stable total a"| Add["Add b more toy snacks"]
+    Add -->|"Stable total a+b"| Count["Point to each toy; say one number per toy"]
+    Count -->|"Full sequence"| Explain["Explain a plus b makes this many"]
     Explain --> Select{"Any picnic missions left?"}
-    Select -->|"Yes: choose an unfinished mission"| Mission["Friends have a snacks and bring b more. How many altogether?"]
-    Mission -->|"Correct without tutor giving the answer"| Play["Celebrate; pretend to spread a blanket or serve a friend"]
+    Select -->|"Yes"| Pack["New basket: prepare a actual toy snacks"]
+    Pack -->|"Stable total a"| Join["Add b more toys; zero needs no change"]
+    Join -->|"Stable total a+b"| Mission["Point to toys one by one; count each aloud without a tutor model"]
+    Mission -->|"Full sequence 1 through a+b"| Play["Name the total; celebrate with a pretend picnic action"]
     Play --> Select
-    Mission -->|"Needs help, incorrect, or skip"| Base
-    Count -->|"Incorrect: model total"| Base
-    Count -->|"Table changed: discard pending answer"| Base
+    Mission -->|"Help, incomplete count, or skip"| Base
+    Mission -->|"Table changed: discard pending answer"| Pack
+    Count -->|"Incorrect: model count and rebuild"| Base
     Select -->|"All seven complete"| Feast["The picnic is ready! Pretend feast"]
-    Count -->|"Three consecutive misses or task limit"| Rest["Rest; save picnic progress"]
-    Mission -->|"Three consecutive misses or task limit"| Rest
+    Count -->|"Three misses or task limit"| Rest["Rest and save progress"]
+    Mission -->|"Three misses or task limit"| Rest
 ```
 
 Both graphs are directed and cyclic: arrows lead back to earlier questions during
@@ -173,8 +176,12 @@ scoring a mistake. Break requests (`stop`, `break`, `I'm tired`, `стоп`, `п
 `я устал`, `я устала`) pause, including during toy setup.
 
 Counting checks use full `Numbers` sequences, judged on the following `Heard`
-event so the same response cannot answer the next question. Addition's independent
-totals accept voice or taps; guided counting requires the full sequence. Stable
+event so the same response cannot answer the next question. Lessons 1–2 use
+actual toys and complete spoken counts, one number per toy.
+Lesson two prepares the starting set and combined set before each independent
+count; a final-number tap cannot complete a basket. Its tutor names the total
+after the full count. Later independent arithmetic answers can still be spoken
+or tapped; guided toy counts always require the full sequence. Stable
 table totals gate toy tasks; table changes cancel pending toy counts. The strategy
 cannot verify one touch per toy or pretend actions.
 
@@ -185,9 +192,12 @@ Setup has no enforced timeout. Default ten tasks fits each uninterrupted adventu
 use shorter sessions and resume as needed.
 
 Persist `SessionSummary.remember` via `apply_remembered`, then supply it in the
-next `SessionConfig.extra`. Counting keeps the first independent success;
-addition keeps completed picnic missions under `unmath.lesson2.picnic.v2`.
-Old 21-fact scores are not reused. Each lesson also remembers its destination.
+next `SessionConfig.extra`. Counting keeps the first independent toy-count
+success under
+`unmath.lesson1.one_by_one.v2`;
+addition keeps completed picnic missions under `unmath.lesson2.one_by_one.v3`.
+Older recitation/final-number checkpoints are not reused. Each lesson also
+remembers its destination.
 Completion clears its checkpoint. Only `PhaseKind::Finished` and a non-paused
 summary mean completion; `correct` also includes guided responses.
 

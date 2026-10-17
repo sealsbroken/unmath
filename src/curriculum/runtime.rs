@@ -148,8 +148,8 @@ impl Adventure {
                 )
             } else {
                 Words::new(
-                    "Point to each toy and count aloud. We can take our time!",
-                    "Показывай на каждую игрушку и считай вслух. Мы не спешим!",
+                    "Point to the toys one by one. Say one number for each toy, starting at one, until every toy has been counted. We can take our time!",
+                    "Показывай на игрушки по одной. Называй по одному числу для каждой, начиная с одного, пока не посчитаешь все. Мы не спешим!",
                 )
             }),
             Effect::listen(

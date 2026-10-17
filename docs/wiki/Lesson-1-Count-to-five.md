@@ -18,15 +18,15 @@ again. A cycle can be repeated, with success and rest as reachable exits.
 
 ```mermaid
 flowchart TD
-    Choose["Where shall we go: forest or moon?"] --> Doors["Captain, count from one to five to open the doors"]
-    Doors -->|"Full sequence"| Setup["Can you bring five toy passengers?"]
+    Choose["Where shall we go: forest or moon?"] --> Setup["Can you bring five toy passengers?"]
+    Setup -->|"Stable total five"| Doors["Point to one toy at a time; say one number per toy to open the doors"]
+    Doors -->|"Full sequence"| Tickets["Point to the toys one by one; count each ticket aloud"]
     Doors -->|"Needs help"| Small["Prepare n toy passengers; first practice starts at one"]
-    Setup -->|"Stable total five"| Tickets["Can you count each passenger's ticket aloud?"]
     Tickets -->|"Full sequence"| Total["How many passengers are coming to our picnic?"]
     Tickets -->|"Needs help"| Small
     Total -->|"Five"| Seats["Let the five passengers choose new seats"]
     Total -->|"Other answer"| Tickets
-    Seats --> Engine["Can you count from one to five to start our adventure?"]
+    Seats --> Engine["Point to each passenger again; count one by one to start our adventure"]
     Engine -->|"Full sequence and earlier independent success"| Picnic["Off to the picnic! Lesson complete"]
     Engine -->|"Needs help"| Small
     Small -->|"Required toys ready"| Model["Tutor counts the tickets; can you try by yourself?"]
@@ -39,8 +39,10 @@ flowchart TD
 
 ## What counts as success?
 
-The child independently says `1, 2, 3, 4, 5` twice, separated by counting five
-real toys and answering the total. No skipped or repeated numbers. Guided
+Every counting question uses real toys and asks for one number per toy.
+The child independently says `1, 2, 3, 4, 5` twice, separated by the ticket-check
+activity and its total. The first count waits for five stable toys; it is not
+a free recitation. The total-only question follows a completed full count. No skipped or repeated numbers. Guided
 practice and a tap on “5” cannot satisfy an independent sequence check.
 The story provides a reason to count; the count remains the acceptance criterion.
 
@@ -61,3 +63,7 @@ The story provides a reason to count; the count remains the acceptance criterion
 
 Strategy ID remains `unmath-count-to-five`; app title: **Lesson 1: five passengers**.
 English and Russian are supported. The story choice itself never earns a maths score.
+
+Spoken-count checkpoints use `unmath.lesson1.one_by_one.v2`. Earlier recitation
+checkpoints are not reused. The engine checks the full spoken sequence and the
+stable toy total; it cannot prove that each physical touch matched a unique toy.
