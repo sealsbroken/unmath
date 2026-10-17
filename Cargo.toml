@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.92"
 license = "LGPL-3.0-or-later"
-description = "Counting and addition lesson strategies for unengine"
+description = "Ten play-based arithmetic lesson strategies for unengine"
 
 [dependencies]
 un-core = { path = "../unengine/crates/un-core" }

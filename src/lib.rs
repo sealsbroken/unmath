@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 //! Deterministic, on-device counting lessons plugged into unengine's Strategy API.
 mod addition;
+pub mod curriculum;
 mod play;
 pub use addition::{AddToFive, AddToFiveFactory, ADDITION_ID};
 use play::{invitation, wants_break, wants_help, Place};
@@ -396,5 +397,6 @@ impl StrategyFactory for CountToFiveFactory {
 pub fn register(registry: &mut StrategyRegistry) {
     registry.register(Arc::new(CountToFiveFactory));
     registry.register(Arc::new(AddToFiveFactory));
+    curriculum::register(registry);
 }
 inventory::submit! { LinkedStrategy(|| Arc::new(CountToFiveFactory)) }

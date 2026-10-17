@@ -58,10 +58,19 @@ impl Place {
     }
 }
 pub(crate) fn invitation(config: &SessionConfig) -> Vec<Effect> {
-    vec![Effect::Say(match config.language {
-        Language::English => "You choose our adventure! Forest picnic or moon picnic? Say forest or moon, or tap one or two.".into(),
-        Language::Russian => "Выбирай приключение! Пикник в лесу или на Луне? Скажи лес или луна, или нажми один или два.".into(),
-    }), Effect::listen(ListenMode::Voice, config.answer_timeout)]
+    vec![
+        Effect::Say(match config.language {
+            Language::English => {
+                "You choose our adventure! Forest or moon? Say forest or moon, or tap one or two."
+                    .into()
+            }
+            Language::Russian => {
+                "Выбирай приключение! Лес или Луна? Скажи лес или луна, или нажми один или два."
+                    .into()
+            }
+        }),
+        Effect::listen(ListenMode::Voice, config.answer_timeout),
+    ]
 }
 pub(crate) fn wants_break(words: &str) -> bool {
     matches!(

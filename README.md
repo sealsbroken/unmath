@@ -1,10 +1,10 @@
 # unmath
 
-Rust counting and addition lesson modules for unengine apps. It depends only on the public `un-core`
+Ten play-based arithmetic lessons for unengine apps. It depends only on the public `un-core`
 strategy interface, performs no I/O, and uses no network services.
 
 Lesson IDs: `unmath-count-to-five` and `unmath-add-to-five`.
-English and Russian prompts are included. `unmath::register` registers both.
+English and Russian prompts are included. `unmath::register` registers all ten.
 
 ## Plug into an app
 
@@ -127,9 +127,45 @@ practice and onward through repeated missions. See the [wiki](https://github.com
 for examples, acceptance criteria, child controls, and resume behavior. Page sources
 are in `docs/wiki`.
 
+## Next eight lessons: 3–10
+
+See the [curriculum plan](docs/CURRICULUM.md) for sequencing, prerequisites, and
+acceptance criteria. Each adventure has six missions and a directed cyclic
+question graph in the wiki:
+
+| Lesson | Strategy ID | Skill |
+| --- | --- | --- |
+| [3: Cave train](https://github.com/sealsbroken/unmath/wiki/Lesson-3-Cave-train) | `unmath-subtract-to-five` | Taking away within five |
+| [4: Bridge builders](https://github.com/sealsbroken/unmath/wiki/Lesson-4-Bridge-builders) | `unmath-compare-to-five` | More, fewer, and equal within five |
+| [5: Parcel detectives](https://github.com/sealsbroken/unmath/wiki/Lesson-5-Parcel-detectives) | `unmath-missing-to-five` | Missing addends within five |
+| [6: Firefly gates](https://github.com/sealsbroken/unmath/wiki/Lesson-6-Firefly-gates) | `unmath-count-to-ten` | Ordered counting through ten |
+| [7: Supply launch](https://github.com/sealsbroken/unmath/wiki/Lesson-7-Supply-launch) | `unmath-add-to-ten` | Combining quantities with totals six through ten |
+| [8: Homeward trail](https://github.com/sealsbroken/unmath/wiki/Lesson-8-Homeward-trail) | `unmath-subtract-to-ten` | Taking away within ten |
+| [9: Ten-seat ferry](https://github.com/sealsbroken/unmath/wiki/Lesson-9-Ten-seat-ferry) | `unmath-make-ten` | Complements to ten |
+| [10: Fair-share café](https://github.com/sealsbroken/unmath/wiki/Lesson-10-Fair-share-cafe) | `unmath-share-between-two` | Equal sharing between two |
+
+All are registered by the existing `unmath::register` function. Direct use:
+
+```rust
+use unmath::curriculum::{Adventure, Lesson, NEXT_LESSONS};
+let strategy = Adventure::new(Lesson::CaveTrain, config.clone());
+// Or registry.create(Lesson::CaveTrain.id(), &config).
+// NEXT_LESSONS lists the eight new lessons in teaching order.
+```
+
+Lessons 3–5 require five recognizable toys; 6–10 require ten. Set `total_objects`
+accurately: a lesson pauses with a materials prompt if the configured supply is
+insufficient. Each independent success advances one mission; toy-guided counts
+never complete missions. The default ten-task session fits six uninterrupted
+missions. Separate checkpoints retain progress if help uses the remaining tasks.
+See each wiki page for its specific physical help stages, accepted answers, and
+perception limits. The shared runtime is not a claim that the lessons teach the
+same operation: subtraction removes toys, missing quantities add to a target,
+comparison counts two supplies, and sharing deals alternately to two guests.
+
 ## Integration behavior
 
-`unmath::ID` and `unmath::ADDITION_ID` are unchanged. Registration includes both
+`unmath::ID` and `unmath::ADDITION_ID` are unchanged. Registration includes all ten
 lessons. Choose a destination by saying `forest` / `moon` (`лес` / `луна`) or
 by tapping 1 / 2. Destination choices never score as maths answers. Help requests
 (`help`, `help me`, `I don't know`, `помоги`, `не знаю`) enter toy practice without
