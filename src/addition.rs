@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
 //! Addition with nonnegative operands and a total no greater than five.
 use std::sync::Arc;
 use un_core::{language::Language, strategy::*};
@@ -363,7 +364,7 @@ impl StrategyFactory for AddToFiveFactory {
     fn info(&self) -> StrategyInfo {
         StrategyInfo { id: ADDITION_ID.into(), title: "Lesson 2: add up to five".into(),
             description: "Join toy sets, then independently solve every addition fact with a total up to five.".into(),
-            languages: vec![Language::English, Language::Russian], license: "UNLICENSED".into() }
+            languages: vec![Language::English, Language::Russian], license: "LGPL-3.0-or-later".into() }
     }
     fn create(&self, config: &SessionConfig) -> Box<dyn Strategy> {
         Box::new(AddToFive::new(config.clone()))

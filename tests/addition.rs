@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
 use un_core::strategy::*;
 use unmath::{AddToFive, ADDITION_ID};
 fn lesson() -> AddToFive {

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
 //! Deterministic, on-device counting lessons plugged into unengine's Strategy API.
 mod addition;
 pub use addition::{AddToFive, AddToFiveFactory, ADDITION_ID};
@@ -315,7 +316,7 @@ impl StrategyFactory for CountToFiveFactory {
             title: "Lesson 1: count to five".into(),
             description: "Practice loops and two independent counts from one to five.".into(),
             languages: vec![Language::English, Language::Russian],
-            license: "UNLICENSED".into(),
+            license: "LGPL-3.0-or-later".into(),
         }
     }
     fn create(&self, config: &SessionConfig) -> Box<dyn Strategy> {

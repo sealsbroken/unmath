@@ -175,3 +175,10 @@ See the [lesson wiki](https://github.com/sealsbroken/unmath/wiki) for rendered M
 directed acyclic graphs of each lesson. Source pages are kept in `docs/wiki`.
 The graphs show forward teaching passes; retry leaves start a new pass while
 the lesson implementations keep their practice cycles.
+
+## License
+
+This repository is licensed under the GNU Lesser General Public License,
+version 3 or (at your option) any later version (`LGPL-3.0-or-later`).
+See [LICENSE](LICENSE) for the LGPL terms and [LICENSE.GPL](LICENSE.GPL)
+for the incorporated GPL version 3 terms.
