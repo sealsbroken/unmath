@@ -1,9 +1,10 @@
 # unmath
 
-A Rust lesson module for unengine apps. It depends only on the public `un-core`
+Rust counting and addition lesson modules for unengine apps. It depends only on the public `un-core`
 strategy interface, performs no I/O, and uses no network services.
 
-Lesson ID: `unmath-count-to-five`. English and Russian prompts are included.
+Lesson IDs: `unmath-count-to-five` and `unmath-add-to-five`.
+English and Russian prompts are included. `unmath::register` registers both.
 
 ## Plug into an app
 
@@ -113,3 +114,56 @@ cargo fmt --check
 
 The tests exercise the strategy API; camera, microphone, and mobile/desktop builds
 must be checked in the host product. No files in `unengine` are changed.
+
+
+## Lesson 2: add up to five
+
+Use `unmath::ADDITION_ID` (`unmath-add-to-five`) in the registry, or select
+**Lesson 2: add up to five** in the app. The same registration code above includes
+both lessons. The child should already be able to count five objects.
+
+The lesson teaches addition as joining sets: prepare `a` toys, add `b` more,
+then count the combined set. An adult can help prepare materials. At most five
+toys are needed. A `1 + 1` demonstration introduces the activity before independent
+questions begin. Fingers are allowed for independent answers; fluent recall is
+not required.
+
+Acceptance: correctly answer every ordered pair of nonnegative operands with
+`a + b <= 5` in an independent question (21 facts, including `0 + 0`, `0 + 5`,
+and `5 + 0`). Reversed operands are checked separately. Toy-assisted practice
+never marks a fact mastered. This is a lesson completion check, not a delayed
+retention assessment.
+
+```mermaid
+flowchart TD
+    Base[Can you put a toys on the table?] -->|stable total a| Add[Can you add b more toys?]
+    Add -->|stable total a+b| Count[Can you count all the toys?]
+    Count -->|correct: explain a plus b makes the total| Check[What is a plus b?]
+    Count -->|incorrect: model and rebuild| Base
+    Check -->|correct: save fact; next unmastered fact| Check
+    Check -->|incorrect| Base
+    Check -->|all 21 facts mastered| Finished
+    Count -->|three misses or task limit| Pause
+    Check -->|three misses or task limit| Pause
+```
+
+For adding zero, no table change is required. An empty set is answered with
+zero in voice mode; other guided sums require the complete spoken count in
+counting mode. Independent sums accept a spoken total or number-pad answer.
+Practice moves to another unchecked fact before returning to the failed fact
+when possible. Table changes during guided counting cancel that attempt and
+restart set preparation. The camera verifies totals, not which individual toys
+were added or how the child reasoned.
+
+Set `max_tasks` to about 40 for a longer session, or use shorter sessions and
+persist `SessionSummary.remember` through `apply_remembered`. The checkpoint
+`unmath.lesson2.mastered` stores mastered facts; a resumed session asks only
+unfinished facts. Three consecutive mistakes/timeouts, Stop, or the task limit
+pause without declaring mastery. Silence does not create a task record. Repeat
+reissues the current prompt. Skipping an answer records a skip and starts
+practice; skipping toy setup pauses. Setup has no enforced time limit.
+
+Passing emits a non-paused summary and `PhaseKind::Finished`; `final_level` is
+the number of mastered facts (21 at completion), while `correct` also includes
+guided successes. Completion clears this lesson's checkpoint. Existing lesson-one
+progress uses a separate key.

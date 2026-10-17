@@ -1,4 +1,7 @@
 //! Deterministic, on-device counting lessons plugged into unengine's Strategy API.
+mod addition;
+pub use addition::{AddToFive, AddToFiveFactory, ADDITION_ID};
+
 use std::sync::Arc;
 use un_core::language::Language;
 use un_core::strategy::*;
@@ -321,5 +324,6 @@ impl StrategyFactory for CountToFiveFactory {
 }
 pub fn register(registry: &mut StrategyRegistry) {
     registry.register(Arc::new(CountToFiveFactory));
+    registry.register(Arc::new(AddToFiveFactory));
 }
 inventory::submit! { LinkedStrategy(|| Arc::new(CountToFiveFactory)) }

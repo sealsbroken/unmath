@@ -3,7 +3,7 @@ name = "unmath"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.92"
-description = "Counting-to-five lesson strategies for unengine"
+description = "Counting and addition lesson strategies for unengine"
 
 [dependencies]
 un-core = { path = "../unengine/crates/un-core" }
