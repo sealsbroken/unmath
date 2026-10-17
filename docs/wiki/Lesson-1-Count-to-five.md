@@ -9,73 +9,38 @@ independent success.
 
 ## Independent questions (one pass)
 
-```text
- [Q0: Can you count from one to five?]
-                 |
-        +--------+---------------------+
-        | exact 1,2,3,4,5              | needs help
-        v                              v
- [Save first independent success]   [Practice pass below]
-        |
-        v
- [Prepare five toys; wait for stable total of five]
-        |
-        v
- [Q1: Can you count these toys aloud?]
-        |
-        +------------------------------+
-        | exact 1,2,3,4,5              | needs help
-        v                              v
- [Q2: How many altogether?]          [Practice pass below]
-        |
-        +------------------------------+
-        | five                         | other answer
-        v                              v
- [Invite rearranging the five toys] [New pass at Q1]
-        |
-        v
- [Q3: Count from one to five again, by yourself]
-        |
-        +------------------------------+
-        | exact 1,2,3,4,5              | needs help
-        v                              v
- [PASS: two independent counts]     [Practice pass below]
+```mermaid
+flowchart TD
+    Q0["Can you count from one to five?"]
+    Q0 -->|"Exact sequence 1,2,3,4,5"| First["Save first independent success"]
+    Q0 -->|"Needs help"| Help["Begin a practice pass"]
+    First --> Setup["Prepare five toys; wait for stable total"]
+    Setup --> Q1["Can you count these toys aloud?"]
+    Q1 -->|"Exact sequence 1,2,3,4,5"| Q2["How many altogether?"]
+    Q1 -->|"Needs help"| Help
+    Q2 -->|"Five"| Move["Invite rearranging the five toys"]
+    Q2 -->|"Other answer"| Retry["New pass at the five-toy count"]
+    Move --> Q3["Count from one to five again, by yourself"]
+    Q3 -->|"Exact sequence 1,2,3,4,5"| Pass["PASS: two independent counts"]
+    Q3 -->|"Needs help"| Help
 ```
 
 ## Practice questions (one successful pass)
 
-```text
- [Prepare one toy]
-        |
-        v
- [Tutor models 1; child counts one toy]
-        |
-        | correct
-        v
- [Prepare two toys; model 1,2; child counts]
-        |
-        | correct
-        v
- [Prepare three toys; model 1,2,3; child counts]
-        |
-        | correct
-        v
- [Prepare four toys; model 1,2,3,4; child counts]
-        |
-        | correct
-        v
- [Prepare five toys; model 1,2,3,4,5; child counts]
-        |
-        | correct
-        v
- [New independent pass at Q0]
-
- Any practice question
-        |
-        +-- needs help --> [New practice pass at current set size;
-        |                   reduce by one on second miss, minimum one]
-        |
-        +-- third consecutive miss --> [PAUSE]
+```mermaid
+flowchart TD
+    One["One toy: tutor models 1; child counts"]
+    One -->|"Correct"| Two["Two toys: model 1,2; child counts"]
+    Two -->|"Correct"| Three["Three toys: model 1,2,3; child counts"]
+    Three -->|"Correct"| Four["Four toys: model 1,2,3,4; child counts"]
+    Four -->|"Correct"| Five["Five toys: model 1,2,3,4,5; child counts"]
+    Five -->|"Correct"| Fresh["New independent pass: count from one to five"]
+    One -->|"Needs help"| Retry["New practice pass; reduce set on second miss, minimum one"]
+    Two -->|"Needs help"| Retry
+    Three -->|"Needs help"| Retry
+    Four -->|"Needs help"| Retry
+    Five -->|"Needs help"| Retry
+    Retry -->|"Third consecutive miss"| Pause["PAUSE"]
 ```
 
 Stable table totals gate toy questions. A table change cancels the pending toy

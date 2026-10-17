@@ -171,7 +171,7 @@ progress uses a separate key.
 
 ## Wiki question graphs
 
-See the [lesson wiki](https://github.com/sealsbroken/unmath/wiki) for ASCII
+See the [lesson wiki](https://github.com/sealsbroken/unmath/wiki) for rendered Mermaid
 directed acyclic graphs of each lesson. Source pages are kept in `docs/wiki`.
 The graphs show forward teaching passes; retry leaves start a new pass while
 the lesson implementations keep their practice cycles.

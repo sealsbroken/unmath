@@ -5,7 +5,7 @@ Question graphs for the unmath lesson strategies:
 - [Lesson 1: Count to five](Lesson-1-Count-to-five)
 - [Lesson 2: Add up to five](Lesson-2-Add-up-to-five)
 
-Each ASCII diagram is a directed acyclic graph (DAG): arrows lead forward.
+Each rendered Mermaid diagram is a directed acyclic graph (DAG): arrows lead forward.
 These are teaching views of one pass through the questions, not replacements
 for the cyclic strategy state machines. Retry leaves describe where a new pass
 begins; they do not draw backward edges. The Rust lessons retain their existing

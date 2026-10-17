@@ -9,30 +9,17 @@ answers do not mark a fact mastered.
 
 ## Introduction and independent questions
 
-```text
- [Start a new lesson]
-          |
-          v
- [Guided 1+1 demonstration: use practice graph below]
-          |
-          | guided success
-          v
- [Choose an unmastered fact a+b, where a+b <= 5]
-          |
-          v
- [Q: What is a plus b? You can use your fingers.]
-          |
-     +----+--------------------------+
-     | correct                       | incorrect / skip
-     v                               v
- [Save this fact as mastered]     [Guided practice for this fact]
-     |                               |
-     v                               v
- [Are all 21 facts mastered?]      [New check pass; choose another
-     |                             unchecked fact when possible]
-     +-- yes --> [PASS]
-     |
-     +-- no ---> [New check pass for an unmastered fact]
+```mermaid
+flowchart TD
+    Start["Start a new lesson"] --> Demo["Guided 1+1 demonstration"]
+    Demo -->|"Guided success"| Select["Choose an unmastered fact: a+b at most 5"]
+    Select --> Q["What is a plus b? You can use your fingers"]
+    Q -->|"Correct"| Save["Save fact as mastered"]
+    Q -->|"Incorrect or skip"| Practice["Guided practice for this fact"]
+    Save --> All{"All 21 facts mastered?"}
+    All -->|"Yes"| Pass["PASS"]
+    All -->|"No"| Next["New check pass for an unmastered fact"]
+    Practice --> Fresh["New check pass; another unchecked fact when possible"]
 ```
 
 A resumed lesson with saved mastered facts begins at fact selection and skips
@@ -41,53 +28,33 @@ accepted for independent checks.
 
 ## Guided practice questions (one pass)
 
-```text
- [Q0: Can you put a toys on the table? Adult may help.]
-                         |
-                         | stable total a
-                         v
- [Q1: Can you add b more toys, then move your hands away?]
-                         |
-                         | stable total a+b
-                         | (b=0 needs no table change)
-                         v
- [Is the combined set empty?]
-             |
-     +-------+---------------------------+
-     | yes                               | no
-     v                                   v
- [Q2: No toys. How many?]        [Q3: Count all the toys aloud.]
-     |                                   |
-     | zero                              | full sequence 1..a+b
-     +----------------+------------------+
-                      v
- [Explain: a plus b makes the total; adding joins sets]
-                      |
-                      v
- [New independent check pass; guided answer earns no mastery]
-
- Q2 or Q3
-     |
-     +-- wrong / skip --> [Model total; new practice pass from Q0]
-     |
-     +-- table changed --> [Discard pending answer;
-     |                      new preparation pass from Q0]
-     |
-     +-- third consecutive miss --> [PAUSE]
+```mermaid
+flowchart TD
+    Base["Can you put a toys on the table? Adult may help"]
+    Base -->|"Stable total a"| Add["Can you add b more toys and move your hands away?"]
+    Add -->|"Stable total a+b; zero needs no change"| Empty{"Is the combined set empty?"}
+    Empty -->|"Yes"| Zero["No toys: how many?"]
+    Empty -->|"No"| Count["Count all the toys aloud"]
+    Zero -->|"Zero"| Explain["Explain: a plus b makes the total; adding joins sets"]
+    Count -->|"Full sequence 1 through a+b"| Explain
+    Explain --> Fresh["New independent check pass; no mastery from guided answers"]
+    Zero -->|"Wrong or skip"| Model["Model total; new practice pass from preparation"]
+    Count -->|"Wrong or skip"| Model
+    Zero -->|"Table changed"| Reset["Discard pending answer; new preparation pass"]
+    Count -->|"Table changed"| Reset
+    Model -->|"Third consecutive miss"| Pause["PAUSE"]
 ```
 
 ## Fact coverage
 
-```text
- Total     Ordered facts
- -----     ---------------------------------------
-   0       0+0
-   1       0+1  1+0
-   2       0+2  1+1  2+0
-   3       0+3  1+2  2+1  3+0
-   4       0+4  1+3  2+2  3+1  4+0
-   5       0+5  1+4  2+3  3+2  4+1  5+0
-```
+| Total | Ordered facts |
+| --- | --- |
+| 0 | 0+0 |
+| 1 | 0+1, 1+0 |
+| 2 | 0+2, 1+1, 2+0 |
+| 3 | 0+3, 1+2, 2+1, 3+0 |
+| 4 | 0+4, 1+3, 2+2, 3+1, 4+0 |
+| 5 | 0+5, 1+4, 2+3, 3+2, 4+1, 5+0 |
 
 This table lists coverage, not the precise selection order. The implementation
 uses a fixed order, skips mastered facts, and revisits failed facts after guided
