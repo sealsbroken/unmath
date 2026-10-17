@@ -1,14 +1,19 @@
-# unmath lesson graphs
+# Play, count, and add
 
-Question graphs for the unmath lesson strategies:
+Two connected pretend-play adventures, using any five recognizable toys:
 
-- [Lesson 1: Count to five](Lesson-1-Count-to-five)
-- [Lesson 2: Add up to five](Lesson-2-Add-up-to-five)
+- [Lesson 1: Five passengers](Lesson-1-Count-to-five): captain a bus or rocket,
+  check tickets, and count to five before departing.
+- [Lesson 2: Picnic baskets](Lesson-2-Add-up-to-five): pack snacks for bears or
+  aliens, combine baskets, and celebrate with pretend picnic actions.
 
-Each rendered Mermaid diagram is a directed acyclic graph (DAG): arrows lead forward.
-These are teaching views of one pass through the questions, not replacements
-for the cyclic strategy state machines. Retry leaves describe where a new pass
-begins; they do not draw backward edges. The Rust lessons retain their existing
-practice loops, pause/resume behavior, and mastery criteria.
+The child chooses forest or moon, moves real toys, can ask for help, and can ask
+to rest. No special props, network calls, or new engine features are required.
+Story actions are spoken invitations; the engine does not render the vehicles
+or judge pretend play.
 
-The pages are also maintained in the main repository under `docs/wiki`.
+Each page has a rendered Mermaid **directed cyclic graph**. Return arrows show
+real practice and progression loops in the strategy, with exits for demonstrated
+success and rest. The implementation, README, and wiki describe the same flow.
+
+Source pages are maintained in the main repository under `docs/wiki`.

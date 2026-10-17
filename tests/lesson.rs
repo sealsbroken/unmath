@@ -7,6 +7,10 @@ fn lesson() -> CountToFive {
         ..Default::default()
     })
 }
+fn start(s: &mut CountToFive) -> Vec<Effect> {
+    s.handle(Event::Start);
+    s.handle(Event::Said("forest".into()))
+}
 fn count(s: &mut CountToFive, ns: &[u32]) -> Vec<Effect> {
     assert!(s.handle(Event::Numbers(ns.to_vec())).is_empty());
     s.handle(Event::Heard(*ns.last().unwrap()))
@@ -17,7 +21,7 @@ fn table(s: &mut CountToFive, n: u32) {
 #[test]
 fn two_independent_counts_separated_by_toy_activity_pass() {
     let mut s = lesson();
-    s.handle(Event::Start);
+    start(&mut s);
     count(&mut s, &[1, 2, 3, 4, 5]);
     assert_eq!(s.snapshot().phase, PhaseKind::Performing);
     table(&mut s, 5);
@@ -40,20 +44,20 @@ fn last_number_taps_and_malformed_sequences_do_not_pass() {
         vec![1, 2, 3, 4, 5, 6],
     ] {
         let mut s = lesson();
-        s.handle(Event::Start);
+        start(&mut s);
         count(&mut s, &ns);
         assert_eq!(s.snapshot().correct, 0);
         assert_eq!(s.snapshot().target_count, Some(1));
     }
     let mut s = lesson();
-    s.handle(Event::Start);
+    start(&mut s);
     s.handle(Event::Heard(5));
     assert_eq!(s.snapshot().correct, 0);
 }
 #[test]
 fn practice_cycles_back_to_an_independent_check() {
     let mut s = lesson();
-    s.handle(Event::Start);
+    start(&mut s);
     count(&mut s, &[1, 3]);
     for n in 1..=5 {
         table(&mut s, n);
@@ -66,7 +70,7 @@ fn practice_cycles_back_to_an_independent_check() {
 #[test]
 fn unstable_table_invalidates_pending_count() {
     let mut s = lesson();
-    s.handle(Event::Start);
+    start(&mut s);
     count(&mut s, &[1, 2, 3, 4, 5]);
     table(&mut s, 5);
     s.handle(Event::Numbers(vec![1, 2, 3, 4, 5]));
@@ -83,7 +87,7 @@ fn task_limit_and_silence_pause_without_mastery() {
         max_tasks: 1,
         ..Default::default()
     });
-    s.handle(Event::Start);
+    start(&mut s);
     let result = count(&mut s, &[1, 2, 3, 4, 5]);
     let summary = result
         .into_iter()
@@ -102,7 +106,7 @@ fn task_limit_and_silence_pause_without_mastery() {
     resumed.handle(Event::Start);
     assert_eq!(resumed.snapshot().target_count, Some(5));
     let mut s = lesson();
-    s.handle(Event::Start);
+    start(&mut s);
     for _ in 0..3 {
         s.handle(Event::NothingHeard);
     }
@@ -120,7 +124,7 @@ fn registration_deduplicates_and_creates() {
 #[test]
 fn help_is_modeled_after_the_required_toys_arrive() {
     let mut s = lesson();
-    s.handle(Event::Start);
+    start(&mut s);
     count(&mut s, &[1, 3]);
     let effects = s.handle(Event::Table(TableObservation::stable(1)));
     assert!(effects.contains(&Effect::HighlightCount(1)));
@@ -135,7 +139,7 @@ fn russian_prompts_and_repeat_preserve_question() {
         language: un_core::language::Language::Russian,
         ..Default::default()
     });
-    let first = s.handle(Event::Start);
+    let first = start(&mut s);
     assert!(first
         .iter()
         .any(|e| matches!(e, Effect::Say(text) if text.contains("пяти"))));

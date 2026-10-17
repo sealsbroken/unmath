@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 //! Deterministic, on-device counting lessons plugged into unengine's Strategy API.
 mod addition;
+mod play;
 pub use addition::{AddToFive, AddToFiveFactory, ADDITION_ID};
+use play::{invitation, wants_break, wants_help, Place};
 
 use std::sync::Arc;
 use un_core::language::Language;
@@ -23,6 +25,7 @@ enum Question {
 /// Only full Numbers sequences are accepted for counting; taps never prove mastery.
 pub struct CountToFive {
     config: SessionConfig,
+    place: Place,
     question: Question,
     phase: PhaseKind,
     table: Option<u32>,
@@ -36,7 +39,13 @@ pub struct CountToFive {
 impl CountToFive {
     pub fn new(config: SessionConfig) -> Self {
         let first_success = config.extra.get(PROGRESS).is_some_and(|v| v == "true");
+        let place = config
+            .extra
+            .get("unmath.lesson1.place")
+            .and_then(|s| Place::from_words(s))
+            .unwrap_or_default();
         Self {
+            place,
             config,
             question: if first_success {
                 Question::Toys
@@ -70,23 +79,20 @@ impl CountToFive {
         .into()
     }
     fn prompt(&self) -> String {
+        let vehicle = self.place.vehicle(self.config.language);
         match self.question {
             Question::First => self.text(
-                "Can you count from one to five?",
-                "Можешь посчитать от одного до пяти?",
-            ),
+                &format!("You're the captain of our {vehicle}! Can you count from one to five to open the doors?"),
+                &format!("Ты капитан! Посчитай от одного до пяти, чтобы открыть {vehicle}.")),
             Question::Final => self.text(
-                "Can you count from one to five again, all by yourself?",
-                "Можешь снова посчитать от одного до пяти самостоятельно?",
-            ),
+                "Everyone is aboard! Can you count from one to five to start our adventure?",
+                "Все на борту! Посчитай от одного до пяти, чтобы отправиться в путь!"),
             Question::Total => self.text(
-                "How many toys are there altogether?",
-                "Сколько всего игрушек?",
-            ),
+                "How many passengers are coming to our picnic?",
+                "Сколько пассажиров едет на наш пикник?"),
             _ => self.text(
-                "Can you count these toys aloud? Point to each toy as you count.",
-                "Посчитай эти игрушки вслух. Показывай на каждую игрушку, когда считаешь.",
-            ),
+                "Ticket check! Can you point to each toy passenger and count them aloud?",
+                "Проверяем билеты! Показывай на каждого игрушечного пассажира и считай вслух."),
         }
     }
     fn ask(&mut self) -> Vec<Effect> {
@@ -95,8 +101,8 @@ impl CountToFive {
             if self.table != Some(n) {
                 self.phase = PhaseKind::Performing;
                 return vec![Effect::StopListening, Effect::Say(match self.config.language {
-                    Language::English => format!("Please put {n} toys on the table, then move your hands away. A grown-up can help."),
-                    Language::Russian => format!("Положи на стол {n} игрушек и убери руки. Взрослый может помочь."),
+                    Language::English => format!("Our next stop needs {n} toy passengers! Can you put them on the table? Move your hands away to check the tickets. A grown-up can help."),
+                    Language::Russian => format!("На остановке ждут {n} игрушечных пассажиров! Поставь их на стол и убери руки, чтобы проверить билеты. Взрослый может помочь."),
                 })];
             }
         }
@@ -145,6 +151,14 @@ impl CountToFive {
             ..Default::default()
         };
         summary.remember.insert(
+            "unmath.lesson1.place".into(),
+            if mastered {
+                String::new()
+            } else {
+                self.place.saved().into()
+            },
+        );
+        summary.remember.insert(
             PROGRESS.into(),
             if mastered {
                 String::new()
@@ -158,8 +172,8 @@ impl CountToFive {
         }
         effects.push(Effect::Say(if mastered {
             self.text(
-                "You counted all the way to five by yourself!",
-                "Ты самостоятельно посчитал до пяти!",
+                "You counted to five by yourself! Everyone has a ticket. Off to our picnic!",
+                "Ты самостоятельно посчитал до пяти! У всех есть билеты. Едем на пикник!",
             )
         } else {
             self.text(
@@ -203,6 +217,7 @@ impl CountToFive {
         let mut effects = vec![Effect::StopListening];
         if correct {
             self.misses = 0;
+            effects.push(Effect::Say(self.place.cheer(self.config.language).into()));
             self.question = match self.question {
                 Question::First => {
                     self.first_success = true;
@@ -213,8 +228,8 @@ impl CountToFive {
                 Question::Toys => Question::Total,
                 Question::Total => {
                     effects.push(Effect::Say(self.text(
-                        "Move the toys around; keep all five. Then try another count.",
-                        "Передвинь игрушки; оставь все пять. А потом посчитай ещё раз.",
+                        "Let the five passengers choose new seats! Move the toys around, then we can start the engine.",
+                        "Пусть пять пассажиров выберут новые места! Передвинь игрушки, а потом заведём мотор.",
                     )));
                     Question::Final
                 }
@@ -244,8 +259,62 @@ impl CountToFive {
 impl Strategy for CountToFive {
     fn handle(&mut self, event: Event) -> Vec<Effect> {
         match event {
-            Event::Start if self.phase == PhaseKind::Idle => self.ask(),
-            Event::Stop if matches!(self.phase, PhaseKind::Asking | PhaseKind::Performing) => {
+            Event::Start if self.phase == PhaseKind::Idle => {
+                if self.first_success {
+                    self.ask()
+                } else {
+                    self.phase = PhaseKind::Meeting;
+                    invitation(&self.config)
+                }
+            }
+            Event::Heard(n) if self.phase == PhaseKind::Meeting => {
+                if let Some(place) = Place::from_number(n) {
+                    self.place = place;
+                    self.misses = 0;
+                    self.ask()
+                } else {
+                    invitation(&self.config)
+                }
+            }
+            Event::Said(words)
+                if wants_break(&words)
+                    && matches!(
+                        self.phase,
+                        PhaseKind::Meeting | PhaseKind::Asking | PhaseKind::Performing
+                    ) =>
+            {
+                self.finish(false)
+            }
+            Event::Said(words) if wants_help(&words) && self.phase == PhaseKind::Asking => {
+                self.sequence = None;
+                self.question = Question::Practice(1);
+                self.ask()
+            }
+            Event::Said(words) if self.phase == PhaseKind::Meeting => {
+                if let Some(place) = Place::from_words(&words) {
+                    self.place = place;
+                    self.misses = 0;
+                    self.ask()
+                } else {
+                    invitation(&self.config)
+                }
+            }
+            Event::RepeatRequested if self.phase == PhaseKind::Meeting => invitation(&self.config),
+            Event::NothingHeard if self.phase == PhaseKind::Meeting => {
+                self.misses += 1;
+                if self.misses >= 3 {
+                    self.finish(false)
+                } else {
+                    invitation(&self.config)
+                }
+            }
+            Event::SkipRequested if self.phase == PhaseKind::Meeting => self.ask(),
+            Event::Stop
+                if matches!(
+                    self.phase,
+                    PhaseKind::Meeting | PhaseKind::Asking | PhaseKind::Performing
+                ) =>
+            {
                 self.finish(false)
             }
             Event::Table(t) => {
@@ -302,7 +371,7 @@ impl Strategy for CountToFive {
             correct: self.records.iter().filter(|r| r.correct).count() as u32,
             task: Some(format!("Lesson 1: {:?}", self.question)),
             target_count: self.target(),
-            expected_answer: Some(self.expected()),
+            expected_answer: (self.phase == PhaseKind::Asking).then(|| self.expected()),
         }
     }
 }
@@ -313,8 +382,9 @@ impl StrategyFactory for CountToFiveFactory {
     fn info(&self) -> StrategyInfo {
         StrategyInfo {
             id: ID.into(),
-            title: "Lesson 1: count to five".into(),
-            description: "Practice loops and two independent counts from one to five.".into(),
+            title: "Lesson 1: five passengers".into(),
+            description: "Captain a bus or rocket, check toy tickets, and count five passengers."
+                .into(),
             languages: vec![Language::English, Language::Russian],
             license: "LGPL-3.0-or-later".into(),
         }

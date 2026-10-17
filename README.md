@@ -41,7 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-Select **Lesson 1: count to five** in the app's strategy selector. Registration
+Select **Lesson 1: five passengers** in the app's strategy selector. Registration
 also participates in `inventory`, so a CLI product can retain the crate with
 `unmath::register(&mut un_core::strategy::StrategyRegistry::new());` before
 calling `un_cli::main()`. Select it with
@@ -58,51 +58,102 @@ Build the product library and regenerate its Swift/Kotlin bindings using the
 unengine workflow. This crate is a linked Rust strategy, not a dynamically loaded
 plugin; existing prebuilt apps must be rebuilt with it.
 
-## Lesson graph
+## Play adventures
+
+The child chooses a forest picnic by bus or a moon picnic by rocket. Any five
+recognizable toys become passengers, then pretend snacks for bears or aliens.
+English and Russian prompts support story choices, ticket checks, basket packing,
+and playful celebrations. Say `help` to build with toys, or `stop` / `I'm tired`
+to pause. No special props are needed. Pretend actions are spoken invitations;
+the engine does not render story scenes or judge pretend play.
+
+### Lesson 1: Five passengers
+
+Open the doors by counting, check each passenger's ticket, let the toys choose
+new seats, and count again to start the engine. Passing still requires two
+independent exact sequences `[1, 2, 3, 4, 5]` separated by the five-toy activity
+and its total. Guided practice never earns an independent sequence check.
 
 ```mermaid
 flowchart TD
-    First[Count from one to five] -->|full sequence| Toys[Count five real toys]
-    First -->|needs help| Practice[Count n toys, starting with one]
-    Practice -->|success below five: increment n| Practice
-    Practice -->|success at five| First
-    Practice -->|needs help: model; reduce n on second miss| Practice
-    Toys -->|full sequence| Total[How many altogether?]
-    Toys -->|needs help| Practice
-    Total -->|five| Final[Rearrange toys; count from one to five again]
-    Total -->|other answer| Toys
-    Final -->|full sequence and prior independent success| Passed
-    Final -->|needs help| Practice
-    Practice -->|three consecutive misses| Paused
+    Choose["Where shall we go: forest or moon?"] --> Doors["Captain, count from one to five to open the doors"]
+    Doors -->|"Full sequence"| Setup["Can you bring five toy passengers?"]
+    Doors -->|"Needs help"| Small["Prepare n toy passengers; first practice starts at one"]
+    Setup -->|"Stable total five"| Tickets["Can you count each passenger's ticket aloud?"]
+    Tickets -->|"Full sequence"| Total["How many passengers are coming to our picnic?"]
+    Tickets -->|"Needs help"| Small
+    Total -->|"Five"| Seats["Let the five passengers choose new seats"]
+    Total -->|"Other answer"| Tickets
+    Seats --> Engine["Can you count from one to five to start our adventure?"]
+    Engine -->|"Full sequence and earlier independent success"| Picnic["Off to the picnic! Lesson complete"]
+    Engine -->|"Needs help"| Small
+    Small -->|"Required toys ready"| Model["Tutor counts the tickets; can you try by yourself?"]
+    Model -->|"Correct; fewer than five"| More["Next stop: one more passenger"]
+    More --> Small
+    Model -->|"Correct at five"| Doors
+    Model -->|"Needs help: same set or smaller on second miss"| Small
+    Model -->|"Three consecutive misses"| Rest["Park and rest; save progress"]
 ```
 
-Passing requires two independent exact sequences `[1, 2, 3, 4, 5]`, separated
-by counting five real toys and answering the total. Guided practice does not
-satisfy either independent check. Every practice count is modeled first using
-speech and `HighlightCount`; the tutor then asks for a separate child attempt.
-An adult may help prepare each set. All materials are called “toys”; use a detector
-configuration that counts all the toys on the lesson table.
 
-Counting questions use `ListenMode::Counting`. The strategy caches `Numbers`
-and judges on the following `Heard`, so that trailing event cannot answer the
-next question. A single final number or number-pad tap does not prove counting.
-`Counted` is informational and never scores an attempt.
+### Lesson 2: Picnic baskets
 
-Object questions wait for a stable table with the required total. Table changes
-invalidate the pending count. Rearrangement is an invitation; the API cannot
-verify that rearrangement occurred, or that the child pointed once at every toy.
-Speech recognition errors may require repeating a question; silence does not
-create a failed task record. Three consecutive unsuccessful responses/timeouts
-pause the session. Repeat restarts the current question; skip is recorded and
-routes into practice. Stop and the configured task limit pause without mastery.
-There is no enforced wall-clock limit, including while waiting for toy setup.
+Pack a guided basket, then solve seven story missions: `1+1`, `1+2`, `2+2`,
+`2+3`, `3+1`, `1+4`, and `3+0`. Independent answers earn pretend picnic actions
+and move to the next basket. Help returns to combining toys, counting, and a
+fresh mission. Two different ways to make five are included. Completion checks
+these seven challenges; it does not claim recall of every addition fact.
 
-Persist `SessionSummary.remember` with `apply_remembered` and supply the resulting
-map as the next `SessionConfig.extra`. A paused lesson remembers its first
-independent success and resumes at the five-toy activity; other progress restarts
-at the first independent check. Successful completion clears that checkpoint.
-The module reports mastery only with `PhaseKind::Finished` and a non-paused
-summary. `correct` counts successful individual questions, not mastered lessons.
+```mermaid
+flowchart TD
+    Choose["Forest picnic or moon picnic?"] --> Base["Can you pack a toy snacks? First basket: one"]
+    Base -->|"Stable total a"| Add["A friend brings b more; can you add them?"]
+    Add -->|"Stable total a+b; zero needs no change"| Count["Can you count all the toy snacks aloud?"]
+    Count -->|"Correct"| Explain["a plus b makes this many; joining fills our basket"]
+    Explain --> Select{"Any picnic missions left?"}
+    Select -->|"Yes: choose an unfinished mission"| Mission["Friends have a snacks and bring b more. How many altogether?"]
+    Mission -->|"Correct without tutor giving the answer"| Play["Celebrate; pretend to spread a blanket or serve a friend"]
+    Play --> Select
+    Mission -->|"Needs help, incorrect, or skip"| Base
+    Count -->|"Incorrect: model total"| Base
+    Count -->|"Table changed: discard pending answer"| Base
+    Select -->|"All seven complete"| Feast["The picnic is ready! Pretend feast"]
+    Count -->|"Three consecutive misses or task limit"| Rest["Rest; save picnic progress"]
+    Mission -->|"Three consecutive misses or task limit"| Rest
+```
+
+Both graphs are directed and cyclic: arrows lead back to earlier questions during
+practice and onward through repeated missions. See the [wiki](https://github.com/sealsbroken/unmath/wiki)
+for examples, acceptance criteria, child controls, and resume behavior. Page sources
+are in `docs/wiki`.
+
+## Integration behavior
+
+`unmath::ID` and `unmath::ADDITION_ID` are unchanged. Registration includes both
+lessons. Choose a destination by saying `forest` / `moon` (`лес` / `луна`) or
+by tapping 1 / 2. Destination choices never score as maths answers. Help requests
+(`help`, `help me`, `I don't know`, `помоги`, `не знаю`) enter toy practice without
+scoring a mistake. Break requests (`stop`, `break`, `I'm tired`, `стоп`, `перерыв`,
+`я устал`, `я устала`) pause, including during toy setup.
+
+Counting checks use full `Numbers` sequences, judged on the following `Heard`
+event so the same response cannot answer the next question. Addition's independent
+totals accept voice or taps; guided counting requires the full sequence. Stable
+table totals gate toy tasks; table changes cancel pending toy counts. The strategy
+cannot verify one touch per toy or pretend actions.
+
+Three consecutive unsuccessful responses/timeouts or the task limit pause;
+silence creates no failed task record. Repeat reissues a prompt; Skip records
+an answer as skipped and enters practice, while skipping addition setup pauses.
+Setup has no enforced timeout. Default ten tasks fits each uninterrupted adventure;
+use shorter sessions and resume as needed.
+
+Persist `SessionSummary.remember` via `apply_remembered`, then supply it in the
+next `SessionConfig.extra`. Counting keeps the first independent success;
+addition keeps completed picnic missions under `unmath.lesson2.picnic.v2`.
+Old 21-fact scores are not reused. Each lesson also remembers its destination.
+Completion clears its checkpoint. Only `PhaseKind::Finished` and a non-paused
+summary mean completion; `correct` also includes guided responses.
 
 ## Verify
 
@@ -112,73 +163,11 @@ cargo clippy --all-targets -- -D warnings
 cargo fmt --check
 ```
 
-The tests exercise the strategy API; camera, microphone, and mobile/desktop builds
-must be checked in the host product. No files in `unengine` are changed.
-
-
-## Lesson 2: add up to five
-
-Use `unmath::ADDITION_ID` (`unmath-add-to-five`) in the registry, or select
-**Lesson 2: add up to five** in the app. The same registration code above includes
-both lessons. The child should already be able to count five objects.
-
-The lesson teaches addition as joining sets: prepare `a` toys, add `b` more,
-then count the combined set. An adult can help prepare materials. At most five
-toys are needed. A `1 + 1` demonstration introduces the activity before independent
-questions begin. Fingers are allowed for independent answers; fluent recall is
-not required.
-
-Acceptance: correctly answer every ordered pair of nonnegative operands with
-`a + b <= 5` in an independent question (21 facts, including `0 + 0`, `0 + 5`,
-and `5 + 0`). Reversed operands are checked separately. Toy-assisted practice
-never marks a fact mastered. This is a lesson completion check, not a delayed
-retention assessment.
-
-```mermaid
-flowchart TD
-    Base[Can you put a toys on the table?] -->|stable total a| Add[Can you add b more toys?]
-    Add -->|stable total a+b| Count[Can you count all the toys?]
-    Count -->|correct: explain a plus b makes the total| Check[What is a plus b?]
-    Count -->|incorrect: model and rebuild| Base
-    Check -->|correct: save fact; next unmastered fact| Check
-    Check -->|incorrect| Base
-    Check -->|all 21 facts mastered| Finished
-    Count -->|three misses or task limit| Pause
-    Check -->|three misses or task limit| Pause
-```
-
-For adding zero, no table change is required. An empty set is answered with
-zero in voice mode; other guided sums require the complete spoken count in
-counting mode. Independent sums accept a spoken total or number-pad answer.
-Practice moves to another unchecked fact before returning to the failed fact
-when possible. Table changes during guided counting cancel that attempt and
-restart set preparation. The camera verifies totals, not which individual toys
-were added or how the child reasoned.
-
-Set `max_tasks` to about 40 for a longer session, or use shorter sessions and
-persist `SessionSummary.remember` through `apply_remembered`. The checkpoint
-`unmath.lesson2.mastered` stores mastered facts; a resumed session asks only
-unfinished facts. Three consecutive mistakes/timeouts, Stop, or the task limit
-pause without declaring mastery. Silence does not create a task record. Repeat
-reissues the current prompt. Skipping an answer records a skip and starts
-practice; skipping toy setup pauses. Setup has no enforced time limit.
-
-Passing emits a non-paused summary and `PhaseKind::Finished`; `final_level` is
-the number of mastered facts (21 at completion), while `correct` also includes
-guided successes. Completion clears this lesson's checkpoint. Existing lesson-one
-progress uses a separate key.
-
-
-## Wiki question graphs
-
-See the [lesson wiki](https://github.com/sealsbroken/unmath/wiki) for rendered Mermaid
-directed acyclic graphs of each lesson. Source pages are kept in `docs/wiki`.
-The graphs show forward teaching passes; retry leaves start a new pass while
-the lesson implementations keep their practice cycles.
+Tests exercise strategy events and effects. Camera, microphone, and host app
+builds need testing in the product. No `unengine` changes are required.
 
 ## License
 
 This repository is licensed under the GNU Lesser General Public License,
 version 3 or (at your option) any later version (`LGPL-3.0-or-later`).
-See [LICENSE](LICENSE) for the LGPL terms and [LICENSE.GPL](LICENSE.GPL)
-for the incorporated GPL version 3 terms.
+See [LICENSE](LICENSE) and the incorporated [GPL terms](LICENSE.GPL).
