@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 //! Addition with nonnegative operands and a total no greater than five.
-use crate::play::{invitation, wants_break, wants_help, Place};
+use crate::answers::{count_feedback, safe_config, saved_mask, valid_count, CountBuffer};
+use crate::play::{invitation, wants_break, wants_help, wants_restart, Place};
 use std::sync::Arc;
 use un_core::{language::Language, strategy::*};
 
@@ -32,19 +33,15 @@ pub struct AddToFive {
     index: usize,
     fact: (u32, u32),
     table: Option<u32>,
-    sequence: Option<Vec<u32>>,
+    sequence: CountBuffer,
     mastered: u32,
     misses: u32,
     records: Vec<TaskRecord>,
 }
 impl AddToFive {
     pub fn new(config: SessionConfig) -> Self {
-        let mastered = config
-            .extra
-            .get(PROGRESS)
-            .and_then(|v| v.parse::<u32>().ok())
-            .unwrap_or(0)
-            & ALL;
+        let config = safe_config(config);
+        let mastered = saved_mask(config.extra.get(PROGRESS), ALL);
         let place = config
             .extra
             .get("unmath.lesson2.place")
@@ -57,7 +54,7 @@ impl AddToFive {
             index: 0,
             fact: (1, 1),
             table: None,
-            sequence: None,
+            sequence: CountBuffer::default(),
             mastered,
             misses: 0,
             records: vec![],
@@ -89,7 +86,7 @@ impl AddToFive {
         }
     }
     fn prompt(&mut self) -> Vec<Effect> {
-        self.sequence = None;
+        self.sequence.reset();
         let (a, b) = self.fact;
         let sum = a + b;
         let friends = self.place.friends(self.config.language);
@@ -223,10 +220,12 @@ impl AddToFive {
         let guided = self.node == Node::Count;
         let correct = !skipped
             && if sum > 0 {
-                sequence == (1..=sum).collect::<Vec<_>>()
+                valid_count(&sequence, sum, answer)
             } else {
                 answer == Some(sum)
             };
+        let feedback = (!correct && !skipped && sum > 0)
+            .then(|| count_feedback(&sequence, sum, self.config.language));
         self.records.push(TaskRecord {
             task: format!(
                 "{} + {} ({})",
@@ -321,7 +320,7 @@ impl AddToFive {
             effects.extend(self.next_check());
             effects
         } else {
-            let mut effects = vec![];
+            let mut effects: Vec<Effect> = feedback.into_iter().collect();
             if guided {
                 effects.push(Effect::HighlightCount(sum));
                 effects.push(self.say(
@@ -336,8 +335,22 @@ impl AddToFive {
 }
 impl Strategy for AddToFive {
     fn handle(&mut self, event: Event) -> Vec<Effect> {
+        if matches!(&event, Event::Heard(n) if self.sequence.ignore_discarded_tail(*n)) {
+            return vec![];
+        }
+        if matches!(&event, Event::Said(words) if wants_restart(words)) {
+            return self.handle(Event::RepeatRequested);
+        }
         match event {
             Event::Start if self.node == Node::Idle => {
+                if self.config.max_tasks == 0 {
+                    return self.finish(false);
+                }
+                if self.config.total_objects < 5 {
+                    let mut effects = vec![self.say("Ask a grown-up to prepare five toy snacks. We can play when they are ready.".into(), "Попроси взрослого подготовить пять игрушечных угощений. Сыграем, когда они будут готовы.".into())];
+                    effects.extend(self.finish(false));
+                    return effects;
+                }
                 if self.mastered == 0 {
                     self.node = Node::Meeting;
                     invitation(&self.config)
@@ -351,7 +364,12 @@ impl Strategy for AddToFive {
                     self.misses = 0;
                     self.practice()
                 } else {
-                    invitation(&self.config)
+                    self.misses += 1;
+                    if self.misses >= 3 {
+                        self.finish(false)
+                    } else {
+                        invitation(&self.config)
+                    }
                 }
             }
             Event::Said(words)
@@ -380,7 +398,12 @@ impl Strategy for AddToFive {
                     self.misses = 0;
                     self.practice()
                 } else {
-                    invitation(&self.config)
+                    self.misses += 1;
+                    if self.misses >= 3 {
+                        self.finish(false)
+                    } else {
+                        invitation(&self.config)
+                    }
                 }
             }
             Event::RepeatRequested if self.node == Node::Meeting => invitation(&self.config),
@@ -389,7 +412,12 @@ impl Strategy for AddToFive {
                 if self.misses >= 3 {
                     self.finish(false)
                 } else {
-                    invitation(&self.config)
+                    self.misses += 1;
+                    if self.misses >= 3 {
+                        self.finish(false)
+                    } else {
+                        invitation(&self.config)
+                    }
                 }
             }
             Event::SkipRequested if self.node == Node::Meeting => self.practice(),
@@ -410,7 +438,7 @@ impl Strategy for AddToFive {
             Event::Table(t) => {
                 self.table = if t.is_stable { t.count } else { None };
                 if matches!(self.node, Node::Count | Node::Check) && self.table != self.target() {
-                    self.sequence = None;
+                    self.sequence.reset();
                     return if self.node == Node::Check {
                         self.check_setup()
                     } else {
@@ -427,7 +455,7 @@ impl Strategy for AddToFive {
                 }
             }
             Event::Numbers(ns) if matches!(self.node, Node::Count | Node::Check) => {
-                self.sequence = Some(ns);
+                self.sequence.set(ns);
                 vec![]
             }
             Event::Heard(n) if matches!(self.node, Node::Count | Node::Check) => {

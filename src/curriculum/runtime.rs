@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 use super::*;
-use crate::play::{invitation, wants_break, wants_help, Place};
+use crate::answers::{count_feedback, safe_config, saved_mask, valid_count, CountBuffer};
+use crate::play::{invitation, normalized, wants_break, wants_help, wants_restart, Place};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Node {
@@ -25,20 +26,16 @@ pub struct Adventure {
     mastered: u32,
     place: Place,
     table: Option<u32>,
-    sequence: Option<Vec<u32>>,
+    sequence: CountBuffer,
     misses: u32,
     records: Vec<TaskRecord>,
 }
 impl Adventure {
     pub fn new(lesson: Lesson, config: SessionConfig) -> Self {
+        let config = safe_config(config);
         let missions = lesson.missions();
         let key = lesson.key();
-        let mastered = config
-            .extra
-            .get(&key)
-            .and_then(|s| s.parse::<u32>().ok())
-            .unwrap_or(0)
-            & ((1 << missions.len()) - 1);
+        let mastered = saved_mask(config.extra.get(&key), (1 << missions.len()) - 1);
         let index = config
             .extra
             .get(&format!("{key}.index"))
@@ -60,7 +57,7 @@ impl Adventure {
             mastered,
             place,
             table: None,
-            sequence: None,
+            sequence: CountBuffer::default(),
             misses: 0,
             records: vec![],
         }
@@ -101,7 +98,7 @@ impl Adventure {
             self.index = (self.index + 1) % self.missions.len();
         }
         self.node = Node::Check;
-        self.sequence = None;
+        self.sequence.reset();
         let destination = match self.place {
             Place::Forest => Words::new("Our forest friends need you!", "Лесные друзья ждут тебя!"),
             Place::Moon => Words::new("Our moon friends need you!", "Лунные друзья ждут тебя!"),
@@ -126,7 +123,7 @@ impl Adventure {
     }
     fn prepare(&mut self) -> Vec<Effect> {
         self.node = Node::Prepare;
-        self.sequence = None;
+        self.sequence.reset();
         let mut effects = vec![
             Effect::StopListening,
             self.say(&self.mission().stages[self.stage].action),
@@ -138,7 +135,7 @@ impl Adventure {
     }
     fn guide_question(&mut self) -> Vec<Effect> {
         self.node = Node::Guide;
-        self.sequence = None;
+        self.sequence.reset();
         let n = self.target().expect("a guide always has a target");
         vec![
             self.say(&if n == 0 {
@@ -173,10 +170,12 @@ impl Adventure {
         };
         let correct = !skipped
             && if needs_sequence {
-                sequence == (1..=expected).collect::<Vec<_>>()
+                valid_count(&sequence, expected, number)
             } else {
                 number == Some(expected)
             };
+        let feedback = (!correct && !skipped && needs_sequence)
+            .then(|| count_feedback(&sequence, expected, self.config.language));
         self.records.push(TaskRecord {
             task: format!(
                 "{}: {}{}",
@@ -213,6 +212,7 @@ impl Adventure {
         }
         if !correct {
             let mut effects = vec![Effect::StopListening];
+            effects.extend(feedback);
             if guided {
                 if expected > 0 {
                     effects.push(Effect::HighlightCount(expected));
@@ -260,7 +260,7 @@ impl Adventure {
         } else {
             Node::Paused
         };
-        self.sequence = None;
+        self.sequence.reset();
         let key = self.lesson.key();
         let mut summary = SessionSummary {
             tasks_completed: self.records.len() as u32,
@@ -295,7 +295,12 @@ impl Adventure {
             effects.extend(self.check());
             effects
         } else {
-            invitation(&self.config)
+            self.misses += 1;
+            if self.misses >= 3 {
+                self.finish(false)
+            } else {
+                invitation(&self.config)
+            }
         }
     }
     fn active(&self) -> bool {
@@ -307,8 +312,17 @@ impl Adventure {
 }
 impl Strategy for Adventure {
     fn handle(&mut self, event: Event) -> Vec<Effect> {
+        if matches!(&event, Event::Heard(n) if self.sequence.ignore_discarded_tail(*n)) {
+            return vec![];
+        }
+        if matches!(&event, Event::Said(words) if wants_restart(words)) {
+            return self.handle(Event::RepeatRequested);
+        }
         match event {
             Event::Start if self.node == Node::Idle => {
+                if self.config.max_tasks == 0 {
+                    return self.finish(false);
+                }
                 if self.config.total_objects < self.lesson.required_toys() {
                     let mut effects=vec![self.say(&Words::new(format!("Ask a grown-up to find {} recognizable toys for this adventure. We can play it when they're ready.",self.lesson.required_toys()),format!("Для приключения нужно игрушек: {}. Попроси взрослого подготовить их, и мы сыграем позже.",self.lesson.required_toys())))];
                     effects.extend(self.finish(false));
@@ -317,7 +331,9 @@ impl Strategy for Adventure {
                 if self
                     .config
                     .extra
-                    .contains_key(&format!("{}.place", self.lesson.key()))
+                    .get(&format!("{}.place", self.lesson.key()))
+                    .and_then(|s| Place::from_words(s))
+                    .is_some()
                 {
                     let mut effects = vec![self.say(&self.lesson.welcome())];
                     effects.extend(self.check());
@@ -338,7 +354,7 @@ impl Strategy for Adventure {
                 if self.node == Node::Check
                     && matches!(self.mission().answer, Answer::Choice(_)) =>
             {
-                let choice = match s.trim().to_lowercase().as_str() {
+                let choice = match normalized(&s).as_str() {
                     "first" | "the first" | "первая" | "первый" => Some(1),
                     "second" | "the second" | "вторая" | "второй" => Some(2),
                     "same" | "equal" | "the same" | "поровну" | "одинаково" => {
@@ -363,7 +379,7 @@ impl Strategy for Adventure {
                 }
             }
             Event::Numbers(ns) if matches!(self.node, Node::Check | Node::Guide) => {
-                self.sequence = Some(ns);
+                self.sequence.set(ns);
                 vec![]
             }
             Event::Heard(n) if matches!(self.node, Node::Check | Node::Guide) => {

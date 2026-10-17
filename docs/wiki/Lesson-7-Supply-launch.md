@@ -28,6 +28,8 @@ flowchart TD
     Guided -->|"Table changed: cancel pending answer"| SetupStage
     Q -->|"Three misses, task limit, or break"| Rest["Rest and save progress"]
     Guided -->|"Three misses, task limit, or break"| Rest
+    Guided -->|"Starts at zero while toys remain"| Zero["Zero means no toys; first toy gets one"]
+    Zero --> Setup
 ```
 
 Question nodes represent the current mission, so their numbers change as the
@@ -87,3 +89,6 @@ Success means all six specified challenges were solved independently. It is a
 lesson completion check, not a claim of comprehensive fluency or delayed retention.
 The story, toys, and reward actions are spoken invitations; no new engine animation
 or unimplemented perception feature is assumed.
+
+See the [edge-case audit](Edge-case-audit) for zero-starts, counting mutations,
+interruptions, saved-state validation, and engine-boundary regressions.

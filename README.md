@@ -94,6 +94,11 @@ flowchart TD
     Model -->|"Correct at five"| Doors
     Model -->|"Needs help: same set or smaller on second miss"| Small
     Model -->|"Three consecutive misses"| Rest["Park and rest; save progress"]
+    Doors -->|"Starts at zero with toys"| Zero["Zero means no toys; first toy gets one"]
+    Tickets -->|"Starts at zero with toys"| Zero
+    Engine -->|"Starts at zero with toys"| Zero
+    Model -->|"Starts at zero with toys"| Zero
+    Zero --> Small
 ```
 
 
@@ -123,6 +128,9 @@ flowchart TD
     Select -->|"All seven complete"| Feast["The picnic is ready! Pretend feast"]
     Count -->|"Three misses or task limit"| Rest["Rest and save progress"]
     Mission -->|"Three misses or task limit"| Rest
+    Mission -->|"Starts at zero with toys"| Zero["Zero means no toys; first toy gets one"]
+    Count -->|"Starts at zero with toys"| Zero
+    Zero --> Base
 ```
 
 Both graphs are directed and cyclic: arrows lead back to earlier questions during
@@ -187,7 +195,7 @@ cannot verify one touch per toy or pretend actions.
 
 Three consecutive unsuccessful responses/timeouts or the task limit pause;
 silence creates no failed task record. Repeat reissues a prompt; Skip records
-an answer as skipped and enters practice, while skipping addition setup pauses.
+an answer as skipped and enters practice, while skipping toy setup pauses.
 Setup has no enforced timeout. Default ten tasks fits each uninterrupted adventure;
 use shorter sessions and resume as needed.
 
@@ -200,6 +208,15 @@ Older recitation/final-number checkpoints are not reused. Each lesson also
 remembers its destination.
 Completion clears its checkpoint. Only `PhaseKind::Finished` and a non-paused
 summary mean completion; `correct` also includes guided responses.
+
+## Edge-case audit
+
+See [the audit](docs/EDGE_CASES.md) for counterexamples, regression coverage,
+and explicit limits. Zero-prefixed toy counts are rejected with an explanation;
+zero remains valid for an empty set. Supported restart/help/break commands tolerate
+recognizer punctuation and case. Invalid saved masks and timeout values are
+validated. Update `sealsbroken/unengine` too: the speech parser must preserve
+explicit zero, and cached pre-start toys must reach the active strategy.
 
 ## Verify
 

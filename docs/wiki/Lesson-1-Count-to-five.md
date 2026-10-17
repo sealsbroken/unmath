@@ -35,6 +35,11 @@ flowchart TD
     Model -->|"Correct at five"| Doors
     Model -->|"Needs help: same set or smaller on second miss"| Small
     Model -->|"Three consecutive misses"| Rest["Park and rest; save progress"]
+    Doors -->|"Starts at zero with toys"| Zero["Zero means no toys; first toy gets one"]
+    Tickets -->|"Starts at zero with toys"| Zero
+    Engine -->|"Starts at zero with toys"| Zero
+    Model -->|"Starts at zero with toys"| Zero
+    Zero --> Small
 ```
 
 ## What counts as success?
@@ -67,3 +72,6 @@ English and Russian are supported. The story choice itself never earns a maths s
 Spoken-count checkpoints use `unmath.lesson1.one_by_one.v2`. Earlier recitation
 checkpoints are not reused. The engine checks the full spoken sequence and the
 stable toy total; it cannot prove that each physical touch matched a unique toy.
+
+See the [edge-case audit](Edge-case-audit) for zero-starts, counting mutations,
+interruptions, saved-state validation, and engine-boundary regressions.

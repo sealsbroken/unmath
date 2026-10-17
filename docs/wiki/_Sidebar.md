@@ -9,3 +9,4 @@
 - [Lesson 8: Homeward trail](Lesson-8-Homeward-trail)
 - [Lesson 9: Ten-seat ferry](Lesson-9-Ten-seat-ferry)
 - [Lesson 10: Fair-share café](Lesson-10-Fair-share-cafe)
+- [Edge-case audit](Edge-case-audit)

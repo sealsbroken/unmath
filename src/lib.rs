@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 //! Deterministic, on-device counting lessons plugged into unengine's Strategy API.
 mod addition;
+mod answers;
+use answers::{count_feedback, safe_config, valid_count, CountBuffer};
 pub mod curriculum;
 mod play;
 pub use addition::{AddToFive, AddToFiveFactory, ADDITION_ID};
-use play::{invitation, wants_break, wants_help, Place};
+use play::{invitation, wants_break, wants_help, wants_restart, Place};
 
 use std::sync::Arc;
 use un_core::language::Language;
@@ -30,7 +32,7 @@ pub struct CountToFive {
     question: Question,
     phase: PhaseKind,
     table: Option<u32>,
-    sequence: Option<Vec<u32>>,
+    sequence: CountBuffer,
     first_success: bool,
     attempts: u32,
     misses: u32,
@@ -39,6 +41,7 @@ pub struct CountToFive {
 
 impl CountToFive {
     pub fn new(config: SessionConfig) -> Self {
+        let config = safe_config(config);
         let first_success = config.extra.get(PROGRESS).is_some_and(|v| v == "true");
         let place = config
             .extra
@@ -55,7 +58,7 @@ impl CountToFive {
             },
             phase: PhaseKind::Idle,
             table: None,
-            sequence: None,
+            sequence: CountBuffer::default(),
             first_success,
             attempts: 0,
             misses: 0,
@@ -96,7 +99,7 @@ impl CountToFive {
         }
     }
     fn ask(&mut self) -> Vec<Effect> {
-        self.sequence = None;
+        self.sequence.reset();
         if let Some(n) = self.target() {
             if self.table != Some(n) {
                 self.phase = PhaseKind::Performing;
@@ -194,8 +197,10 @@ impl CountToFive {
             && if self.question == Question::Total {
                 answer == Some(5)
             } else {
-                numbers == (1..=expected).collect::<Vec<_>>()
+                valid_count(&numbers, expected, answer)
             };
+        let feedback = (!correct && !skipped && self.question != Question::Total)
+            .then(|| count_feedback(&numbers, expected, self.config.language));
         self.records.push(TaskRecord {
             task: format!("{:?}", self.question),
             answers: if self.question == Question::Total {
@@ -218,6 +223,7 @@ impl CountToFive {
             return self.finish(false);
         }
         let mut effects = vec![Effect::StopListening];
+        effects.extend(feedback);
         if correct {
             self.misses = 0;
             effects.push(Effect::Say(self.place.cheer(self.config.language).into()));
@@ -261,8 +267,22 @@ impl CountToFive {
 
 impl Strategy for CountToFive {
     fn handle(&mut self, event: Event) -> Vec<Effect> {
+        if matches!(&event, Event::Heard(n) if self.sequence.ignore_discarded_tail(*n)) {
+            return vec![];
+        }
+        if matches!(&event, Event::Said(words) if wants_restart(words)) {
+            return self.handle(Event::RepeatRequested);
+        }
         match event {
             Event::Start if self.phase == PhaseKind::Idle => {
+                if self.config.max_tasks == 0 {
+                    return self.finish(false);
+                }
+                if self.config.total_objects < 5 {
+                    let mut effects = vec![Effect::Say(self.text("Ask a grown-up to prepare five toys. We can play when they are ready.", "Попроси взрослого подготовить пять игрушек. Сыграем, когда они будут готовы."))];
+                    effects.extend(self.finish(false));
+                    return effects;
+                }
                 if self.first_success {
                     self.ask()
                 } else {
@@ -276,7 +296,12 @@ impl Strategy for CountToFive {
                     self.misses = 0;
                     self.ask()
                 } else {
-                    invitation(&self.config)
+                    self.misses += 1;
+                    if self.misses >= 3 {
+                        self.finish(false)
+                    } else {
+                        invitation(&self.config)
+                    }
                 }
             }
             Event::Said(words)
@@ -289,7 +314,7 @@ impl Strategy for CountToFive {
                 self.finish(false)
             }
             Event::Said(words) if wants_help(&words) && self.phase == PhaseKind::Asking => {
-                self.sequence = None;
+                self.sequence.reset();
                 self.question = Question::Practice(1);
                 self.ask()
             }
@@ -299,7 +324,12 @@ impl Strategy for CountToFive {
                     self.misses = 0;
                     self.ask()
                 } else {
-                    invitation(&self.config)
+                    self.misses += 1;
+                    if self.misses >= 3 {
+                        self.finish(false)
+                    } else {
+                        invitation(&self.config)
+                    }
                 }
             }
             Event::RepeatRequested if self.phase == PhaseKind::Meeting => invitation(&self.config),
@@ -308,7 +338,12 @@ impl Strategy for CountToFive {
                 if self.misses >= 3 {
                     self.finish(false)
                 } else {
-                    invitation(&self.config)
+                    self.misses += 1;
+                    if self.misses >= 3 {
+                        self.finish(false)
+                    } else {
+                        invitation(&self.config)
+                    }
                 }
             }
             Event::SkipRequested if self.phase == PhaseKind::Meeting => self.ask(),
@@ -329,7 +364,7 @@ impl Strategy for CountToFive {
                         return self.ask();
                     }
                     if self.phase == PhaseKind::Asking && self.table != self.target() {
-                        self.sequence = None;
+                        self.sequence.reset();
                         self.phase = PhaseKind::Performing;
                         return vec![Effect::StopListening];
                     }
@@ -339,12 +374,12 @@ impl Strategy for CountToFive {
             // Judge on Heard, after caching Numbers: the engine sends this pair in order.
             // This prevents the old count's trailing Heard from answering the next question.
             Event::Numbers(ns) if self.phase == PhaseKind::Asking => {
-                self.sequence = Some(ns);
+                self.sequence.set(ns);
                 vec![]
             }
             Event::Heard(n) if self.phase == PhaseKind::Asking => self.answer(Some(n), false),
             Event::NothingHeard if self.phase == PhaseKind::Asking => {
-                self.sequence = None;
+                self.sequence.reset();
                 self.misses += 1;
                 if self.misses >= 3 {
                     self.finish(false)
@@ -357,11 +392,8 @@ impl Strategy for CountToFive {
             {
                 self.ask()
             }
-            Event::SkipRequested
-                if matches!(self.phase, PhaseKind::Asking | PhaseKind::Performing) =>
-            {
-                self.answer(None, true)
-            }
+            Event::SkipRequested if self.phase == PhaseKind::Asking => self.answer(None, true),
+            Event::SkipRequested if self.phase == PhaseKind::Performing => self.finish(false),
             _ => vec![],
         }
     }
@@ -373,7 +405,8 @@ impl Strategy for CountToFive {
             tasks_completed: self.records.len() as u32,
             correct: self.records.iter().filter(|r| r.correct).count() as u32,
             task: Some(format!("Lesson 1: {:?}", self.question)),
-            target_count: self.target(),
+            target_count: matches!(self.phase, PhaseKind::Asking | PhaseKind::Performing)
+                .then(|| self.expected()),
             expected_answer: (self.phase == PhaseKind::Asking).then(|| self.expected()),
         }
     }

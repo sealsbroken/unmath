@@ -20,7 +20,7 @@ impl Place {
         }
     }
     pub fn from_words(s: &str) -> Option<Self> {
-        match s.trim().to_lowercase().as_str() {
+        match normalized(s).as_str() {
             "forest" | "the forest" | "лес" | "в лес" => Some(Self::Forest),
             "moon" | "the moon" | "луна" | "на луну" => Some(Self::Moon),
             _ => None,
@@ -74,14 +74,63 @@ pub(crate) fn invitation(config: &SessionConfig) -> Vec<Effect> {
 }
 pub(crate) fn wants_break(words: &str) -> bool {
     matches!(
-        words.trim().to_lowercase().as_str(),
-        "stop" | "break" | "i'm tired" | "стоп" | "перерыв" | "я устал" | "я устала"
+        normalized(words).as_str(),
+        "stop"
+            | "please stop"
+            | "stop please"
+            | "break"
+            | "i'm tired"
+            | "i am tired"
+            | "i want a break"
+            | "стоп"
+            | "перерыв"
+            | "я устал"
+            | "я устала"
     )
 }
 
 pub(crate) fn wants_help(words: &str) -> bool {
     matches!(
-        words.trim().to_lowercase().as_str(),
-        "help" | "help me" | "i don't know" | "помоги" | "не знаю"
+        normalized(words).as_str(),
+        "help"
+            | "help me"
+            | "please help"
+            | "help me please"
+            | "i don't know"
+            | "i dont know"
+            | "помоги"
+            | "помоги пожалуйста"
+            | "не знаю"
+    )
+}
+
+/// Recognizers commonly add punctuation, curly apostrophes, or extra spaces.
+pub(crate) fn normalized(words: &str) -> String {
+    words
+        .replace('’', "'")
+        .chars()
+        .map(|c| {
+            if c.is_alphanumeric() || c == '\'' {
+                c
+            } else {
+                ' '
+            }
+        })
+        .collect::<String>()
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .to_lowercase()
+}
+pub(crate) fn wants_restart(words: &str) -> bool {
+    matches!(
+        normalized(words).as_str(),
+        "start again"
+            | "restart"
+            | "let me start again"
+            | "let's start again"
+            | "сначала"
+            | "начать сначала"
+            | "давай сначала"
     )
 }

@@ -9,3 +9,6 @@ description = "Ten play-based arithmetic lesson strategies for unengine"
 [dependencies]
 un-core = { path = "../unengine/crates/un-core" }
 inventory = "0.3"
+
+[dev-dependencies]
+un-engine = { path = "../unengine/crates/un-engine" }

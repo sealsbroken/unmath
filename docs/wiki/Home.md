@@ -30,3 +30,5 @@ Source pages are maintained in the main repository under `docs/wiki`.
 - [Lesson 10: Fair-share café](Lesson-10-Fair-share-cafe)
 
 [Curriculum plan](https://github.com/sealsbroken/unmath/blob/main/docs/CURRICULUM.md)
+
+[Edge-case audit and counterexamples](Edge-case-audit)

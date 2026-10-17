@@ -38,6 +38,9 @@ flowchart TD
     Select -->|"All seven complete"| Feast["The picnic is ready! Pretend feast"]
     Count -->|"Three misses or task limit"| Rest["Rest and save progress"]
     Mission -->|"Three misses or task limit"| Rest
+    Mission -->|"Starts at zero with toys"| Zero["Zero means no toys; first toy gets one"]
+    Count -->|"Starts at zero with toys"| Zero
+    Zero --> Base
 ```
 
 ## Challenge scope
@@ -89,3 +92,6 @@ Prerequisite: count up to five objects. English and Russian are supported.
 The camera verifies totals and the recognizer verifies the spoken sequence.
 A grown-up can observe one touch per toy; the strategy API cannot verify unique
 physical touches. Counts can span pauses in `ListenMode::Counting`.
+
+See the [edge-case audit](Edge-case-audit) for zero-starts, counting mutations,
+interruptions, saved-state validation, and engine-boundary regressions.
