@@ -138,14 +138,16 @@ practice and onward through repeated missions. See the [wiki](https://github.com
 for examples, acceptance criteria, child controls, and resume behavior. Page sources
 are in `docs/wiki`.
 
-## Next eight lessons: 3–10
+## Course 1: all ten lessons
 
 See the [curriculum plan](docs/CURRICULUM.md) for sequencing, prerequisites, and
-acceptance criteria. Each adventure has six missions and a directed cyclic
-question graph in the wiki:
+acceptance criteria. The wiki provides a single lesson list, course goals, and directed cyclic
+question graphs:
 
 | Lesson | Strategy ID | Skill |
 | --- | --- | --- |
+| [1: Five passengers](https://github.com/sealsbroken/unmath/wiki/Lesson-1-Count-to-five) | `unmath-count-to-five` | Count five toys one by one |
+| [2: Picnic baskets](https://github.com/sealsbroken/unmath/wiki/Lesson-2-Add-up-to-five) | `unmath-add-to-five` | Combine and count within five |
 | [3: Cave train](https://github.com/sealsbroken/unmath/wiki/Lesson-3-Cave-train) | `unmath-subtract-to-five` | Taking away within five |
 | [4: Bridge builders](https://github.com/sealsbroken/unmath/wiki/Lesson-4-Bridge-builders) | `unmath-compare-to-five` | More, fewer, and equal within five |
 | [5: Parcel detectives](https://github.com/sealsbroken/unmath/wiki/Lesson-5-Parcel-detectives) | `unmath-missing-to-five` | Missing addends within five |

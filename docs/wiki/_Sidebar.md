@@ -1,4 +1,4 @@
-- [Home](Home)
+- [Course 1: goals and lessons](Home)
 - [Lesson 1: Five passengers](Lesson-1-Count-to-five)
 - [Lesson 2: Picnic baskets](Lesson-2-Add-up-to-five)
 - [Lesson 3: Cave train](Lesson-3-Cave-train)

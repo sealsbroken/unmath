@@ -1,65 +1,101 @@
-# Arithmetic adventures: lessons 3–10
+# Course 1: Arithmetic adventures within ten
 
-This is the implementation plan for the next eight lessons after Five passengers
-and Picnic baskets. Each is a short, choice-led adventure with six independent
-missions, its own physical help sequence, a directed cyclic question graph, and
-reachable completion/rest exits. The child may count with fingers; fast recall
-is not required. These are authored teaching choices, not age-based placement rules.
-Offer the next lesson when its prerequisite skills are comfortable; there is no
-automatic promotion or grade assignment.
+Ten connected play lessons introduce numbers as quantities the child can count,
+combine, take away, compare, complete, and share. The child chooses a forest or
+moon adventure and uses real toys to solve story problems.
 
-| Lesson | Story and skill | Prerequisite | Counted toys |
-| --- | --- | --- | --- |
-| 3 | Cave train: taking away within five | Lessons 1–2: counting and combining within five | 5 |
-| 4 | Bridge builders: more, fewer, and equal within five | Count sets to five | 5 |
-| 5 | Parcel detectives: missing addends within five | Addition within five; comparison helps | 5 |
-| 6 | Firefly gates: ordered counting through ten | Count to five independently | 10 |
-| 7 | Supply launch: combining quantities with totals six through ten | Count to ten; addition within five | 10 |
-| 8 | Homeward trail: taking away within ten | Count to ten; subtraction within five | 10 |
-| 9 | Ten-seat ferry: complements to ten | Count to ten; missing addends within five | 10 |
-| 10 | Fair-share café: equal sharing between two | Count to ten; understanding equal amounts | 10 |
+## Curriculum goals
 
-The progression moves from taking away and comparing small sets to missing
-quantities, extends counting to ten, then applies combining/taking away to larger
-sets. Completing ten connects addition with missing quantities. Equal sharing
-introduces a new operation through one-for-each dealing rather than symbols.
+By the end of this first course, the child should be able to:
 
-## Acceptance and implementation
+- **Count quantities to ten:** start at one, say numbers in order, give each toy
+  one number, and use the final number to answer “how many?” Understand that zero
+  means no toys, rather than naming the first toy zero.
+- **Add and subtract within ten:** join two small sets or take some objects away,
+  then find the resulting quantity using toys, counting, or fingers.
+- **Compare quantities within five:** identify more, fewer, and equal amounts,
+  including matching two groups one to one.
+- **Find what is missing:** work out how many more objects are needed to reach a
+  target within five, then use the same idea to complete ten.
+- **Share fairly between two:** deal even quantities up to ten alternately and
+  identify how many each guest receives.
+- **Solve through play:** connect a story to a physical action, try again after
+  a mistake, ask for help, and recognize when a rest is needed.
 
-Each lesson has exactly six defined missions, listed in its wiki page. Only
-independent numerical/sequence answers complete missions. Wrong answers branch
-to toy preparation and counting, explanation, and a fresh challenge. Guided
-answers are recorded but do not earn mastery. All missions must be completed;
-finishing a time/task allowance never implies success.
+These are concrete quantity skills. Fast recall, written arithmetic, formal
+division notation, and mastery of every possible number fact are not course
+requirements.
 
-Lessons 3–5 need five recognizable toys; 6–10 need ten counted toys. The fair-share
-café's guest characters stay outside the counting area. Setup totals and guided
-counts are observable. Matching identities, pointing once per toy, pretend rewards,
-and fair distribution require child/adult participation and are not inferred from
-camera totals. No engine changes, network calls, image assets, or video features
-are required. English and Russian are implemented.
+## Lessons
 
-The eight strategies use `curriculum::Adventure` for event handling, with separate
-mission content and physical stage sequences. `NEXT_LESSONS` exposes the catalogue;
-`unmath::register` and link-time inventory include all ten lessons. Checkpoints are
-versioned and isolated per lesson. Existing strategy IDs and lessons 1–2 remain.
+Follow this single sequence; return to an earlier lesson whenever useful.
+Each link includes its questions, acceptance criteria, and directed cyclic graph.
 
-## Validation
+| Lesson | Adventure | Learning goal |
+| --- | --- | --- |
+| 1 | [Five passengers](https://github.com/sealsbroken/unmath/wiki/Lesson-1-Count-to-five) | Count five real toys one by one; connect the count to the total. |
+| 2 | [Picnic baskets](https://github.com/sealsbroken/unmath/wiki/Lesson-2-Add-up-to-five) | Combine two toy groups with a total up to five; count every toy in the combined basket. |
+| 3 | [Cave train](https://github.com/sealsbroken/unmath/wiki/Lesson-3-Cave-train) | Take away within five; find what remains, including none left and none taken away. |
+| 4 | [Bridge builders](https://github.com/sealsbroken/unmath/wiki/Lesson-4-Bridge-builders) | Compare groups up to five: more, fewer, or equal. |
+| 5 | [Parcel detectives](https://github.com/sealsbroken/unmath/wiki/Lesson-5-Parcel-detectives) | Find how many more objects complete a target up to five. |
+| 6 | [Firefly gates](https://github.com/sealsbroken/unmath/wiki/Lesson-6-Firefly-gates) | Extend ordered counting through ten, including two independent full counts to ten. |
+| 7 | [Supply launch](https://github.com/sealsbroken/unmath/wiki/Lesson-7-Supply-launch) | Combine cargo loads with totals from six through ten. |
+| 8 | [Homeward trail](https://github.com/sealsbroken/unmath/wiki/Lesson-8-Homeward-trail) | Take away within ten; find the remainder, including zero. |
+| 9 | [Ten-seat ferry](https://github.com/sealsbroken/unmath/wiki/Lesson-9-Ten-seat-ferry) | Find how many more passengers complete a group of ten. |
+| 10 | [Fair-share café](https://github.com/sealsbroken/unmath/wiki/Lesson-10-Fair-share-cafe) | Share even quantities from two to ten fairly between two guests. |
 
-Tests cover every lesson's registration, exact planned answers, full completion,
-help cycles, deferred independent retries, sequence-only counting, table changes,
-spoken comparison choices, task/material limits, Russian controls, and resume
-isolation. README and wiki graphs show explicit cycles. Host camera, speech, and
-child usability testing remain product-level checks; software tests cannot
-establish that a child enjoys or has retained a lesson.
+## What course completion means
 
-## Lesson pages
+The child meets the independent checks described in each lesson. A full spoken
+count is required for counting tasks; a final-number-only answer cannot replace
+it. Help and modeled counts support learning but do not complete independent
+missions. Reaching a task limit or stopping for a rest never counts as success.
 
-- [Lesson 3: Cave train](https://github.com/sealsbroken/unmath/wiki/Lesson-3-Cave-train)
-- [Lesson 4: Bridge builders](https://github.com/sealsbroken/unmath/wiki/Lesson-4-Bridge-builders)
-- [Lesson 5: Parcel detectives](https://github.com/sealsbroken/unmath/wiki/Lesson-5-Parcel-detectives)
-- [Lesson 6: Firefly gates](https://github.com/sealsbroken/unmath/wiki/Lesson-6-Firefly-gates)
-- [Lesson 7: Supply launch](https://github.com/sealsbroken/unmath/wiki/Lesson-7-Supply-launch)
-- [Lesson 8: Homeward trail](https://github.com/sealsbroken/unmath/wiki/Lesson-8-Homeward-trail)
-- [Lesson 9: Ten-seat ferry](https://github.com/sealsbroken/unmath/wiki/Lesson-9-Ten-seat-ferry)
-- [Lesson 10: Fair-share café](https://github.com/sealsbroken/unmath/wiki/Lesson-10-Fair-share-cafe)
+An adult observes whether each toy receives one number and whether sharing is
+fair. The camera and recognizer check totals and spoken answers; they cannot
+prove unique touches or equal distribution. The app currently reports completion
+per lesson, not a separate course-wide certificate. Passing the defined challenges
+shows current performance, rather than proof of long-term retention or every
+arithmetic fact.
+
+## How to use the course
+
+Lessons 1–5 use **five recognizable toys**; lessons 6–10 use **ten**. Story props
+are optional. Keep fair-share guests outside the camera's counting area.
+English and Russian prompts are included. The child can ask for help, restart a
+count, or rest; progress can be saved between sessions.
+
+Every lesson graph is **directed and cyclic**: practice returns to questions,
+independent success advances the story, and completion/rest provide exits.
+Pretend rewards are spoken invitations, not new engine animations.
+
+[Course wiki](https://github.com/sealsbroken/unmath/wiki)
+· [Edge-case audit](EDGE_CASES.md)
+
+## Prerequisites and progression
+
+Lesson 1 starts the course without assuming prior arithmetic. Lesson 2 builds on
+counting five. Lessons 3–5 explore taking away, comparison, and missing quantities
+within that familiar range. Lesson 6 extends counting to ten before lessons 7–9
+apply combining, taking away, and completing to larger quantities. Lesson 10
+uses counting and equality to introduce fair sharing.
+
+This is a suggested teaching sequence, not an automatic promotion rule or an
+age/grade assignment. A child may revisit a prerequisite and resume later.
+
+## Implementation and checks
+
+`unmath::register` includes all ten strategies. Lessons 1–2 have their own
+reducers; lessons 3–10 use `curriculum::Adventure` with separate mission content
+and physical help stages. Checkpoints are versioned and isolated per lesson.
+
+Lesson 1 requires independent one-by-one counts of five, with a total question
+and a fresh departure count. Lesson 2 has seven independently counted picnic
+baskets. Lessons 3–10 each have six independent challenges. Their individual
+pages define the exact checks; these are representative activities, not exhaustive
+fact drills.
+
+Regression tests cover grading, retries, graph reachability, zero-start counts,
+interrupted responses, spoken controls, saved state, and speech-engine boundaries.
+See the edge-case audit for evidence and known limits. Product camera/microphone
+checks and child usability observations remain separate from software tests.
