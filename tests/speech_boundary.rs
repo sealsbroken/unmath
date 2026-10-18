@@ -21,7 +21,7 @@ fn spoken_zero_prefix_reaches_the_lesson_in_english_and_russian() {
             ..Default::default()
         };
         let speech = Arc::new(ScriptedSpeechInput::saying(
-            vec!["forest".into(), zero_count.into()],
+            vec![zero_count.into()],
             Duration::from_millis(20),
         ));
         let voice = Arc::new(SilentSpeechOutput::new(false));
@@ -74,12 +74,7 @@ fn an_explicit_restart_discards_the_zero_prefix_in_the_real_listener() {
         ..Default::default()
     };
     let speech = Arc::new(ScriptedSpeechInput::saying(
-        vec![
-            "forest".into(),
-            "zero".into(),
-            "start again".into(),
-            "one".into(),
-        ],
+        vec!["zero".into(), "start again".into(), "one".into()],
         Duration::from_millis(30),
     ));
     let engine = Engine::new(

@@ -1,116 +1,69 @@
-# Lesson 6: Firefly gates
+# Lesson 6: Count toys to ten
 
-**Skill:** Ordered counting through ten. **Prerequisites:** Count to five independently.
-Prepare **10 recognizable toys**. Story props are optional; real food is not needed.
+Count toys in order through ten, with a second independent count to ten.
 
-Fireflies hide pretend gates. Toys are glowing keys; your count opens each gate.
+The lesson starts directly with a toy task. There is no destination menu and
+no pretend role assigned to any toy. English and Russian prompts describe real
+toys and groups of toys. Instructions never ask for a grown-up.
 
-Example question: “The gate needs eight glowing keys! Count from one to eight to open it.”
+Correct answers may be repeated: `1, 2, 1, 2` for two toys is one successful
+response, not two tasks. Each cycle must be complete. Zero-starts, skipped
+numbers, duplicates within a count, and incomplete restarts need correction.
+After an incorrect spoken answer, the next teaching question begins with
+“А ты уверен?” / “Are you sure?” once. Skips and silence do not trigger that prefix.
+
+## Tasks and acceptance
+
+1. Count 1 through 6.
+2. Count 1 through 7.
+3. Count 1 through 8.
+4. Count 1 through 9.
+5. Count 1 through 10.
+6. A separate independent count 1 through 10.
 
 ## Acyclic teaching and correction paths
 
-A child may repeat the whole correct answer. For two toys, `1, 2, 1, 2`
-(or “один, два, один, два”) is one successful response. Each repetition must be
-a complete `1..n` count, in order, ending at the actual toy total. Repetitions
-never earn extra task completions or replace a later independent question.
-Skipped numbers, incomplete restarts, and repeating one number inside a count
-remain correction cases. Long valid repetitions are checked in full, then
-compacted for bounded saved diagnostics; a late error is never discarded.
-
-After an incorrect spoken answer, the next teaching question begins with
-**“А ты уверен?”** in Russian (**“Are you sure?”** in English). The prefix is
-spoken once, after any setup wait; skips and silence do not trigger it.
-
-A wrong answer opens the teaching branch below automatically. Each box is a
-child action or a smaller question; it is not a replay of the original stem.
-The child keeps completed missions. A failed guided response stays at that
-physical step. Once the groups are understood, later errors revisit only the
-remaining concept. English and Russian use the same transitions.
-
-The graph unfolds a correction episode into distinct forward nodes. `Continue`
-is a boundary to the next forward correction episode at the indicated step,
-not a jump to the first question. Further scored steps are bounded by the session
-task budget; break, skip during setup, or repeated misses can pause. Replaying
-a prompt and waiting for stable toys do not advance the teaching graph.
-Guided work does not earn mastery: a fresh follow-up is required.
+A mistake opens concrete teaching subquestions, not a restart. Failed guided
+counts retry the current group. Later errors revisit only the remaining concept.
+The graph unfolds one correction episode into distinct forward nodes. `Continue`
+marks the next episode at the current learning step; prompt replays and physical
+waiting do not advance it. The session task budget bounds scored steps.
 
 ```mermaid
 flowchart TD
-    Choose["Count the firefly keys in order"] -->|"Independent success"| Done["Keep progress; continue to next question or finish"]
-    Choose -->|"Starts at zero"| E0["First key gets one"]
+    Start["Count toys in order through ten, with a second independent count to ten."] -->|"Independent success"| Done["Keep progress; next question or finish"]
+    Start -->|"Zero, skips, or duplicates within a count"| E0["Start at one; give each toy one number"]
     E0 --> S0
-    Choose -->|"Skips or duplicates a number within one count"| E1["Give each key exactly one number"]
+    Start -->|"Final total only or overcounts"| E1["Count each toy once and stop at the last"]
     E1 --> S0
-    Choose -->|"Only final number or past the last key"| E2["Count every key once and stop at the last"]
-    E2 --> S0
-    S0["Prepare the requested real keys and count each one"] -->|"Guided success; no mastery credit"| Follow
-    S0 -->|"Mistake at this step"| H0["Model the current settled count; one number per toy"]
-    H0 --> R0["New guided attempt at this SAME step"]
+    S0["Prepare and count this toy group one toy at a time"] -->|"Guided success; no mastery credit"| Follow
+    S0 -->|"Mistake here"| H0["Model this settled toy group; say one number per toy"]
+    H0 --> R0["Fresh guided attempt at this same step"]
     R0 -->|"Guided success"| Follow
-    R0 -->|"Needs another teaching step"| Continue["Next forward correction episode; keep learned steps"]
-    Follow["Fresh full count of the prepared keys, starting at one"] -->|"Independent success"| Done
-    Follow -->|"Still needs help"| Focus["Practice only this gate group, not the earlier gates"]
-    Focus --> Continue
-    Choose -->|"Break or budget reached"| Rest["Rest; save earned progress"]
-    Continue -->|"Child requests rest, task limit, or three consecutive misses"| Rest
+    R0 -->|"More teaching needed"| Continue["Next correction episode; retain learned steps"]
+    Follow["Fresh full count of this toy group without a model"] -->|"Independent success"| Done
+    Follow -->|"Still needs help"| Continue
+    Start -->|"Break or budget reached"| Rest["Rest; save progress"]
+    Continue -->|"Break, task limit, or three consecutive misses"| Rest
 ```
 
-## Six missions and acceptance
+## Controls, progress, and limits
 
-1. Full sequence 1–6
-2. Full sequence 1–7
-3. Full sequence 1–8
-4. Full sequence 1–9
-5. Full sequence 1–10
-6. A separate full sequence 1–10
+Say `help` / `помоги` for teaching steps; `start again` / `сначала` to repeat the
+current prompt; `stop`, `break`, `I'm tired` / `стоп`, `перерыв`, `я устал` to pause.
+Help and corrections keep completed work. Guided answers never complete an
+independent check. Three consecutive unsuccessful responses/timeouts or the
+task budget pause. Skip during toy setup pauses without inventing a failed answer.
 
-Say every ordered sequence exactly, including two separate independent counts from one to ten. A final number alone never passes.
+Toy setup waits for the required stable detected total. An overshoot during
+addition undoes ALL newly added toys, restores the original group, and repeats
+the same addition; the child is never asked to subtract the excess. Setup has
+no enforced timeout. The camera checks totals, not toy identities or individual
+touches; it cannot prove which toys were moved or that two groups were paired.
 
-## Toy-based help
+Save `SessionSummary.remember` between sessions. Completed arithmetic checks
+are preserved; legacy destination values are ignored and cleared. English and
+Russian use the same transitions. Existing strategy IDs and page URLs remain
+compatible with integrations.
 
-1. Prepare n glowing toy keys.
-2. Point once per key and count aloud.
-3. If unsure, model the count and return to gate missions.
-
-Each camera-visible stage waits for its required stable total and a complete
-spoken count (or zero for an empty group). A disturbed table cancels the pending
-answer without scoring an error. A wrong guided count is modeled, then that same physical stage is tried again. Setup itself is unscored. The camera verifies totals, not toy identities,
-the meaning of the scene, or the child's pointing.
-
-Independent gates use counting mode: only the full sequence `1..n` passes.
-A missing, repeated, or extra number, or saying only the final number, fails
-that attempt. The last two gates each require a separate complete count to ten.
-Guided counts never complete gates.
-
-## Controls, progress, and integration
-
-Strategy ID: `unmath-count-to-ten`. Use `Lesson::FireflyGates`
-with `Adventure::new`, or use the ID through `unmath::register` and the registry.
-English and Russian content is included.
-
-Choose forest or moon by saying its name. Say `help` / `помоги` during a question
-for physical practice; this does not score an error. Say `stop`, `I'm tired`,
-`стоп`, or `я устал` to rest, including during setup. Repeat restarts the current
-prompt. Skipping a question records a skip and starts help; skipping setup pauses.
-
-Three consecutive unsuccessful responses/timeouts, Stop, or `max_tasks` pauses.
-Silence has no task record. Physical setup has no enforced timeout. A successful
-uninterrupted adventure takes six tasks, within the default ten-task session.
-Guided counts are additional tasks; pause and resume whenever needed.
-
-Persist `SessionSummary.remember` using `apply_remembered` and pass it as the
-next `SessionConfig.extra`. The isolated key prefix is
-`unmath.lesson6.adventure.v1`; saved values keep completed missions, the next
-mission, and forest/moon choice. Guided-stage progress restarts at an independent
-question after resuming. Completion clears this lesson's keys.
-`final_level` counts independently completed missions (six at completion), while
-`correct` also includes guided counts. Insufficient `total_objects` pauses before
-any maths task, explaining the required materials.
-
-Success means all six specified challenges were solved independently. It is a
-lesson completion check, not a claim of comprehensive fluency or delayed retention.
-The story, toys, and reward actions are spoken invitations; no new engine animation
-or unimplemented perception feature is assumed.
-
-See the [edge-case audit](Edge-case-audit) for zero-starts, counting mutations,
-interruptions, saved-state validation, and engine-boundary regressions.
+Strategy ID: `unmath-count-to-ten`. See the [edge-case audit](Edge-case-audit).

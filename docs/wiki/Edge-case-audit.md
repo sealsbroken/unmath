@@ -38,6 +38,10 @@ This is the counting-error policy, not a replacement for each lesson's story gra
 An empty-set question uses a spoken total of zero rather than this positive-toy
 sequence check.
 
+All lessons start directly at the current toy task. Destination selection has
+been removed; old destination words do not create a choice or a score. Toys
+remain toys in all prompts, and no tutor prompt asks for adult assistance.
+
 ## Counterexamples and expected behavior
 
 A child may repeat the whole correct answer. For two toys, `1, 2, 1, 2`
@@ -64,12 +68,11 @@ compacted for bounded saved diagnostics; a late error is never discarded.
 | `start again`, `restart`, `сначала` | Clear the pending count and reissue the current prompt; no error score |
 | Repeat/table change between `Numbers` and its trailing `Heard` | Discard the known old trailing event; do not grade it as a new attempt |
 | Wrong, missing, or unstable toys during a toy task | Wait or re-prepare; do not score the canceled count |
-| Table changes during an independent oral firefly count | Do not cancel: this question has no table precondition |
+| Table changes during an independent oral count to ten | Do not cancel: this question has no table precondition |
 | Explicit negative number or out-of-parser-range numeric token | Engine marks it invalid instead of dropping it into a passing positive answer |
 | `2 - 2`, empty table, spoken zero | Correct; zero is not globally forbidden |
 | `none`/`нет` in counting mode | Ordinary speech, not an inserted zero |
-| Punctuation, capitalization, curly apostrophe, repeated spaces in commands | Normalize before matching supported help/restart/break/choice phrases |
-| Three invalid destination choices | Rest without recording maths mistakes |
+| Punctuation, capitalization, curly apostrophe, repeated spaces in commands | Normalize before matching supported help/restart/break/comparison phrases |
 | Repeated silence | Rest after three timeouts; silence does not create a failed task record |
 | Too many toys added | Undo the entire added group, verify original total, then repeat the same addition; never subtract the excess |
 | `help` | Begin toy practice without scoring an error; recheck the same mission afterward |
@@ -120,7 +123,7 @@ This is a tested edge-case catalogue, not proof of every possible child behavior
 The strategy receives recognized numbers and table totals, not raw speech or
 per-toy touch identities. It cannot prove that every physical touch is unique,
 correct a recognizer that invents an otherwise valid full sequence, or verify
-fair distribution from a total alone. An adult can observe these actions.
+fair distribution from a total alone. These actions need separate usability observation.
 
 Events have no question ID. We can discard a known canceled `Numbers` tail, but
 cannot unambiguously identify every arbitrary replay of a standalone correct

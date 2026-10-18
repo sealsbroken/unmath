@@ -29,7 +29,7 @@ fn prepare(s: &mut dyn Strategy) {
 }
 fn start(s: &mut dyn Strategy) {
     s.handle(Event::Start);
-    s.handle(Event::Said("forest".into()));
+
     prepare(s);
 }
 fn counting(id: &str, language: Language) -> Box<dyn Strategy> {
@@ -339,17 +339,20 @@ fn invalid_timeouts_do_not_emit_panicking_duration_inputs() {
     }
 }
 #[test]
-fn three_invalid_destinations_pause_without_counting_as_maths_mistakes() {
+fn obsolete_destination_words_do_not_create_a_choice_or_score() {
     for id in ids() {
         let mut s = make(&id, config(Language::English));
         s.handle(Event::Start);
-        for _ in 0..3 {
-            s.handle(Event::Heard(99));
+        let before = s.snapshot();
+        for word in ["forest", "moon", "лес"] {
+            assert!(s.handle(Event::Said(word.into())).is_empty());
         }
-        assert_eq!(s.snapshot().phase, PhaseKind::Paused, "{id}");
-        assert_eq!(s.snapshot().tasks_completed, 0);
+        assert_ne!(s.snapshot().phase, PhaseKind::Meeting, "{id}");
+        assert_eq!(s.snapshot().tasks_completed, before.tasks_completed);
+        assert_eq!(s.snapshot().task, before.task);
     }
 }
+
 #[test]
 fn paused_and_finished_lessons_ignore_late_answers_and_repeated_stop() {
     for id in ids() {

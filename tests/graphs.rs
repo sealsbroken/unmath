@@ -71,13 +71,13 @@ fn every_question_graph_is_acyclic_with_reachable_nodes_and_success_rest_exits()
                     edges.entry(from).or_default().push(to);
                 }
             }
-            assert!(nodes.contains("Choose"));
+            assert!(nodes.contains("Start"));
             assert!(
-                !cycle("Choose", &edges, &mut BTreeSet::new()),
+                !cycle("Start", &edges, &mut BTreeSet::new()),
                 "{} contains a directed cycle",
                 path.display()
             );
-            let visited = reachable("Choose", &edges);
+            let visited = reachable("Start", &edges);
             assert_eq!(visited, nodes, "unreachable nodes in {}", path.display());
             let success = ["Picnic", "Feast", "Done"]
                 .into_iter()

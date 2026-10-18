@@ -29,31 +29,8 @@ fn counted(n: u32, forms: [&str; 3], one: &str, two: &str) -> String {
 pub(crate) fn toys(n: u32) -> String {
     counted(n, ["игрушку", "игрушки", "игрушек"], "одну", "две")
 }
-pub(crate) fn treats(n: u32) -> String {
-    counted(n, ["угощение", "угощения", "угощений"], "одно", "два")
-}
-pub(crate) fn keys(n: u32) -> String {
-    counted(n, ["ключ", "ключа", "ключей"], "один", "два")
-}
-pub(crate) fn pods(n: u32) -> String {
-    counted(n, ["капсулу", "капсулы", "капсул"], "одну", "две")
-}
-pub(crate) fn parcels(n: u32) -> String {
-    counted(n, ["посылку", "посылки", "посылок"], "одну", "две")
-}
-pub(crate) fn blocks(n: u32) -> String {
-    counted(n, ["блок", "блока", "блоков"], "один", "два")
-}
-pub(crate) fn travelers(n: u32) -> String {
-    counted(
-        n,
-        ["путешественник", "путешественника", "путешественников"],
-        "один",
-        "два",
-    )
-}
-pub(crate) fn passengers(n: u32) -> String {
-    counted(n, ["пассажир", "пассажира", "пассажиров"], "один", "два")
+pub(crate) fn toy_group(n: u32) -> String {
+    counted(n, ["игрушка", "игрушки", "игрушек"], "одна", "две")
 }
 
 #[cfg(test)]
@@ -73,15 +50,8 @@ mod tests {
         ] {
             assert_eq!(toys(n), expected);
         }
-        assert_eq!(treats(1), "одно угощение");
-        assert_eq!(treats(2), "два угощения");
-        assert_eq!(treats(5), "пять угощений");
-        assert_eq!(pods(1), "одну капсулу");
-        assert_eq!(pods(2), "две капсулы");
-        assert_eq!(parcels(1), "одну посылку");
-        assert_eq!(blocks(1), "один блок");
-        assert_eq!(keys(6), "шесть ключей");
-        assert_eq!(travelers(1), "один путешественник");
-        assert_eq!(passengers(0), "ноль пассажиров");
+        assert_eq!(toy_group(1), "одна игрушка");
+        assert_eq!(toy_group(2), "две игрушки");
+        assert_eq!(toy_group(5), "пять игрушек");
     }
 }

@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 use super::*;
 use crate::answers::{count_feedback, safe_config, saved_mask, valid_count, CountBuffer};
-use crate::play::{invitation, normalized, wants_break, wants_help, wants_restart, Place};
+use crate::play::{normalized, wants_break, wants_help, wants_restart};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Node {
     Idle,
-    Choose,
     Check,
     Prepare,
     Guide,
@@ -31,7 +30,6 @@ pub struct Adventure {
     paired: bool,
     retry_preface: bool,
     mastered: u32,
-    place: Place,
     table: Option<u32>,
     sequence: CountBuffer,
     misses: u32,
@@ -49,11 +47,6 @@ impl Adventure {
             .and_then(|s| s.parse::<usize>().ok())
             .filter(|i| *i < missions.len())
             .unwrap_or(0);
-        let place = config
-            .extra
-            .get(&format!("{key}.place"))
-            .and_then(|s| Place::from_words(s))
-            .unwrap_or_default();
         Self {
             lesson,
             config,
@@ -66,7 +59,6 @@ impl Adventure {
             paired: false,
             retry_preface: false,
             mastered,
-            place,
             table: None,
             sequence: CountBuffer::default(),
             misses: 0,
@@ -79,7 +71,6 @@ impl Adventure {
     fn phase(&self) -> PhaseKind {
         match self.node {
             Node::Idle => PhaseKind::Idle,
-            Node::Choose => PhaseKind::Meeting,
             Node::Check | Node::Guide | Node::Pair | Node::Relation | Node::Recheck => {
                 PhaseKind::Asking
             }
@@ -103,7 +94,6 @@ impl Adventure {
     }
     fn expected(&self) -> Option<u32> {
         match self.node {
-            Node::Choose => None,
             Node::Check | Node::Recheck => Some(self.mission().answer.expected()),
             Node::Relation => Some(
                 if self.mission().stages[0].count == self.mission().stages[1].count {
@@ -135,13 +125,8 @@ impl Adventure {
         }
         self.node = Node::Check;
         self.sequence.reset();
-        let destination = match self.place {
-            Place::Forest => Words::new("Our forest friends need you!", "Лесные друзья ждут тебя!"),
-            Place::Moon => Words::new("Our moon friends need you!", "Лунные друзья ждут тебя!"),
-        };
         vec![
             Effect::StopListening,
-            self.say(&destination),
             self.say(&self.mission().question),
             Effect::listen(
                 if matches!(self.mission().answer, Answer::Sequence(_)) {
@@ -177,8 +162,8 @@ impl Adventure {
         self.node = Node::Pair;
         self.sequence.reset();
         vec![Effect::StopListening, self.ask_retry(&Words::new(
-            "Ask a grown-up to keep both rows beside the table. Pair one block from the first team with one from the second. Which team has blocks WITHOUT a partner? Say first, second, or same if none are left.",
-            "Попроси взрослого оставить оба ряда рядом со столом. Составь пары: один блок первой команды и один второй. У какой команды остались блоки БЕЗ пары? Скажи: первая, вторая или поровну, если таких блоков нет.")),
+            "Keep both toy groups beside the table. Pair one toy from the first group with one from the second. Which group has toys WITHOUT a partner? Say first, second, or same if none are left.",
+            "Оставь обе группы игрушек рядом со столом. Составь пары: одна игрушка из первой группы и одна из второй. В какой группе остались игрушки БЕЗ пары? Скажи: первая, вторая или поровну, если таких игрушек нет.")),
             Effect::listen(ListenMode::Voice, self.config.answer_timeout)]
     }
     fn relation_question(&mut self) -> Vec<Effect> {
@@ -186,11 +171,11 @@ impl Adventure {
         self.sequence.reset();
         let equal = self.mission().stages[0].count == self.mission().stages[1].count;
         let words = if equal {
-            Words::new("Every block has a partner. Are the amounts the SAME, or does one team have more? Say same or more.",
-                "У каждого блока есть пара. У команд ПОРОВНУ или у одной больше? Скажи: поровну или больше.")
+            Words::new("Every toy has a partner. Are the amounts the SAME, or does one group have more? Say same or more.",
+                "У каждой игрушки есть пара. В группах ПОРОВНУ или в одной больше? Скажи: поровну или больше.")
         } else {
-            Words::new("One row has blocks left without partners. Does THAT row have MORE or FEWER blocks? Say more or fewer.",
-                "В одном ряду остались блоки без пары. В ЭТОМ ряду блоков БОЛЬШЕ или МЕНЬШЕ? Скажи: больше или меньше.")
+            Words::new("One row has toys left without partners. Does THAT row have MORE or FEWER toys? Say more or fewer.",
+                "В одном ряду остались игрушки без пары. В ЭТОМ ряду игрушек БОЛЬШЕ или МЕНЬШЕ? Скажи: больше или меньше.")
         };
         vec![
             Effect::StopListening,
@@ -342,8 +327,8 @@ impl Adventure {
             }
             if relation {
                 effects.push(self.say(&Words::new(
-                    "More means there are blocks left without partners. Fewer means the other row runs out first. If every block has a partner, the amounts are the same.",
-                    "Больше — значит остались блоки без пары. Меньше — значит блоки закончились раньше. Если у всех блоков есть пара, то поровну.")));
+                    "More means there are toys left without partners. Fewer means the other row runs out first. If every toy has a partner, the amounts are the same.",
+                    "Больше — значит остались игрушки без пары. Меньше — значит игрушки закончились раньше. Если у каждой игрушки есть пара, то поровну.")));
                 effects.extend(self.relation_question());
             } else if pairing {
                 effects.push(self.say(&self.lesson.correction()));
@@ -417,7 +402,7 @@ impl Adventure {
         for (k, v) in [
             (key.clone(), self.mastered.to_string()),
             (format!("{key}.index"), self.index.to_string()),
-            (format!("{key}.place"), self.place.saved().into()),
+            (format!("{key}.place"), String::new()),
         ] {
             summary
                 .remember
@@ -427,36 +412,24 @@ impl Adventure {
         if success {
             effects.push(Effect::Celebrate);
         }
-        effects.push(self.say(&if success {Words::new("Adventure complete! Give your toy friends a cheer. You solved every mission!", "Приключение завершено! Порадуйся вместе с игрушечными друзьями. Все задания выполнены!")} else {Words::new("Let's rest. Our friends will keep this adventure ready for next time.", "Давай отдохнём. Продолжим приключение в следующий раз.")}));
+        effects.push(self.say(&if success {
+            Words::new(
+                "All questions complete! Well done!",
+                "Все задания выполнены! Отлично!",
+            )
+        } else {
+            Words::new(
+                "Let's rest. We can continue next time.",
+                "Давай отдохнём. Продолжим в следующий раз.",
+            )
+        }));
         effects.push(Effect::SessionEnded(summary));
         effects
-    }
-    fn choose(&mut self, place: Option<Place>) -> Vec<Effect> {
-        if let Some(place) = place {
-            self.place = place;
-            self.misses = 0;
-            let mut effects = vec![self.say(&self.lesson.welcome())];
-            effects.extend(self.check());
-            effects
-        } else {
-            self.misses += 1;
-            if self.misses >= 3 {
-                self.finish(false)
-            } else {
-                invitation(&self.config)
-            }
-        }
     }
     fn active(&self) -> bool {
         matches!(
             self.node,
-            Node::Choose
-                | Node::Check
-                | Node::Prepare
-                | Node::Guide
-                | Node::Pair
-                | Node::Relation
-                | Node::Recheck
+            Node::Check | Node::Prepare | Node::Guide | Node::Pair | Node::Relation | Node::Recheck
         )
     }
 }
@@ -474,29 +447,23 @@ impl Strategy for Adventure {
                     return self.finish(false);
                 }
                 if self.config.total_objects < self.lesson.required_toys() {
-                    let mut effects=vec![self.say(&Words::new(format!("Ask a grown-up to find {} recognizable toys for this adventure. We can play it when they're ready.",self.lesson.required_toys()),format!("Попроси взрослого подготовить {} для игры. Продолжим, когда всё будет готово.",crate::russian::toys(self.lesson.required_toys()))))];
+                    let mut effects = vec![self.say(&Words::new(
+                        format!(
+                            "We need {} toys for this lesson. We can continue when they are ready.",
+                            self.lesson.required_toys()
+                        ),
+                        format!(
+                            "Подготовь {} для урока. Продолжим, когда всё будет готово.",
+                            crate::russian::toys(self.lesson.required_toys())
+                        ),
+                    ))];
                     effects.extend(self.finish(false));
                     return effects;
                 }
-                if self
-                    .config
-                    .extra
-                    .get(&format!("{}.place", self.lesson.key()))
-                    .and_then(|s| Place::from_words(s))
-                    .is_some()
-                {
-                    let mut effects = vec![self.say(&self.lesson.welcome())];
-                    effects.extend(self.check());
-                    effects
-                } else {
-                    self.node = Node::Choose;
-                    invitation(&self.config)
-                }
+                self.check()
             }
             Event::Stop if self.active() => self.finish(false),
             Event::Said(s) if self.active() && wants_break(&s) => self.finish(false),
-            Event::Heard(n) if self.node == Node::Choose => self.choose(Place::from_number(n)),
-            Event::Said(s) if self.node == Node::Choose => self.choose(Place::from_words(&s)),
             Event::Said(s)
                 if wants_help(&s)
                     && matches!(
@@ -603,7 +570,6 @@ impl Strategy for Adventure {
                     return self.finish(false);
                 }
                 match self.node {
-                    Node::Choose => invitation(&self.config),
                     Node::Guide => self.guide_question(),
                     Node::Pair => self.pair_question(),
                     Node::Relation => self.relation_question(),
@@ -612,7 +578,6 @@ impl Strategy for Adventure {
                 }
             }
             Event::RepeatRequested if self.active() => match self.node {
-                Node::Choose => invitation(&self.config),
                 Node::Prepare => self.prepare(),
                 Node::Guide => self.guide_question(),
                 Node::Pair => self.pair_question(),
@@ -628,7 +593,6 @@ impl Strategy for Adventure {
             {
                 self.answer(None, true)
             }
-            Event::SkipRequested if self.node == Node::Choose => self.choose(Some(self.place)),
             Event::SkipRequested if self.node == Node::Prepare => self.finish(false),
             _ => vec![],
         }

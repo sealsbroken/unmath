@@ -7,7 +7,7 @@ pub mod curriculum;
 mod play;
 mod russian;
 pub use addition::{AddToFive, AddToFiveFactory, ADDITION_ID};
-use play::{invitation, wants_break, wants_help, wants_restart, Place};
+use play::{wants_break, wants_help, wants_restart};
 
 use std::sync::Arc;
 use un_core::language::Language;
@@ -32,7 +32,6 @@ enum Question {
 /// Only full Numbers sequences are accepted for counting; taps never prove mastery.
 pub struct CountToThree {
     config: SessionConfig,
-    place: Place,
     question: Question,
     phase: PhaseKind,
     table: Option<u32>,
@@ -51,11 +50,6 @@ impl CountToThree {
     pub fn new(config: SessionConfig) -> Self {
         let config = safe_config(config);
         let first_success = config.extra.get(PROGRESS).is_some_and(|v| v == "true");
-        let place = config
-            .extra
-            .get("unmath.lesson1.place")
-            .and_then(|s| Place::from_words(s))
-            .unwrap_or_default();
         let question = if first_success {
             Question::Toys
         } else {
@@ -66,7 +60,6 @@ impl CountToThree {
             }
         };
         Self {
-            place,
             config,
             question,
             phase: PhaseKind::Idle,
@@ -99,49 +92,47 @@ impl CountToThree {
         .into()
     }
     fn prompt(&self) -> String {
-        let vehicle = self.place.vehicle(self.config.language);
-        let ride = match self.place {
-            Place::Forest => "Друг едет в автобусе!",
-            Place::Moon => "Друг летит в ракете!",
-        };
         if self.rechecking && !matches!(self.question, Question::Repair(_) | Question::Practice(_))
         {
             return if self.question == Question::Total {
                 self.text(
-                    "Remember the last number you said. How many toys have tickets?",
-                    "Вспомни последнее число. Сколько игрушек получили билеты?",
+                    "Remember the last number you said. How many toys are there?",
+                    "Вспомни последнее число. Сколько всего игрушек?",
                 )
             } else {
-                self.text("The tickets are ready. Now point to each toy and count them all by yourself.", "Билеты готовы. Теперь покажи на каждую игрушку и посчитай все игрушки без подсказки.")
+                self.text(
+                    "Now point to each toy and count them all by yourself.",
+                    "Теперь покажи на каждую игрушку и посчитай все игрушки без подсказки.",
+                )
             };
         }
         match self.question {
             Question::Repair(_) => self.text(
-                "Let's give each toy one ticket. Point to each toy once and say one number for it. Start at one. Stop after the last toy.",
-                "Дадим каждой игрушке один билет. Показывай на каждую игрушку по очереди и называй одно число. Начни с одного. После последней игрушки остановись."),
+                "Point to each toy once and say one number for it. Start at one. Stop after the last toy.",
+                "Показывай на каждую игрушку по очереди и называй одно число. Начни с одного. После последней игрушки остановись."),
             Question::Warmup(1) => self.text(
-                &format!("A friend rides our {vehicle}! Point to the toy. One! Say one."),
-                &format!("{ride} Покажи на игрушку. Один! Скажи: один."),
+                "Here is one toy. Point to it. One! Say one.",
+                "Вот одна игрушка. Покажи на неё. Один! Скажи: один.",
             ),
             Question::Warmup(_) => self.text(
-                "One more friend! Point to each toy. One, two! Your turn.",
-                "Ещё один друг! Покажи на каждую игрушку. Один, два! Теперь ты.",
+                "One more toy! Point to each toy. One, two! Your turn.",
+                "Ещё одна игрушка! Покажи на каждую игрушку. Один, два! Теперь ты.",
             ),
             Question::First => self.text(
-                "Three friends! Point to each toy. Say one number for each. Start at one.",
-                "Три друга! Показывай на каждую игрушку по очереди и считай. Начни с одного.",
+                "Three toys! Point to each toy. Say one number for each. Start at one.",
+                "Три игрушки! Показывай на каждую игрушку по очереди и считай. Начни с одного.",
             ),
             Question::Final => self.text(
-                "Ready to go? Point to each toy and count again!",
-                "Поехали? Покажи на каждую игрушку и посчитай ещё раз!",
+                "Move the toys around. Point to each toy and count again!",
+                "Покажи на каждую игрушку и посчитай ещё раз!",
             ),
             Question::Total => self.text(
-                "How many passengers are coming to our picnic?",
-                "Сколько пассажиров едет на наш пикник?",
+                "How many toys are there altogether?",
+                "Сколько всего игрушек?",
             ),
             _ => self.text(
-                "Tickets! Point to each toy. Say one number for each toy. Start at one.",
-                "Проверим билеты! Показывай на каждую игрушку по очереди и считай. Начни с одного.",
+                "Point to each toy. Say one number for each toy. Start at one.",
+                "Показывай на каждую игрушку по очереди и считай. Начни с одного.",
             ),
         }
     }
@@ -154,9 +145,10 @@ impl CountToThree {
         };
         self.text(
             &format!(
-                "Put {n} toy passengers here. Keep the other toys aside. A grown-up can help."
+                "Put {} here. Keep the other toys aside.",
+                crate::play::toy_amount(n)
             ),
-            &format!("Поставь сюда {toys}. Остальные пока отложи. Попроси взрослого помочь."),
+            &format!("Поставь сюда {toys}. Остальные пока отложи."),
         )
     }
     fn ask(&mut self) -> Vec<Effect> {
@@ -164,8 +156,11 @@ impl CountToThree {
         if let Some(n) = self.target() {
             if n > self.config.total_objects {
                 let mut effects = vec![Effect::Say(self.text(
-                    &format!("Our next stop needs {n} toy passengers. Ask a grown-up for another toy; we can continue when it is ready."),
-                    "Нам нужна ещё одна игрушка. Попроси взрослого её принести. Потом продолжим."))];
+                    &format!(
+                        "We need {n} toys for the next count. We can continue when they are ready."
+                    ),
+                    "Нам нужна ещё одна игрушка. Продолжим, когда она будет готова.",
+                ))];
                 effects.extend(self.finish(false));
                 return effects;
             }
@@ -241,14 +236,9 @@ impl CountToThree {
                 .into()
             },
         );
-        summary.remember.insert(
-            "unmath.lesson1.place".into(),
-            if mastered {
-                String::new()
-            } else {
-                self.place.saved().into()
-            },
-        );
+        summary
+            .remember
+            .insert("unmath.lesson1.place".into(), String::new());
         summary.remember.insert(
             PROGRESS.into(),
             if mastered {
@@ -263,8 +253,8 @@ impl CountToThree {
         }
         effects.push(Effect::Say(if mastered {
             self.text(
-                "You counted to three by yourself! Everyone has a ticket. Off to our picnic!",
-                "Отлично! Мы досчитали до трёх! У всех есть билеты. Едем на пикник!",
+                "You counted to three by yourself! Well done!",
+                "Отлично! Мы досчитали до трёх!",
             )
         } else {
             self.text(
@@ -315,7 +305,7 @@ impl CountToThree {
                 }
                 let mut effects = vec![
                     Effect::StopListening,
-                    Effect::Say(self.place.cheer(self.config.language).into()),
+                    Effect::Say(self.text("Well done!", "Отлично!")),
                 ];
                 effects.extend(self.ask());
                 return effects;
@@ -332,7 +322,7 @@ impl CountToThree {
         if correct {
             self.misses = 0;
             self.rechecking = false;
-            effects.push(Effect::Say(self.place.cheer(self.config.language).into()));
+            effects.push(Effect::Say(self.text("Well done!", "Отлично!")));
             self.question = match self.question {
                 Question::Warmup(_) => unreachable!("warm-up success advances above"),
                 Question::First => {
@@ -348,8 +338,8 @@ impl CountToThree {
                 Question::Toys => Question::Total,
                 Question::Total => {
                     effects.push(Effect::Say(self.text(
-                        "New seats! Move the toys around. Then count again.",
-                        "Поменяемся местами! Передвинь игрушки. Потом посчитаем ещё раз.",
+                        "Move the toys around. Then count again.",
+                        "Передвинь игрушки. Потом посчитаем ещё раз.",
                     )));
                     Question::Final
                 }
@@ -388,42 +378,18 @@ impl Strategy for CountToThree {
                     return self.finish(false);
                 }
                 if self.config.total_objects < 1 {
-                    let mut effects = vec![Effect::Say(self.text("Ask a grown-up to prepare one toy. We can play when they are ready.", "Попроси взрослого подготовить одну игрушку. Сыграем, когда они будут готовы."))];
+                    let mut effects = vec![Effect::Say(self.text(
+                        "We need one toy to begin. We can count when it is ready.",
+                        "Для начала нужна одна игрушка. Посчитаем, когда она будет готова.",
+                    ))];
                     effects.extend(self.finish(false));
                     return effects;
                 }
-                if self.first_success
-                    || matches!(
-                        self.config.extra.get(WARMUP).map(String::as_str),
-                        Some("2" | "3")
-                    )
-                {
-                    self.ask()
-                } else {
-                    self.phase = PhaseKind::Meeting;
-                    invitation(&self.config)
-                }
-            }
-            Event::Heard(n) if self.phase == PhaseKind::Meeting => {
-                if let Some(place) = Place::from_number(n) {
-                    self.place = place;
-                    self.misses = 0;
-                    self.ask()
-                } else {
-                    self.misses += 1;
-                    if self.misses >= 3 {
-                        self.finish(false)
-                    } else {
-                        invitation(&self.config)
-                    }
-                }
+                self.ask()
             }
             Event::Said(words)
                 if wants_break(&words)
-                    && matches!(
-                        self.phase,
-                        PhaseKind::Meeting | PhaseKind::Asking | PhaseKind::Performing
-                    ) =>
+                    && matches!(self.phase, PhaseKind::Asking | PhaseKind::Performing) =>
             {
                 self.finish(false)
             }
@@ -435,36 +401,7 @@ impl Strategy for CountToThree {
                 self.question = Question::Practice(1);
                 self.ask()
             }
-            Event::Said(words) if self.phase == PhaseKind::Meeting => {
-                if let Some(place) = Place::from_words(&words) {
-                    self.place = place;
-                    self.misses = 0;
-                    self.ask()
-                } else {
-                    self.misses += 1;
-                    if self.misses >= 3 {
-                        self.finish(false)
-                    } else {
-                        invitation(&self.config)
-                    }
-                }
-            }
-            Event::RepeatRequested if self.phase == PhaseKind::Meeting => invitation(&self.config),
-            Event::NothingHeard if self.phase == PhaseKind::Meeting => {
-                self.misses += 1;
-                if self.misses >= 3 {
-                    self.finish(false)
-                } else {
-                    invitation(&self.config)
-                }
-            }
-            Event::SkipRequested if self.phase == PhaseKind::Meeting => self.ask(),
-            Event::Stop
-                if matches!(
-                    self.phase,
-                    PhaseKind::Meeting | PhaseKind::Asking | PhaseKind::Performing
-                ) =>
-            {
+            Event::Stop if matches!(self.phase, PhaseKind::Asking | PhaseKind::Performing) => {
                 self.finish(false)
             }
             Event::Table(t) => {
@@ -536,9 +473,8 @@ impl StrategyFactory for CountToThreeFactory {
     fn info(&self) -> StrategyInfo {
         StrategyInfo {
             id: ID.into(),
-            title: "Lesson 1: three passengers".into(),
-            description: "Captain a bus or rocket, check toy tickets, and count three passengers."
-                .into(),
+            title: "Lesson 1: count three toys".into(),
+            description: "Start with one toy and learn to count three toys one by one.".into(),
             languages: vec![Language::English, Language::Russian],
             license: "LGPL-3.0-or-later".into(),
         }

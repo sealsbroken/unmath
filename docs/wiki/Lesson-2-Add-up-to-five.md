@@ -1,150 +1,86 @@
-# Lesson 2: Picnic baskets
+# Lesson 2: Add toys up to five
 
-Prerequisite: count real toys one by one to five. Lesson 1 now stops at three;
-practice four and five with a grown-up before beginning these missions.
+Join toy groups with totals up to five and count the combined group.
 
-The passengers have arrived, and the child is in charge of the picnic. Choose
-**forest** to feed pretend bears or **moon** to feed pretend aliens. Any toy can
-stand for a snack; no real food or special props are needed.
+The lesson starts directly with a toy task. There is no destination menu and
+no pretend role assigned to any toy. English and Russian prompts describe real
+toys and groups of toys. Instructions never ask for a grown-up.
 
-First, pack one toy snack and add another. Count the combined basket. Then solve
-seven short picnic missions with totals up to five. Each completed mission earns
-a celebration and a pretend action: spread a blanket, pass a basket, pour a drink,
-smell the soup, or offer a favorite toy a snack. These actions are invitations,
-not tasks judged by the camera.
+Correct answers may be repeated: `1, 2, 1, 2` for two toys is one successful
+response, not two tasks. Each cycle must be complete. Zero-starts, skipped
+numbers, duplicates within a count, and incomplete restarts need correction.
+After an incorrect spoken answer, the next teaching question begins with
+“А ты уверен?” / “Are you sure?” once. Skips and silence do not trigger that prefix.
 
-Example: “The bears have two snacks and bring three more. Point to the toy
-snacks one by one and say one number for each, starting at one.”
-If the child asks for help, build that basket with toys, count it, explain how
-joining made the total, and return to the missions. Use the actual toy basket for each count.
+Readiness: count toys to five before beginning. Lesson one stops at three.
+
+## Tasks and acceptance
+
+1. Guided opening: 1 + 1.
+2. Independent counts: 1 + 2, 2 + 2, 2 + 3, 3 + 1, 1 + 4, 3 + 0, then 1 + 1.
 
 ## Acyclic teaching and correction paths
 
-A child may repeat the whole correct answer. For two toys, `1, 2, 1, 2`
-(or “один, два, один, два”) is one successful response. Each repetition must be
-a complete `1..n` count, in order, ending at the actual toy total. Repetitions
-never earn extra task completions or replace a later independent question.
-Skipped numbers, incomplete restarts, and repeating one number inside a count
-remain correction cases. Long valid repetitions are checked in full, then
-compacted for bounded saved diagnostics; a late error is never discarded.
-
-After an incorrect spoken answer, the next teaching question begins with
-**“А ты уверен?”** in Russian (**“Are you sure?”** in English). The prefix is
-spoken once, after any setup wait; skips and silence do not trigger it.
-
-A wrong answer opens the teaching branch below automatically. Each box is a
-child action or a smaller question; it is not a replay of the original stem.
-The child keeps completed missions. A failed guided response stays at that
-physical step. Once the groups are understood, later errors revisit only the
-remaining concept. English and Russian use the same transitions.
-
-The graph unfolds a correction episode into distinct forward nodes. `Continue`
-is a boundary to the next forward correction episode at the indicated step,
-not a jump to the first question. Further scored steps are bounded by the session
-task budget; break, skip during setup, or repeated misses can pause. Replaying
-a prompt and waiting for stable toys do not advance the teaching graph.
-Guided work does not earn mastery: a fresh follow-up is required.
+A mistake opens concrete teaching subquestions, not a restart. Failed guided
+counts retry the current group. Later errors revisit only the remaining concept.
+The graph unfolds one correction episode into distinct forward nodes. `Continue`
+marks the next episode at the current learning step; prompt replays and physical
+waiting do not advance it. The session task budget bounds scored steps.
 
 ```mermaid
 flowchart TD
-    Choose["Combine the current picnic basket and count every toy"] -->|"Independent success"| Done["Keep progress; continue to next question or finish"]
-    Choose -->|"Starts at zero"| E0["First toy gets one"]
+    Start["Join toy groups with totals up to five and count the combined group."] -->|"Independent success"| Done["Keep progress; next question or finish"]
+    Start -->|"Malformed count or total only"| E0["Use one-to-one counting with this same combined toy group"]
     E0 --> S0
-    Choose -->|"Skips, duplicates within a count, or gives only the total"| E1["Give every snack one place on the blanket"]
-    E1 --> S0
-    S0["Count THIS assembled basket together, one toy at a time"] -->|"Guided success; no mastery credit"| Follow
-    S0 -->|"Mistake at this step"| H0["Model the current settled count; one number per toy"]
-    H0 --> R0["New guided attempt at this SAME step"]
+    S0["Keep the assembled toy group; count each toy once with a model"] -->|"Guided success; no mastery credit"| Follow
+    S0 -->|"Mistake here"| H0["Model this settled toy group; say one number per toy"]
+    H0 --> R0["Fresh guided attempt at this same step"]
     R0 -->|"Guided success"| Follow
-    R0 -->|"Needs another teaching step"| Continue["Next forward correction episode; keep learned steps"]
-    Follow["Fresh count of every snack without a tutor model"] -->|"Independent success"| Done
-    Follow -->|"Still needs help"| Focus["Keep the assembled basket; repeat the one-to-one teaching step"]
-    Focus --> Continue
-    Choose -->|"Break or budget reached"| Rest["Rest; save earned progress"]
-    Continue -->|"Child requests rest, task limit, or three consecutive misses"| Rest
+    R0 -->|"More teaching needed"| Continue["Next correction episode; retain learned steps"]
+    Follow["Fresh full count of the same toy group without a model"] -->|"Independent success"| Done
+    Follow -->|"Still needs help"| Continue
+    Start -->|"Break or budget reached"| Rest["Rest; save progress"]
+    Continue -->|"Break, task limit, or three consecutive misses"| Rest
 ```
-
 
 ## Too many toys were added
 
-If the child is asked to add two toys but adds three, the tutor says:
-“Too many toys joined. Put ALL the toys you just added back beside the table.
-Leave the toys that were here before. A grown-up can help.”
-
-The child undoes the whole attempted addition. The tutor waits for the original
-stable total, then asks for the original addition again. It never asks the child
-to calculate an excess or remove just that many toys. Even passing through the
-correct combined total during removal does not bypass the reset. Setup errors
-do not score failed answers or erase completed missions. Partial additions and
-moving/unknown observations do not trigger this overshoot correction.
+“Too many toys were added. Put ALL the toys you just added back beside the table.
+Leave the toys that were here before.” The tutor waits for the original stable
+total, then repeats the same addition. Removing only the excess does not bypass
+this correction. A setup error does not score a failed maths answer.
 
 ```mermaid
 flowchart TD
-    Choose["Original toy group verified"] --> Add["Ask for the new toy group"]
-    Add -->|"Correct stable combined total"| Count["Count the combined group"]
-    Count --> Done["Continue the current mission"]
-    Add -->|"Stable total is too large"| Undo["Remove ALL toys just added; keep original toys"]
-    Undo -->|"Wait until original stable total is restored"| Retry["Ask for the SAME addition again"]
+    Start["Original toy group verified"] --> Add["Ask for the new toys"]
+    Add -->|"Correct stable combined total"| Count["Count all the toys"]
+    Count --> Done["Continue current task"]
+    Add -->|"Stable total too large"| Undo["Remove ALL newly added toys; leave original toys"]
+    Undo -->|"Original stable total restored"| Retry["Ask for the SAME addition again"]
     Retry --> Done
-    Undo -->|"Break or skip requested"| Rest["Rest; keep earned progress"]
+    Undo -->|"Break or skip"| Rest["Rest; keep progress"]
 ```
 
-This acyclic segment shows one physical setup attempt. The retry opens a new
-attempt of the same addition; it does not restart the lesson. Physical setup
-has no enforced timeout or fixed retry count. The camera verifies totals, not
-which individual toys were removed; a grown-up can help keep the original group.
+This segment shows one physical attempt. Retry opens a fresh attempt of the
+same task; it does not restart the lesson.
 
+## Controls, progress, and limits
 
-## Challenge scope
+Say `help` / `помоги` for teaching steps; `start again` / `сначала` to repeat the
+current prompt; `stop`, `break`, `I'm tired` / `стоп`, `перерыв`, `я устал` to pause.
+Help and corrections keep completed work. Guided answers never complete an
+independent check. Three consecutive unsuccessful responses/timeouts or the
+task budget pause. Skip during toy setup pauses without inventing a failed answer.
 
-| Picnic basket | Addition |
-| --- | --- |
-| Two snacks | 1 + 1 |
-| Three snacks | 1 + 2 |
-| Four snacks | 2 + 2 |
-| Five snacks | 2 + 3 |
-| Four snacks another way | 3 + 1 |
-| Five snacks another way | 1 + 4 |
-| A friend brings an empty basket | 3 + 0 |
+Toy setup waits for the required stable detected total. An overshoot during
+addition undoes ALL newly added toys, restores the original group, and repeats
+the same addition; the child is never asked to subtract the excess. Setup has
+no enforced timeout. The camera checks totals, not toy identities or individual
+touches; it cannot prove which toys were moved or that two groups were paired.
 
-The opening demonstration is guided `1 + 1`. Missions start at `1 + 2`, then
-visit each unfinished basket, with `1 + 1` checked independently later. A failed
-count opens a modeled one-to-one counting question for that same basket, then
-a fresh independent count. Explicit help
-rebuilds that basket and then checks it independently; completed missions stay complete. Adding zero needs no camera change.
+Save `SessionSummary.remember` between sessions. Completed arithmetic checks
+are preserved; legacy destination values are ignored and cleared. English and
+Russian use the same transitions. Existing strategy IDs and page URLs remain
+compatible with integrations.
 
-## What counts as success?
-
-Build and count all seven real toy baskets without the tutor modeling the
-current count. Each mission waits for the starting group, the added group, and
-a stable combined total before listening. Toy-assisted guided responses do not complete missions. This checks
-combining quantities, including two ways to make five; it does not claim mastery
-of every addition fact or delayed retention. Both independent and guided counts require the full sequence `1..a+b`. A lone
-final number or a sequence with skipped/duplicated numbers within a count cannot complete
-a basket. After a correct count, the tutor names the total to connect counting
-with “how many altogether.”
-
-## Child controls and engine behavior
-
-The same spoken destination choices, help/break requests, and restart requests
-as lesson one are available; no screen interaction is required. Help rebuilds the current basket without an error
-record. Skipping toy setup pauses. Three consecutive mistakes/timeouts, Stop, or
-the task limit pause; silence does not create a failed task record. Setup has no
-timeout. The camera verifies totals, not food identities or pretend actions.
-
-Default `max_tasks = 10` fits an uninterrupted demonstration plus seven missions.
-Use shorter sessions as needed. Persist `SessionSummary.remember` to keep the
-chosen friends and completed baskets. The redesigned checkpoint is
-`unmath.lesson2.one_by_one.v3`; older final-number and 21-fact scores are not reused. Completion clears
-this checkpoint. `final_level` counts completed missions (seven at completion),
-while `correct` also counts guided successes.
-
-Strategy ID remains `unmath-add-to-five`; app title: **Lesson 2: picnic baskets**.
-Prerequisite: count up to five objects. English and Russian are supported.
-
-The camera verifies totals and the recognizer verifies the spoken sequence.
-A grown-up can observe one touch per toy; the strategy API cannot verify unique
-physical touches. Counts can span pauses in `ListenMode::Counting`.
-
-See the [edge-case audit](Edge-case-audit) for zero-starts, counting mutations,
-interruptions, saved-state validation, and engine-boundary regressions.
+Strategy ID: `unmath-add-to-five`. See the [edge-case audit](Edge-case-audit).

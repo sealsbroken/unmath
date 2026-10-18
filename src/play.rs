@@ -1,84 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
-use un_core::{
-    language::Language,
-    strategy::{Effect, ListenMode, SessionConfig},
-};
+use un_core::{language::Language, strategy::Effect};
 
-/// A real child choice, remembered across a paused adventure.
-#[derive(Clone, Copy, Default)]
-pub(crate) enum Place {
-    #[default]
-    Forest,
-    Moon,
-}
-impl Place {
-    pub fn from_number(n: u32) -> Option<Self> {
-        match n {
-            1 => Some(Self::Forest),
-            2 => Some(Self::Moon),
-            _ => None,
-        }
-    }
-    /// The place the child named, wherever in what they said ("лес лес", "давай в лес!", "the
-    /// moon please"); nothing when they named neither, or both.
-    pub fn from_words(s: &str) -> Option<Self> {
-        let words = normalized(s);
-        let forest = words
-            .split(' ')
-            .any(|w| matches!(w, "forest" | "лес" | "леса" | "лесу" | "лесной"));
-        let moon = words
-            .split(' ')
-            .any(|w| matches!(w, "moon" | "луна" | "луну" | "луне" | "луны"));
-        match (forest, moon) {
-            (true, false) => Some(Self::Forest),
-            (false, true) => Some(Self::Moon),
-            _ => None,
-        }
-    }
-    pub fn saved(self) -> &'static str {
-        match self {
-            Self::Forest => "forest",
-            Self::Moon => "moon",
-        }
-    }
-    pub fn vehicle(self, language: Language) -> &'static str {
-        match (self, language) {
-            (Self::Forest, Language::English) => "bus",
-            (Self::Moon, Language::English) => "rocket",
-            (Self::Forest, Language::Russian) => "автобус",
-            (Self::Moon, Language::Russian) => "ракету",
-        }
-    }
-    pub fn friends(self, language: Language) -> &'static str {
-        match (self, language) {
-            (Self::Forest, Language::English) => "bears",
-            (Self::Moon, Language::English) => "aliens",
-            (Self::Forest, Language::Russian) => "мишек",
-            (Self::Moon, Language::Russian) => "инопланетян",
-        }
-    }
-    pub fn cheer(self, language: Language) -> &'static str {
-        match (self, language) {
-            (Self::Forest, Language::English) => "Beep beep!",
-            (Self::Moon, Language::English) => "Whoosh!",
-            (Self::Forest, Language::Russian) => "Би-би!",
-            (Self::Moon, Language::Russian) => "Вжух!",
-        }
-    }
-}
-pub(crate) fn invitation(config: &SessionConfig) -> Vec<Effect> {
-    vec![
-        Effect::Say(match config.language {
-            Language::English => {
-                "You choose our adventure! Forest or moon? Say forest or moon.".into()
-            }
-            Language::Russian => {
-                "Выбирай приключение! В лес или на Луну? Скажи: лес или Луна.".into()
-            }
-        }),
-        Effect::listen(ListenMode::Voice, config.answer_timeout),
-    ]
-}
 pub(crate) fn wants_break(words: &str) -> bool {
     matches!(
         normalized(words).as_str(),
@@ -145,8 +67,8 @@ pub(crate) fn wants_restart(words: &str) -> bool {
 /// Undo the whole attempted addition without asking a child to subtract a difference.
 pub(crate) fn undo_added_toys(language: Language) -> String {
     match language {
-        Language::English => "Too many toys joined. Put ALL the toys you just added back beside the table. Leave the toys that were here before. A grown-up can help.",
-        Language::Russian => "Игрушек добавилось слишком много. Убери со стола ВСЕ новые игрушки. Те, что были здесь раньше, оставь. Попроси взрослого помочь.",
+        Language::English => "Too many toys were added. Put ALL the toys you just added back beside the table. Leave the toys that were here before.",
+        Language::Russian => "Игрушек добавилось слишком много. Убери со стола ВСЕ новые игрушки. Те, что были здесь раньше, оставь.",
     }.into()
 }
 
@@ -163,4 +85,8 @@ pub(crate) fn preface_retry(pending: &mut bool, language: Language, question: Ef
         }
         effect => effect,
     }
+}
+
+pub(crate) fn toy_amount(n: u32) -> String {
+    format!("{n} {}", if n == 1 { "toy" } else { "toys" })
 }

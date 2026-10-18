@@ -1,91 +1,76 @@
-# Lesson 1: Three passengers
+# Lesson 1: Count three toys
 
-Start with **one toy**, then add one friend at a time: **one → two → three**.
-The child chooses a forest bus or moon rocket and makes their toys passengers.
-Keep other toys aside; extra visible toys never skip the one-toy opening.
+Start with one toy, add one at a time to three, and count every toy.
 
-Use short spoken turns: “Point to the toy. One! Say one.” Then “One more
-friend! Point to each toy. One, two! Your turn.” The first two counts are modeled;
-the child then counts three independently, checks tickets, answers how many,
-and counts again for departure. Each number belongs to one toy.
+The lesson starts directly with a toy task. There is no destination menu and
+no pretend role assigned to any toy. English and Russian prompts describe real
+toys and groups of toys. Instructions never ask for a grown-up.
 
-This is a gentle starting activity intended for a two-year-old, with a grown-up
-helping prepare toys. Pause whenever the child wants; there is no time pressure
-for arranging toys. One available toy is enough to begin; three are needed to
-complete. With fewer toys, progress is saved at the next stop.
+Correct answers may be repeated: `1, 2, 1, 2` for two toys is one successful
+response, not two tasks. Each cycle must be complete. Zero-starts, skipped
+numbers, duplicates within a count, and incomplete restarts need correction.
+After an incorrect spoken answer, the next teaching question begins with
+“А ты уверен?” / “Are you sure?” once. Skips and silence do not trigger that prefix.
+
+Begin with only one toy on the table. Add one toy at a time to two and three.
+Extra visible toys never skip the opening. One available toy is enough to begin;
+three are needed to finish. Independent success requires full counts of three,
+a how-many question after counting, and a fresh independent final count.
+
+## Tasks and acceptance
+
+1. Count one toy (modeled).
+2. Count two toys (modeled).
+3. Independently count three toys.
+4. Count the same three toys one by one.
+5. Say how many toys there are altogether.
+6. Move the toys around and independently count three again.
 
 ## Acyclic teaching and correction paths
 
-A child may repeat the whole correct answer. For two toys, `1, 2, 1, 2`
-(or “один, два, один, два”) is one successful response. Each repetition must be
-a complete `1..n` count, in order, ending at the actual toy total. Repetitions
-never earn extra task completions or replace a later independent question.
-Skipped numbers, incomplete restarts, and repeating one number inside a count
-remain correction cases. Long valid repetitions are checked in full, then
-compacted for bounded saved diagnostics; a late error is never discarded.
-
-After an incorrect spoken answer, the next teaching question begins with
-**“А ты уверен?”** in Russian (**“Are you sure?”** in English). The prefix is
-spoken once, after any setup wait; skips and silence do not trigger it.
-
-A wrong answer opens the teaching branch below automatically. Each box is a
-child action or a smaller question; it is not a replay of the original stem.
-The child keeps completed missions. A failed guided response stays at that
-physical step. Once the groups are understood, later errors revisit only the
-remaining concept. English and Russian use the same transitions.
-
-The graph unfolds a correction episode into distinct forward nodes. `Continue`
-is a boundary to the next forward correction episode at the indicated step,
-not a jump to the first question. Further scored steps are bounded by the session
-task budget; break, skip during setup, or repeated misses can pause. Replaying
-a prompt and waiting for stable toys do not advance the teaching graph.
-Guided work does not earn mastery: a fresh follow-up is required.
+A mistake opens concrete teaching subquestions, not a restart. Failed guided
+counts retry the current group. Later errors revisit only the remaining concept.
+The graph unfolds one correction episode into distinct forward nodes. `Continue`
+marks the next episode at the current learning step; prompt replays and physical
+waiting do not advance it. The session task budget bounds scored steps.
 
 ```mermaid
 flowchart TD
-    Choose["Count the current one-, two-, or three-toy group"] -->|"Independent success"| Done["Keep progress; continue to next question or finish"]
-    Choose -->|"Starts at zero"| E0["Zero means no toys; the first toy gets one"]
+    Start["Start with one toy, add one at a time to three, and count every toy."] -->|"Independent success"| Done["Keep progress; next question or finish"]
+    Start -->|"Starts at zero"| E0["The first toy gets one; zero means no toys"]
     E0 --> S0
-    Choose -->|"Skips or duplicates a number within one count"| E1["Each toy gets exactly one ticket"]
+    Start -->|"Skips or duplicates within a count"| E1["Each toy gets one number; a whole count may be repeated"]
     E1 --> S0
-    Choose -->|"Says only the final total"| E2["Listen for one number per toy"]
+    Start -->|"Final total only"| E2["Say one number for each toy"]
     E2 --> S0
-    S0["Model the count of THIS settled group; point once per toy"] -->|"Guided success; no mastery credit"| Follow
-    S0 -->|"Mistake at this step"| H0["Model the current settled count; one number per toy"]
-    H0 --> R0["New guided attempt at this SAME step"]
+    S0["Model the count of THIS toy group; point once per toy"] -->|"Guided success; no mastery credit"| Follow
+    S0 -->|"Mistake here"| H0["Model this settled toy group; say one number per toy"]
+    H0 --> R0["Fresh guided attempt at this same step"]
     R0 -->|"Guided success"| Follow
-    R0 -->|"Needs another teaching step"| Continue["Next forward correction episode; keep learned steps"]
-    Follow["Now count the ticketed toys without a model; for how-many, recall the last number"] -->|"Independent success"| Done
-    Follow -->|"Still needs help"| Focus["Keep the same group; teach one-to-one counting again"]
-    Focus --> Continue
-    Choose -->|"Break or budget reached"| Rest["Rest; save earned progress"]
-    Continue -->|"Child requests rest, task limit, or three consecutive misses"| Rest
+    R0 -->|"More teaching needed"| Continue["Next correction episode; retain learned steps"]
+    Follow["Fresh count without a model, or recall the last number for how-many"] -->|"Independent success"| Done
+    Follow -->|"Still needs help"| Continue
+    Start -->|"Break or budget reached"| Rest["Rest; save progress"]
+    Continue -->|"Break, task limit, or three consecutive misses"| Rest
 ```
 
+## Controls, progress, and limits
 
-## What counts as success?
+Say `help` / `помоги` for teaching steps; `start again` / `сначала` to repeat the
+current prompt; `stop`, `break`, `I'm tired` / `стоп`, `перерыв`, `я устал` to pause.
+Help and corrections keep completed work. Guided answers never complete an
+independent check. Three consecutive unsuccessful responses/timeouts or the
+task budget pause. Skip during toy setup pauses without inventing a failed answer.
 
-Opening counts of one and two never declare mastery. The child must say the
-full sequence `1, 2, 3` independently for three actual toys, complete a ticket
-count and its total, then independently count `1, 2, 3` again for departure.
-A final number alone, zero-start, skipped or duplicated number within a count cannot pass a
-sequence check. The uninterrupted route takes six scored questions.
+Toy setup waits for the required stable detected total. An overshoot during
+addition undoes ALL newly added toys, restores the original group, and repeats
+the same addition; the child is never asked to subtract the excess. Setup has
+no enforced timeout. The camera checks totals, not toy identities or individual
+touches; it cannot prove which toys were moved or that two groups were paired.
 
-## Screen-free controls and progress
+Save `SessionSummary.remember` between sessions. Completed arithmetic checks
+are preserved; legacy destination values are ignored and cleared. English and
+Russian use the same transitions. Existing strategy IDs and page URLs remain
+compatible with integrations.
 
-Say `forest` or `moon` to choose; `help` to practice with toys and then return to the current question; `start again`
-to repeat; `stop`, `break`, or `I'm tired` to rest. English and Russian are supported.
-Three consecutive misses/timeouts or the task limit pause without mastery.
-Table changes invalidate unfinished counts; pointing while the detected count
-stays unchanged does not interrupt. The camera verifies totals, not individual touches.
-
-Strategy: `unmath-count-to-three`; Rust type: `CountToThree`. Old Rust type names
-remain compatibility aliases. The old strategy ID is replaced. Old five-toy
-checkpoints are ignored; save `SessionSummary.remember` using the new keys
-`unmath.lesson1.count_three.v1` and `unmath.lesson1.warmup_three.v1`.
-
-Before lesson 2, separately practice counting four and five with a grown-up:
-finishing this lesson demonstrates counting to three, not readiness for all
-addition questions up to five.
-
-See the [edge-case audit](Edge-case-audit).
+Strategy ID: `unmath-count-to-three`. See the [edge-case audit](Edge-case-audit).

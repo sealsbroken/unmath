@@ -27,7 +27,7 @@ fn count(s: &mut AddToFive, ns: &[u32]) -> Vec<Effect> {
 }
 fn demo(s: &mut AddToFive) {
     s.handle(Event::Start);
-    s.handle(Event::Said("forest".into()));
+
     assert_eq!(s.snapshot().target_count, Some(1));
     table(s, 1);
     assert_eq!(s.snapshot().target_count, Some(2));
@@ -127,7 +127,7 @@ fn adding_zero_needs_no_table_change_but_still_requires_counting_each_toy() {
     let effects = ready(&mut s);
     assert!(un_core::strategy::spoken(&effects)
         .join(" ")
-        .contains("empty basket"));
+        .contains("Add zero toys"));
     assert_eq!(s.snapshot().expected_answer, Some(3));
     assert!(!summary(count(&mut s, &[1, 2, 3])).paused);
 }

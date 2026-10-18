@@ -1,106 +1,54 @@
-# Course 1: Arithmetic adventures within ten
+# Course 1: arithmetic with toys
 
-Ten connected play lessons introduce numbers as quantities the child can count,
-combine, take away, compare, complete, and share. The child chooses a forest or
-moon adventure and uses real toys to solve story problems.
+Ten screen-free lessons use toys as toys. Start directly with the current toy
+task, without choosing a destination. The child speaks, points, and moves toys.
 
-## Curriculum goals
+## Goals
 
-By the end of this first course, the child should be able to:
-
-- **Count quantities to ten:** start at one, say numbers in order, give each toy
-  one number, and use the final number to answer “how many?” Understand that zero
-  means no toys, rather than naming the first toy zero.
-- **Add and subtract within ten:** join two small sets or take some objects away,
-  then find the resulting quantity using toys, counting, or fingers.
-- **Compare quantities within five:** identify more, fewer, and equal amounts,
-  including matching two groups one to one.
-- **Find what is missing:** work out how many more objects are needed to reach a
-  target within five, then use the same idea to complete ten.
-- **Share fairly between two:** deal even quantities up to ten alternately and
-  identify how many each guest receives.
-- **Solve through play:** connect a story to a physical action, try again after
-  a mistake, ask for help, and recognize when a rest is needed.
-
-These are concrete quantity skills. Fast recall, written arithmetic, formal
-division notation, and mastery of every possible number fact are not course
-requirements.
-
-Before lesson 2, practice counting four and five with a grown-up. Lesson 1
-only establishes counting to three.
+- Match one spoken number to each toy, first through three, later through ten.
+- Connect a completed count to how many toys are in the group.
+- Combine and take away toy groups, including zero and empty groups.
+- Compare more, fewer, and equal groups by counting and matching pairs.
+- Find how many new toys make a target, including ten.
+- Split toys alternately into two equal groups and count each group.
 
 ## Lessons
 
-Follow this single sequence; return to an earlier lesson whenever useful.
-Each link includes its questions, acceptance criteria, and acyclic correction graph.
+| Lesson | Goal |
+| --- | --- |
+| [1: Count three toys](Lesson-1-Count-to-three) | Start with one toy, add one at a time to three, and count every toy. |
+| [2: Add toys up to five](Lesson-2-Add-up-to-five) | Join toy groups with totals up to five and count the combined group. |
+| [3: Take toys away up to five](Lesson-3-Cave-train) | Take toys away within five and count those remaining, including zero. |
+| [4: Compare toy groups](Lesson-4-Bridge-builders) | Compare two toy groups within five: more, fewer, or equal. |
+| [5: Add missing toys up to five](Lesson-5-Parcel-detectives) | Find how many toys must be added to reach a target up to five. |
+| [6: Count toys to ten](Lesson-6-Firefly-gates) | Count toys in order through ten, with a second independent count to ten. |
+| [7: Add toys up to ten](Lesson-7-Supply-launch) | Join toy groups with totals from six through ten. |
+| [8: Take toys away up to ten](Lesson-8-Homeward-trail) | Take toys away within ten and count those remaining. |
+| [9: Make ten toys](Lesson-9-Ten-seat-ferry) | Find how many toys must be added to make ten. |
+| [10: Split toys into equal groups](Lesson-10-Fair-share-cafe) | Split even numbers of toys up to ten into two equal groups. |
 
-| Lesson | Adventure | Learning goal |
-| --- | --- | --- |
-| 1 | [Three passengers](Lesson-1-Count-to-three) | Start with one toy, add one at a time to three, and count each toy one by one. |
-| 2 | [Picnic baskets](Lesson-2-Add-up-to-five) | Combine two toy groups with a total up to five; count every toy in the combined basket. |
-| 3 | [Cave train](Lesson-3-Cave-train) | Take away within five; find what remains, including none left and none taken away. |
-| 4 | [Bridge builders](Lesson-4-Bridge-builders) | Compare groups up to five: more, fewer, or equal. |
-| 5 | [Parcel detectives](Lesson-5-Parcel-detectives) | Find how many more objects complete a target up to five. |
-| 6 | [Firefly gates](Lesson-6-Firefly-gates) | Extend ordered counting through ten, including two independent full counts to ten. |
-| 7 | [Supply launch](Lesson-7-Supply-launch) | Combine cargo loads with totals from six through ten. |
-| 8 | [Homeward trail](Lesson-8-Homeward-trail) | Take away within ten; find the remainder, including zero. |
-| 9 | [Ten-seat ferry](Lesson-9-Ten-seat-ferry) | Find how many more passengers complete a group of ten. |
-| 10 | [Fair-share café](Lesson-10-Fair-share-cafe) | Share even quantities from two to ten fairly between two guests. |
+## Materials and progression
 
-## What course completion means
+Lesson one starts with one toy and builds to three. Lessons 2–5 need five toys;
+lessons 6–10 need ten. Practice counting four and five before lesson two.
+Lesson six introduces counting through ten before the larger arithmetic tasks.
+No special toy type or pretend prop is required. Keep the toy groups distinct
+when matching, moving a group aside, or splitting into two equal groups.
 
-The child meets the independent checks described in each lesson. A full spoken
-count is required for counting tasks; a final-number-only answer cannot replace
-it. Help and modeled counts support learning but do not complete independent
-missions. Reaching a task limit or stopping for a rest never counts as success.
+## Teaching and corrections
 
-An adult observes whether each toy receives one number and whether sharing is
-fair. The camera and recognizer check totals and spoken answers; they cannot
-prove unique touches or equal distribution. The app currently reports completion
-per lesson, not a separate course-wide certificate. Passing the defined challenges
-shows current performance, rather than proof of long-term retention or every
-arithmetic fact.
+A wrong answer opens smaller concrete questions using skills already introduced.
+Counting mistakes use the same toy group. Comparison counts each group, pairs
+toys, identifies the unmatched row, teaches more/fewer/equal, and asks a fresh
+choice. Missing-quantity tasks isolate and count only the new toys. Sharing uses
+alternating placement and counting, without requiring a division rule.
 
-## How to use the course
+Guided answers do not earn independent mastery. Completed work remains saved;
+a failed guided count keeps its current stage. Repeated whole correct counts
+are legal and score once. The next teaching question after an incorrect spoken
+answer begins “А ты уверен?” / “Are you sure?”. Help, replay, and break remain
+spoken controls. No lesson asks the child to use a screen or seek adult help.
 
-Lesson 1 starts with **one toy** and grows to three. Lessons 2–5 use
-**five recognizable toys**; lessons 6–10 use **ten**. Story props
-are optional. Keep fair-share guests outside the camera's counting area.
-English and Russian prompts are included. The game is screen free: the child speaks, counts, and moves toys. The child
-can ask for help, restart a count, or rest; progress can be saved between sessions.
-
-Every lesson graph shows **acyclic correction paths**: attempts are distinct nodes.
-A mistake opens concrete teaching subquestions, success advances, and rest preserves progress.
-Further correction episodes continue from the current learning step.
-Pretend rewards are spoken invitations, not new engine animations.
-
-[Detailed curriculum and prerequisites](https://github.com/sealsbroken/unmath/blob/main/docs/CURRICULUM.md)
-· [Edge-case audit and counterexamples](Edge-case-audit)
-
-Wiki sources are maintained in the repository under `docs/wiki`.
-
-## Corrections follow the learning progression
-
-Mistakes automatically open concrete teaching steps instead of replaying the
-original question. Correct guided answers do not count as independent mastery.
-A fresh follow-up checks what the child learned. Completed missions stay saved;
-a mistake inside a guided stage retries that stage. After an entire walkthrough,
-later mistakes revisit the final group or the remaining comparison concept.
-
-| Lesson | Correction builds on | Teaching path |
-| --- | --- | --- |
-| 1: counting to three | Pointing and one-to-one matching | Give each toy one ticket; model this same small group; count again without a model. |
-| 2: addition to five | Counting concrete toys | Give every snack one place; count the assembled basket; then a fresh full count. No subtraction of an excess. |
-| 3: subtraction to five | Counting to five | Count starting travelers; move the requested travelers aside; count only those remaining, including none. |
-| 4: comparison | Counting and matching | Count first row; count second row; pair blocks; identify unmatched row; learn more/fewer/equal; choose the needed team. No subtraction. |
-| 5: missing quantities | Counting and adding one at a time | Count starting parcels; fill target; isolate and count only NEW parcels. No subtraction rule. |
-| 6: counting to ten | One number per object | Prepare this gate's keys; correct zero/skips/repeats; count this group; fresh full count. Earlier gates stay complete. |
-| 7: addition to ten | Counting to ten | Count first load; join second; count the combined load; answer altogether. |
-| 8: subtraction to ten | Counting to ten and moving a group | Count travelers; move campers aside; count only those still traveling. |
-| 9: making ten | Counting and filling places | Count occupied seats; fill ferry; isolate and count only NEW arrivals. No subtraction rule. |
-| 10: sharing | Counting and taking turns | Count all treats; deal alternately; count each guest's share; answer for EACH guest. No division rule. |
-
-Diagrams show error-sensitive branches and the guided questions, including a
-forward boundary for later correction episodes. They do not claim that every
-mistake is cured by repeating the same question three times. The task budget
-bounds scored steps; physical setup has no forced time limit.
+The lesson pages show acyclic teaching paths with explicit correction episodes.
+Camera totals cannot verify individual touches, toy identity, or off-table pairing.
+Session summaries describe demonstrated tasks, not exhaustive arithmetic mastery.

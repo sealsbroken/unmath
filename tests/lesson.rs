@@ -9,7 +9,7 @@ fn lesson() -> CountToThree {
 }
 fn start(s: &mut CountToThree) -> Vec<Effect> {
     s.handle(Event::Start);
-    s.handle(Event::Said("forest".into()));
+
     s.handle(Event::Table(TableObservation::stable(1)))
 }
 fn count(s: &mut CountToThree, ns: &[u32]) -> Vec<Effect> {
@@ -223,7 +223,7 @@ fn one_available_toy_start_the_game_and_save_the_next_stop_for_later() {
         ..Default::default()
     });
     s.handle(Event::Start);
-    s.handle(Event::Said("forest".into()));
+
     table(&mut s, 1);
     let effects = count(&mut s, &[1]);
     let summary = effects
@@ -244,7 +244,7 @@ fn one_available_toy_start_the_game_and_save_the_next_stop_for_later() {
     resumed.handle(Event::Start);
     // The one-toy warm-up did not earn three-toy mastery.
     assert_eq!(resumed.snapshot().level, 0);
-    resumed.handle(Event::Said("forest".into()));
+
     assert_eq!(resumed.snapshot().target_count, Some(2));
 }
 
@@ -264,8 +264,7 @@ fn extra_toys_never_skip_the_one_toy_opening() {
     for n in [2, 3, 4, 5, 7] {
         let mut s = lesson();
         table(&mut s, n);
-        s.handle(Event::Start);
-        let effects = s.handle(Event::Said("forest".into()));
+        let effects = s.handle(Event::Start);
         assert_eq!(s.snapshot().target_count, Some(1));
         assert_eq!(s.snapshot().phase, PhaseKind::Performing);
         assert!(un_core::strategy::spoken(&effects)

@@ -9,7 +9,6 @@ fn config() -> SessionConfig {
 }
 fn start(s: &mut Adventure) {
     s.handle(Event::Start);
-    s.handle(Event::Said("moon".into()));
 }
 fn count(s: &mut Adventure, n: u32) -> Vec<Effect> {
     if n > 0 {
@@ -64,7 +63,6 @@ fn all_ten_lessons_register_once_and_next_eight_finish_in_default_session() {
                 .count(),
             1
         );
-        s.handle(Event::Heard(2));
         let mut seen = std::collections::HashSet::new();
         for _ in 0..lesson.mission_count() {
             let snap = s.snapshot();
@@ -185,7 +183,8 @@ fn checkpoint_is_namespaced_and_resumes_only_remaining_missions_and_destination(
             .all(|k| k.starts_with(&format!("unmath.lesson{}.", lesson.number()))));
         let mut resumed = Adventure::new(lesson, cfg);
         let effects = resumed.handle(Event::Start);
-        assert!(spoken(&effects).contains("moon"));
+        assert_ne!(resumed.snapshot().phase, PhaseKind::Meeting);
+        assert!(!spoken(&effects).contains("moon"));
         assert_eq!(resumed.snapshot().task.unwrap(), next);
         assert_eq!(resumed.snapshot().level, 1);
         assert_eq!(resumed.snapshot().tasks_completed, 0);
@@ -228,9 +227,8 @@ fn russian_help_break_and_repeated_silence_are_supported_for_every_lesson() {
             },
         );
         let intro = s.handle(Event::Start);
-        assert!(spoken(&intro).contains("приключение"));
-        let q = s.handle(Event::Said("лес".into()));
-        assert!(spoken(&q).chars().any(|c| ('А'..='я').contains(&c)));
+        assert_ne!(s.snapshot().phase, PhaseKind::Meeting);
+        assert!(spoken(&intro).chars().any(|c| ('А'..='я').contains(&c)));
         s.handle(Event::Said("помоги".into()));
         assert_eq!(s.snapshot().phase, PhaseKind::Performing);
         s.handle(Event::Said("я устал".into()));

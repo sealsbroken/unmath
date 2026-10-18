@@ -33,7 +33,7 @@ fn all_ten_lessons_teach_after_a_mistake_before_a_fresh_followup() {
             };
             let mut s = registry.create(&info.id, &cfg).unwrap();
             s.handle(Event::Start);
-            s.handle(Event::Said("forest".into()));
+
             ready(s.as_mut());
             if info.id == unmath::ADDITION_ID {
                 count(s.as_mut(), 2); // opening demo is not an independent mission
@@ -97,7 +97,7 @@ fn comparison_separates_counting_pairing_vocabulary_and_fewer_choice_in_russian(
     };
     let mut s = Adventure::new(Lesson::BridgeBuilders, cfg);
     s.handle(Event::Start);
-    s.handle(Event::Said("лес".into()));
+
     s.handle(Event::Said("вторая".into())); // 2 versus 4, MORE: completed
     let original = text(&s.handle(Event::RepeatRequested)); // 5 versus 3, FEWER
     let correction = s.handle(Event::Said("первая".into()));
@@ -129,12 +129,12 @@ fn comparison_separates_counting_pairing_vocabulary_and_fewer_choice_in_russian(
 #[test]
 fn arithmetic_misconceptions_get_different_concrete_corrections() {
     let cases = [
-        (Lesson::CaveTrain, 3, "before anyone stopped"),
-        (Lesson::CaveTrain, 1, "travelers who stopped"),
+        (Lesson::CaveTrain, 3, "before we moved any aside"),
+        (Lesson::CaveTrain, 1, "toys moved aside"),
         (Lesson::ParcelDetectives, 3, "whole group"),
         (Lesson::ParcelDetectives, 1, "were here before"),
-        (Lesson::SupplyLaunch, 5, "just one ship"),
-        (Lesson::FairShareCafe, 2, "all the treats"),
+        (Lesson::SupplyLaunch, 5, "just one group"),
+        (Lesson::FairShareCafe, 2, "all the toys"),
     ];
     for (lesson, wrong, expected_hint) in cases {
         let mut s = Adventure::new(
@@ -145,7 +145,7 @@ fn arithmetic_misconceptions_get_different_concrete_corrections() {
             },
         );
         s.handle(Event::Start);
-        s.handle(Event::Said("forest".into()));
+
         let effects = s.handle(Event::Heard(wrong));
         assert!(
             text(&effects).contains(expected_hint),
@@ -167,7 +167,7 @@ fn equal_groups_are_matched_without_teaching_subtraction() {
         },
     );
     s.handle(Event::Start);
-    s.handle(Event::Said("forest".into()));
+
     s.handle(Event::Said("second".into()));
     s.handle(Event::Said("second".into())); // now compare 3 and 3
     let effects = s.handle(Event::Said("first".into()));
@@ -177,7 +177,7 @@ fn equal_groups_are_matched_without_teaching_subtraction() {
     ready(&mut s);
     count(&mut s, 3);
     s.handle(Event::Said("same".into())); // no unmatched row
-    assert!(text(&s.handle(Event::RepeatRequested)).contains("Every block has a partner"));
+    assert!(text(&s.handle(Event::RepeatRequested)).contains("Every toy has a partner"));
     s.handle(Event::Said("same".into())); // equal amounts
     assert_eq!(s.snapshot().level, 2); // teaching still earns no mastery
     s.handle(Event::Said("same".into())); // fresh team-choice follow-up

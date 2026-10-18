@@ -45,14 +45,14 @@ impl Lesson {
     }
     pub fn title(self) -> &'static str {
         match self {
-            Self::CaveTrain => "Lesson 3: cave train",
-            Self::BridgeBuilders => "Lesson 4: bridge builders",
-            Self::ParcelDetectives => "Lesson 5: parcel detectives",
-            Self::FireflyGates => "Lesson 6: firefly gates",
-            Self::SupplyLaunch => "Lesson 7: supply launch",
-            Self::HomewardTrail => "Lesson 8: homeward trail",
-            Self::TenSeatFerry => "Lesson 9: ten-seat ferry",
-            Self::FairShareCafe => "Lesson 10: fair-share cafe",
+            Self::CaveTrain => "Lesson 3: take toys away up to five",
+            Self::BridgeBuilders => "Lesson 4: compare toy groups",
+            Self::ParcelDetectives => "Lesson 5: add missing toys up to five",
+            Self::FireflyGates => "Lesson 6: count toys to ten",
+            Self::SupplyLaunch => "Lesson 7: add toys up to ten",
+            Self::HomewardTrail => "Lesson 8: take toys away up to ten",
+            Self::TenSeatFerry => "Lesson 9: make ten toys",
+            Self::FairShareCafe => "Lesson 10: split toys into equal groups",
         }
     }
     pub fn required_toys(self) -> u32 {

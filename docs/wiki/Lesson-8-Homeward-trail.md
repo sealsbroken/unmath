@@ -1,66 +1,18 @@
-# Lesson 8: Homeward trail
+# Lesson 8: Take toys away up to ten
 
-**Skill:** Taking away within ten. **Prerequisites:** Count to ten; subtraction within five.
-Prepare **10 recognizable toys**. Story props are optional; real food is not needed.
+Take toys away within ten and count those remaining.
 
-Guide toy travelers home. Some stop at camp; find how many keep traveling.
+The lesson starts directly with a toy task. There is no destination menu and
+no pretend role assigned to any toy. English and Russian prompts describe real
+toys and groups of toys. Instructions never ask for a grown-up.
 
-Example question: “Ten travelers set out. Five stop at camp. How many keep traveling?”
-
-## Acyclic teaching and correction paths
-
-A child may repeat the whole correct answer. For two toys, `1, 2, 1, 2`
-(or “один, два, один, два”) is one successful response. Each repetition must be
-a complete `1..n` count, in order, ending at the actual toy total. Repetitions
-never earn extra task completions or replace a later independent question.
-Skipped numbers, incomplete restarts, and repeating one number inside a count
-remain correction cases. Long valid repetitions are checked in full, then
-compacted for bounded saved diagnostics; a late error is never discarded.
-
+Correct answers may be repeated: `1, 2, 1, 2` for two toys is one successful
+response, not two tasks. Each cycle must be complete. Zero-starts, skipped
+numbers, duplicates within a count, and incomplete restarts need correction.
 After an incorrect spoken answer, the next teaching question begins with
-**“А ты уверен?”** in Russian (**“Are you sure?”** in English). The prefix is
-spoken once, after any setup wait; skips and silence do not trigger it.
+“А ты уверен?” / “Are you sure?” once. Skips and silence do not trigger that prefix.
 
-A wrong answer opens the teaching branch below automatically. Each box is a
-child action or a smaller question; it is not a replay of the original stem.
-The child keeps completed missions. A failed guided response stays at that
-physical step. Once the groups are understood, later errors revisit only the
-remaining concept. English and Russian use the same transitions.
-
-The graph unfolds a correction episode into distinct forward nodes. `Continue`
-is a boundary to the next forward correction episode at the indicated step,
-not a jump to the first question. Further scored steps are bounded by the session
-task budget; break, skip during setup, or repeated misses can pause. Replaying
-a prompt and waiting for stable toys do not advance the teaching graph.
-Guided work does not earn mastery: a fresh follow-up is required.
-
-```mermaid
-flowchart TD
-    Choose["How many travelers continue after others stop?"] -->|"Independent success"| Done["Keep progress; continue to next question or finish"]
-    Choose -->|"Counts everyone before the stop"| E0["Exclude the stopped travelers"]
-    E0 --> S0
-    Choose -->|"Counts only those at camp"| E1["We need those still traveling"]
-    E1 --> S0
-    Choose -->|"Other wrong answer"| E2["Separate the two groups physically"]
-    E2 --> S0
-    S0["Prepare and count the original travelers"] -->|"Guided success; no mastery credit"| S1
-    S0 -->|"Mistake at this step"| H0["Model the current settled count; one number per toy"]
-    H0 --> R0["New guided attempt at this SAME step"]
-    R0 -->|"Guided success"| S1
-    R0 -->|"Needs another teaching step"| Continue["Next forward correction episode; keep learned steps"]
-    S1["Move the campers aside; count only those still going"] -->|"Guided success; no mastery credit"| Follow
-    S1 -->|"Mistake at this step"| H1["Model the current settled count; one number per toy"]
-    H1 --> R1["New guided attempt at this SAME step"]
-    R1 -->|"Guided success"| Follow
-    R1 -->|"Needs another teaching step"| Continue["Next forward correction episode; keep learned steps"]
-    Follow["Look at the travelers still here: how many continue?"] -->|"Independent success"| Done
-    Follow -->|"Still needs help"| Focus["Recount only those still traveling; preserve the completed steps"]
-    Focus --> Continue
-    Choose -->|"Break or budget reached"| Rest["Rest; save earned progress"]
-    Continue -->|"Child requests rest, task limit, or three consecutive misses"| Rest
-```
-
-## Six missions and acceptance
+## Tasks and acceptance
 
 1. 6 - 1 = 5
 2. 7 - 3 = 4
@@ -69,48 +21,52 @@ flowchart TD
 5. 10 - 5 = 5
 6. 10 - 10 = 0
 
-Independently solve all six departures, including an empty trail when everyone stops.
+## Acyclic teaching and correction paths
 
-## Toy-based help
+A mistake opens concrete teaching subquestions, not a restart. Failed guided
+counts retry the current group. Later errors revisit only the remaining concept.
+The graph unfolds one correction episode into distinct forward nodes. `Continue`
+marks the next episode at the current learning step; prompt replays and physical
+waiting do not advance it. The session task budget bounds scored steps.
 
-1. Prepare the traveling group.
-2. Take the campers off the table.
-3. Count the remaining travelers, including zero.
+```mermaid
+flowchart TD
+    Start["Take toys away within ten and count those remaining."] -->|"Independent success"| Done["Keep progress; next question or finish"]
+    Start -->|"Counts original or removed group"| E0["Separate removed toys; count only those remaining"]
+    E0 --> S0
+    S0["Prepare and count the original toys"] -->|"Guided success; no mastery credit"| S1
+    S0 -->|"Mistake here"| H0["Model this settled toy group; say one number per toy"]
+    H0 --> R0["Fresh guided attempt at this same step"]
+    R0 -->|"Guided success"| S1
+    R0 -->|"More teaching needed"| Continue["Next correction episode; retain learned steps"]
+    S1["Move the requested toys aside; count only those remaining"] -->|"Guided success; no mastery credit"| Follow
+    S1 -->|"Mistake here"| H1["Model this settled toy group; say one number per toy"]
+    H1 --> R1["Fresh guided attempt at this same step"]
+    R1 -->|"Guided success"| Follow
+    R1 -->|"More teaching needed"| Continue["Next correction episode; retain learned steps"]
+    Follow["How many toys remain on the table?"] -->|"Independent success"| Done
+    Follow -->|"Still needs help"| Continue
+    Start -->|"Break or budget reached"| Rest["Rest; save progress"]
+    Continue -->|"Break, task limit, or three consecutive misses"| Rest
+```
 
-Each camera-visible stage waits for its required stable total and a complete
-spoken count (or zero for an empty group). A disturbed table cancels the pending
-answer without scoring an error. A wrong guided count is modeled, then that same physical stage is tried again. Setup itself is unscored. The camera verifies totals, not toy identities,
-the meaning of the scene, or the child's pointing.
+## Controls, progress, and limits
 
-## Controls, progress, and integration
+Say `help` / `помоги` for teaching steps; `start again` / `сначала` to repeat the
+current prompt; `stop`, `break`, `I'm tired` / `стоп`, `перерыв`, `я устал` to pause.
+Help and corrections keep completed work. Guided answers never complete an
+independent check. Three consecutive unsuccessful responses/timeouts or the
+task budget pause. Skip during toy setup pauses without inventing a failed answer.
 
-Strategy ID: `unmath-subtract-to-ten`. Use `Lesson::HomewardTrail`
-with `Adventure::new`, or use the ID through `unmath::register` and the registry.
-English and Russian content is included.
+Toy setup waits for the required stable detected total. An overshoot during
+addition undoes ALL newly added toys, restores the original group, and repeats
+the same addition; the child is never asked to subtract the excess. Setup has
+no enforced timeout. The camera checks totals, not toy identities or individual
+touches; it cannot prove which toys were moved or that two groups were paired.
 
-Choose forest or moon by saying its name. Say `help` / `помоги` during a question
-for physical practice; this does not score an error. Say `stop`, `I'm tired`,
-`стоп`, or `я устал` to rest, including during setup. Repeat restarts the current
-prompt. Skipping a question records a skip and starts help; skipping setup pauses.
+Save `SessionSummary.remember` between sessions. Completed arithmetic checks
+are preserved; legacy destination values are ignored and cleared. English and
+Russian use the same transitions. Existing strategy IDs and page URLs remain
+compatible with integrations.
 
-Three consecutive unsuccessful responses/timeouts, Stop, or `max_tasks` pauses.
-Silence has no task record. Physical setup has no enforced timeout. A successful
-uninterrupted adventure takes six tasks, within the default ten-task session.
-Guided counts are additional tasks; pause and resume whenever needed.
-
-Persist `SessionSummary.remember` using `apply_remembered` and pass it as the
-next `SessionConfig.extra`. The isolated key prefix is
-`unmath.lesson8.adventure.v1`; saved values keep completed missions, the next
-mission, and forest/moon choice. Guided-stage progress restarts at an independent
-question after resuming. Completion clears this lesson's keys.
-`final_level` counts independently completed missions (six at completion), while
-`correct` also includes guided counts. Insufficient `total_objects` pauses before
-any maths task, explaining the required materials.
-
-Success means all six specified challenges were solved independently. It is a
-lesson completion check, not a claim of comprehensive fluency or delayed retention.
-The story, toys, and reward actions are spoken invitations; no new engine animation
-or unimplemented perception feature is assumed.
-
-See the [edge-case audit](Edge-case-audit) for zero-starts, counting mutations,
-interruptions, saved-state validation, and engine-boundary regressions.
+Strategy ID: `unmath-subtract-to-ten`. See the [edge-case audit](Edge-case-audit).

@@ -34,7 +34,7 @@ fn an_incorrect_answer_prefaces_the_next_question_once_in_every_lesson() {
                     )
                     .unwrap();
                 let mut initial = s.handle(Event::Start);
-                initial.extend(s.handle(Event::Said("forest".into())));
+
                 ready(s.as_mut(), &mut initial);
                 assert!(!spoken(&initial).iter().any(|line| line.contains(prefix)));
                 let before = s.snapshot();

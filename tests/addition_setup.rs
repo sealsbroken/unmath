@@ -106,7 +106,7 @@ fn guided_additions_and_missing_quantities_undo_without_losing_the_guided_stage(
             };
             let mut s = Adventure::new(lesson, cfg);
             s.handle(Event::Start);
-            s.handle(Event::Said("forest".into()));
+
             s.handle(Event::Said("help".into()));
             let base = s.snapshot().target_count.unwrap();
             table(&mut s, base);
@@ -156,7 +156,7 @@ fn empty_starting_groups_and_zero_additions_restore_the_exact_baseline() {
         );
         let mut s = Adventure::new(lesson, cfg);
         s.handle(Event::Start);
-        s.handle(Event::Said("forest".into()));
+
         s.handle(Event::Said("help".into()));
         table(&mut s, base);
         count(&mut s, base);

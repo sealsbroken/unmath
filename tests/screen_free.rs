@@ -8,10 +8,73 @@ fn inspect(effects: Vec<Effect>, id: &str) {
                 assert!(
                     !matches!(
                         word.as_str(),
-                        "tap" | "tapping" | "press" | "button" | "buttons" | "screen" | "numberpad"
-                    ) && !["нажми", "нажмит", "кноп", "экран", "нажат"]
-                        .iter()
-                        .any(|prefix| word.starts_with(prefix)),
+                        "tap"
+                            | "tapping"
+                            | "press"
+                            | "button"
+                            | "buttons"
+                            | "screen"
+                            | "numberpad"
+                            | "grown"
+                            | "adult"
+                            | "adults"
+                            | "forest"
+                            | "moon"
+                            | "snack"
+                            | "snacks"
+                            | "picnic"
+                            | "ticket"
+                            | "tickets"
+                            | "passenger"
+                            | "passengers"
+                            | "pretend"
+                            | "rocket"
+                            | "bus"
+                            | "guest"
+                            | "guests"
+                            | "treat"
+                            | "treats"
+                            | "ship"
+                            | "ships"
+                            | "pods"
+                            | "cargo"
+                            | "keys"
+                            | "key"
+                            | "gate"
+                            | "gates"
+                            | "traveler"
+                            | "travelers"
+                            | "block"
+                            | "blocks"
+                            | "chef"
+                    ) && ![
+                        "нажми",
+                        "нажмит",
+                        "кноп",
+                        "экран",
+                        "нажат",
+                        "взросл",
+                        "угощ",
+                        "пикник",
+                        "пассаж",
+                        "капсул",
+                        "светля",
+                        "билет",
+                        "ракет",
+                        "мишк",
+                        "инопланет",
+                        "пещер",
+                        "паром",
+                        "повар",
+                        "гост",
+                        "лагер",
+                        "корабл",
+                        "блок",
+                        "ключ",
+                        "путешествен"
+                    ]
+                    .iter()
+                    .any(|prefix| word.starts_with(prefix)),
                     "{id}: {text}"
                 );
             }
@@ -19,7 +82,7 @@ fn inspect(effects: Vec<Effect>, id: &str) {
     }
 }
 #[test]
-fn all_ten_lessons_use_screen_free_speech_for_choices_play_help_and_completion() {
+fn all_ten_lessons_start_directly_and_use_only_real_toys_without_adult_prompts() {
     let mut registry = StrategyRegistry::default();
     unmath::register(&mut registry);
     for info in registry.infos() {
@@ -32,16 +95,11 @@ fn all_ten_lessons_use_screen_free_speech_for_choices_play_help_and_completion()
                 };
                 let mut s = registry.create(&info.id, &cfg).unwrap();
                 inspect(s.handle(Event::Start), &info.id);
-                inspect(
-                    s.handle(Event::Said(
-                        if language == Language::English {
-                            "moon"
-                        } else {
-                            "луна"
-                        }
-                        .into(),
-                    )),
-                    &info.id,
+                assert_ne!(
+                    s.snapshot().phase,
+                    PhaseKind::Meeting,
+                    "{} must start directly",
+                    info.id
                 );
                 let mut helped = false;
                 for _ in 0..100 {

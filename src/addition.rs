@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 //! Addition with nonnegative operands and a total no greater than five.
 use crate::answers::{count_feedback, safe_config, saved_mask, valid_count, CountBuffer};
-use crate::play::{invitation, wants_break, wants_help, wants_restart, Place};
-use crate::russian::{toys, treats};
+use crate::play::{toy_amount, wants_break, wants_help, wants_restart};
+use crate::russian::{toy_group, toys};
 use std::sync::Arc;
 use un_core::{language::Language, strategy::*};
 
 pub const ADDITION_ID: &str = "unmath-add-to-five";
 const PROGRESS: &str = "unmath.lesson2.one_by_one.v3";
-// Seven picnic missions, including two different ways to make five and adding zero.
+// Seven addition tasks, including two different ways to make five and adding zero.
 const FACTS: [(u32, u32); 7] = [(1, 1), (1, 2), (2, 2), (2, 3), (3, 1), (1, 4), (3, 0)];
 const ALL: u32 = (1 << FACTS.len()) - 1;
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Node {
     Idle,
-    Meeting,
     Base,
     Add,
     Count,
@@ -25,11 +24,10 @@ enum Node {
     Finished,
 }
 
-/// A picnic adventure: combine toy supplies, then solve seven short story missions.
+/// Combine real toy groups and solve seven addition tasks.
 /// Toy-assisted answers are practice; only unprompted Check answers earn mastery.
 pub struct AddToFive {
     config: SessionConfig,
-    place: Place,
     node: Node,
     index: usize,
     fact: (u32, u32),
@@ -48,13 +46,7 @@ impl AddToFive {
     pub fn new(config: SessionConfig) -> Self {
         let config = safe_config(config);
         let mastered = saved_mask(config.extra.get(PROGRESS), ALL);
-        let place = config
-            .extra
-            .get("unmath.lesson2.place")
-            .and_then(|s| Place::from_words(s))
-            .unwrap_or_default();
         Self {
-            place,
             config,
             node: Node::Idle,
             index: 0,
@@ -92,7 +84,6 @@ impl AddToFive {
     fn phase(&self) -> PhaseKind {
         match self.node {
             Node::Idle => PhaseKind::Idle,
-            Node::Meeting => PhaseKind::Meeting,
             Node::Base | Node::Add | Node::CheckBase | Node::CheckAdd => PhaseKind::Performing,
             Node::Count | Node::Check => PhaseKind::Asking,
             Node::Paused => PhaseKind::Paused,
@@ -111,21 +102,29 @@ impl AddToFive {
         let sum = a + b;
         let a_toys = toys(a);
         let b_toys = toys(b);
-        let a_treats = treats(a);
-        let b_treats = treats(b);
-        let friends = self.place.friends(self.config.language);
+        let a_group = toy_group(a);
         let line = match self.node {
-            Node::Base | Node::CheckBase => self.say(format!("Let's pack a picnic for our friends! Pretend each toy is a snack. Put {a} toy snacks on the table, then move your hands away. A grown-up can help."), format!("Собираем пикник для друзей! Пусть игрушки будут угощениями. Положи на стол {a_toys} и убери руки. Взрослый может помочь.")),
-            Node::Add | Node::CheckAdd => self.say(if b == 0 { "Our friend brought an empty basket! Add zero: leave the toy snacks as they are.".into() } else { format!("Our friend brings {b} more snacks! Can you add {b} toys to our {a}, then move your hands away?") }, if b == 0 { "Друг принёс пустую корзинку! Прибавь ноль: оставь игрушечные угощения как есть.".into() } else { format!("Друг принёс ещё {b_treats}! Добавь ещё {b_toys} и убери руки.") }),
+            Node::Base | Node::CheckBase => self.say(
+                format!("Put {} on the table, then move your hands away.", toy_amount(a)),
+                format!("Положи на стол {a_toys} и убери руки.")),
+            Node::Add | Node::CheckAdd => self.say(
+                if b == 0 { "Add zero toys: leave the toys as they are.".into() }
+                else { format!("Add {} to the group, then move your hands away.", toy_amount(b)) },
+                if b == 0 { "Добавь ноль игрушек: оставь всё как есть.".into() }
+                else { format!("Добавь ещё {b_toys} и убери руки.") }),
             Node::Count if self.repair_return.is_some() => self.say(
-                "Let's give every snack one place on our picnic blanket. Point to each toy once and count in order from one. Stop after the last toy.".into(),
-                "Дадим каждому угощению место на пледе. Показывай на каждую игрушку по очереди и считай с одного. После последней игрушки остановись.".into()),
-            Node::Count if sum > 0 => self.say(format!("Our picnic basket has {a} snacks and {b} more. Point to the toy snacks one by one. Say one number for each toy, starting at one, until every snack has been counted."), format!("В корзинке было {a_treats}. Добавили ещё {b_treats}. Показывай на каждую игрушку по очереди и считай. Начни с одного.")),
+                "Point to each toy once and count in order from one. Stop after the last toy.".into(),
+                "Показывай на каждую игрушку по очереди и считай с одного. После последней игрушки остановись.".into()),
+            Node::Count if sum > 0 => self.say(
+                format!("We started with {} and added {}. Point to each toy one by one and count them all, starting at one.", toy_amount(a), toy_amount(b)),
+                format!("Сначала на столе {a_group}. Добавили ещё {b_toys}. Показывай на каждую игрушку по очереди и считай. Начни с одного.")),
             Node::Count => self.say("There are no toys. How many is that?".into(), "Игрушек нет. Сколько это?".into()),
             Node::Check if self.rechecking => self.say(
-                "Our picnic blanket is packed. Now count every toy snack once, all by yourself, starting at one.".into(),
-                "Угощения на пледе. Теперь посчитай каждую игрушку один раз, без подсказки. Начни с одного.".into()),
-            Node::Check => self.say(format!("Picnic mission {} of 7! The {friends} have {a} snacks and bring {b} more. Point to the toy snacks one by one and say one number for each, starting at one, until you have counted every snack.", self.mastered.count_ones() + 1), format!("Задание для пикника {} из 7! У {friends} есть {a_treats}. Они принесли ещё {b_treats}. Показывай на каждую игрушку по очереди и считай. Начни с одного.", self.mastered.count_ones() + 1)),
+                "Now count every toy once, all by yourself, starting at one.".into(),
+                "Теперь посчитай каждую игрушку один раз, без подсказки. Начни с одного.".into()),
+            Node::Check => self.say(
+                format!("We started with {} and added {}. Count every toy one by one, starting at one.", toy_amount(a), toy_amount(b)),
+                format!("Сначала на столе {a_group}. Добавили ещё {b_toys}. Показывай на каждую игрушку по очереди и считай. Начни с одного.")),
             _ => return vec![],
         };
         let line = if matches!(self.node, Node::Count | Node::Check) {
@@ -229,14 +228,9 @@ impl AddToFive {
             paused: !success,
             ..Default::default()
         };
-        summary.remember.insert(
-            "unmath.lesson2.place".into(),
-            if success {
-                String::new()
-            } else {
-                self.place.saved().into()
-            },
-        );
+        summary
+            .remember
+            .insert("unmath.lesson2.place".into(), String::new());
         summary
             .remember
             .insert("unmath.lesson2.mastered".into(), String::new());
@@ -257,8 +251,8 @@ impl AddToFive {
         }
         effects.push(if success {
             self.say(
-                "The picnic is ready! You joined our snacks and found how many altogether. Time for a pretend feast!".into(),
-                "Всё готово для пикника! Мы сложили угощения вместе и посчитали их. Угостим друзей понарошку!".into(),
+                "You put the toys together and counted them all. Well done!".into(),
+                "Мы сложили игрушки вместе и посчитали их. Отлично!".into(),
             )
         } else {
             self.say(
@@ -324,46 +318,13 @@ impl AddToFive {
             let mut effects = vec![];
             if !guided {
                 effects.push(self.say(
-                    format!("You counted {sum} snacks altogether!"),
-                    format!("Всего получилось {}!", treats(sum)),
+                    format!("You counted {sum} toys altogether!"),
+                    format!("Всего получилось {}!", toy_group(sum)),
                 ));
                 effects.push(Effect::Celebrate);
-                let (en, ru) = match self.mastered.count_ones() {
-                    1 => (
-                        "Spread our pretend picnic blanket!",
-                        "Расстели воображаемое одеяло для пикника!",
-                    ),
-                    2 => (
-                        "Pass a pretend basket to a friend!",
-                        "Передай другу воображаемую корзинку!",
-                    ),
-                    3 => (
-                        "Pretend to pour a drink. Glug glug!",
-                        "Налей воображаемый сок. Буль-буль!",
-                    ),
-                    4 => (
-                        "Smell our pretend soup. Mmm!",
-                        "Понюхай воображаемый суп. М-м-м!",
-                    ),
-                    5 => (
-                        "Offer a pretend snack to your favorite toy!",
-                        "Представь, что угощаешь любимую игрушку!",
-                    ),
-                    _ => (
-                        "Give our picnic chef a high five!",
-                        "Дай пять нашему повару!",
-                    ),
-                };
-                effects.push(self.say(en.into(), ru.into()));
                 effects.push(self.say(
-                    format!(
-                        "Basket packed! {} picnic missions complete.",
-                        self.mastered.count_ones()
-                    ),
-                    format!(
-                        "Корзинка собрана! Выполнено заданий: {}.",
-                        self.mastered.count_ones()
-                    ),
+                    "Well done! Let's try the next group of toys.".into(),
+                    "Отлично! Попробуем со следующей группой игрушек.".into(),
                 ));
             }
             if guided {
@@ -395,7 +356,7 @@ impl AddToFive {
                     format!("There are {sum} altogether. Let's try joining the toys again."),
                     format!(
                         "Всего получилось {}. Давай снова сложим игрушки вместе.",
-                        treats(sum)
+                        toy_group(sum)
                     ),
                 ));
             }
@@ -424,37 +385,26 @@ impl Strategy for AddToFive {
                     return self.finish(false);
                 }
                 if self.config.total_objects < 5 {
-                    let mut effects = vec![self.say("Ask a grown-up to prepare five toy snacks. We can play when they are ready.".into(), "Попроси взрослого подготовить пять игрушечных угощений. Сыграем, когда они будут готовы.".into())];
+                    let mut effects = vec![self.say(
+                        "We need five toys for this lesson. We can continue when they are ready."
+                            .into(),
+                        "Для этого урока нужно пять игрушек. Продолжим, когда они будут готовы."
+                            .into(),
+                    )];
                     effects.extend(self.finish(false));
                     return effects;
                 }
                 if self.mastered == 0 {
-                    self.node = Node::Meeting;
-                    invitation(&self.config)
-                } else {
-                    self.next_check()
-                }
-            }
-            Event::Heard(n) if self.node == Node::Meeting => {
-                if let Some(place) = Place::from_number(n) {
-                    self.place = place;
-                    self.misses = 0;
                     self.practice()
                 } else {
-                    self.misses += 1;
-                    if self.misses >= 3 {
-                        self.finish(false)
-                    } else {
-                        invitation(&self.config)
-                    }
+                    self.next_check()
                 }
             }
             Event::Said(words)
                 if wants_break(&words)
                     && matches!(
                         self.node,
-                        Node::Meeting
-                            | Node::Base
+                        Node::Base
                             | Node::Add
                             | Node::CheckBase
                             | Node::CheckAdd
@@ -469,40 +419,10 @@ impl Strategy for AddToFive {
             {
                 self.practice()
             }
-            Event::Said(words) if self.node == Node::Meeting => {
-                if let Some(place) = Place::from_words(&words) {
-                    self.place = place;
-                    self.misses = 0;
-                    self.practice()
-                } else {
-                    self.misses += 1;
-                    if self.misses >= 3 {
-                        self.finish(false)
-                    } else {
-                        invitation(&self.config)
-                    }
-                }
-            }
-            Event::RepeatRequested if self.node == Node::Meeting => invitation(&self.config),
-            Event::NothingHeard if self.node == Node::Meeting => {
-                self.misses += 1;
-                if self.misses >= 3 {
-                    self.finish(false)
-                } else {
-                    self.misses += 1;
-                    if self.misses >= 3 {
-                        self.finish(false)
-                    } else {
-                        invitation(&self.config)
-                    }
-                }
-            }
-            Event::SkipRequested if self.node == Node::Meeting => self.practice(),
             Event::Stop
                 if matches!(
                     self.node,
-                    Node::Meeting
-                        | Node::Base
+                    Node::Base
                         | Node::Add
                         | Node::CheckBase
                         | Node::CheckAdd
@@ -632,9 +552,14 @@ impl Strategy for AddToFive {
 pub struct AddToFiveFactory;
 impl StrategyFactory for AddToFiveFactory {
     fn info(&self) -> StrategyInfo {
-        StrategyInfo { id: ADDITION_ID.into(), title: "Lesson 2: picnic baskets".into(),
-            description: "Pack a pretend picnic, join toy snacks, and solve seven story missions with totals up to five.".into(),
-            languages: vec![Language::English, Language::Russian], license: "LGPL-3.0-or-later".into() }
+        StrategyInfo {
+            id: ADDITION_ID.into(),
+            title: "Lesson 2: add toys up to five".into(),
+            description:
+                "Join groups of toys and count the combined groups with totals up to five.".into(),
+            languages: vec![Language::English, Language::Russian],
+            license: "LGPL-3.0-or-later".into(),
+        }
     }
     fn create(&self, config: &SessionConfig) -> Box<dyn Strategy> {
         Box::new(AddToFive::new(config.clone()))
