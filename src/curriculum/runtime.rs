@@ -23,6 +23,7 @@ pub struct Adventure {
     node: Node,
     index: usize,
     stage: usize,
+    undo_add: Option<u32>,
     mastered: u32,
     place: Place,
     table: Option<u32>,
@@ -54,6 +55,7 @@ impl Adventure {
             node: Node::Idle,
             index,
             stage: 0,
+            undo_add: None,
             mastered,
             place,
             table: None,
@@ -79,8 +81,10 @@ impl Adventure {
         Effect::Say(words.in_language(self.config.language))
     }
     fn target(&self) -> Option<u32> {
-        matches!(self.node, Node::Prepare | Node::Guide)
-            .then(|| self.mission().stages[self.stage].count)
+        matches!(self.node, Node::Prepare | Node::Guide).then(|| {
+            self.undo_add
+                .unwrap_or(self.mission().stages[self.stage].count)
+        })
     }
     fn expected(&self) -> Option<u32> {
         match self.node {
@@ -118,12 +122,19 @@ impl Adventure {
         ]
     }
     fn guide(&mut self) -> Vec<Effect> {
+        self.undo_add = None;
         self.stage = 0;
         self.prepare()
     }
     fn prepare(&mut self) -> Vec<Effect> {
         self.node = Node::Prepare;
         self.sequence.reset();
+        if self.undo_add.is_some() {
+            return vec![
+                Effect::StopListening,
+                Effect::Say(crate::play::undo_added_toys(self.config.language)),
+            ];
+        }
         let mut effects = vec![
             Effect::StopListening,
             self.say(&self.mission().stages[self.stage].action),
@@ -385,6 +396,29 @@ impl Strategy for Adventure {
                     return vec![];
                 }
                 self.table = if t.is_stable { t.count } else { None };
+                if self.node == Node::Prepare && self.undo_add.is_some() {
+                    if self.table == self.undo_add {
+                        self.undo_add = None;
+                        return self.prepare();
+                    }
+                    return vec![];
+                }
+                if matches!(self.node, Node::Prepare | Node::Guide)
+                    && self.undo_add.is_none()
+                    && self.stage > 0
+                    && matches!(
+                        self.lesson,
+                        Lesson::SupplyLaunch | Lesson::ParcelDetectives | Lesson::TenSeatFerry
+                    )
+                    && self.mission().stages[self.stage].count
+                        >= self.mission().stages[self.stage - 1].count
+                    && self
+                        .table
+                        .is_some_and(|n| n > self.mission().stages[self.stage].count)
+                {
+                    self.undo_add = Some(self.mission().stages[self.stage - 1].count);
+                    return self.prepare();
+                }
                 if self.node == Node::Prepare && self.table == self.target() {
                     self.guide_question()
                 } else if self.node == Node::Guide && self.table != self.target() {

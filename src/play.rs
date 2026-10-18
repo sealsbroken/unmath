@@ -141,3 +141,11 @@ pub(crate) fn wants_restart(words: &str) -> bool {
             | "давай сначала"
     )
 }
+
+/// Undo the whole attempted addition without asking a child to subtract a difference.
+pub(crate) fn undo_added_toys(language: Language) -> String {
+    match language {
+        Language::English => "Too many toys joined. Put ALL the toys you just added back beside the table. Leave the toys that were here before. A grown-up can help.",
+        Language::Russian => "Игрушек добавилось слишком много. Убери со стола ВСЕ новые игрушки. Те, что были здесь раньше, оставь. Попроси взрослого помочь.",
+    }.into()
+}

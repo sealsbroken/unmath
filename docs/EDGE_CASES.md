@@ -62,6 +62,7 @@ sequence check.
 | Punctuation, capitalization, curly apostrophe, repeated spaces in commands | Normalize before matching supported help/restart/break/choice phrases |
 | Three invalid destination choices | Rest without recording maths mistakes |
 | Repeated silence | Rest after three timeouts; silence does not create a failed task record |
+| Too many toys added | Undo the entire added group, verify original total, then repeat the same addition; never subtract the excess |
 | `help` | Begin toy practice without scoring an error; recheck the same mission afterward |
 | Stop or a supported tired/break phrase | Pause, save progress, stop listening |
 | Skip during a question | Record a skipped attempt, never award mastery |
@@ -76,6 +77,10 @@ sequence check.
 | Toys were visible before engine Start | Replay the cached observation under the strategy lock; do not wait forever for an unchanged table |
 
 ## Automated evidence
+
+- `tests/addition_setup.rs`: overshoot rollback in both languages, repeated attempts,
+  zero additions, empty starting groups, stale speech, and preserving guided stages.
+
 
 - `tests/adversarial.rs`: mutation tests for counting and controls in all ten
   lessons, both languages, plus 40,960 seeded mixed-event steps. These include

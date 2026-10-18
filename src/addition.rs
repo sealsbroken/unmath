@@ -37,6 +37,7 @@ pub struct AddToFive {
     sequence: CountBuffer,
     mastered: u32,
     demo_done: bool,
+    undo_add: bool,
     misses: u32,
     records: Vec<TaskRecord>,
 }
@@ -59,6 +60,7 @@ impl AddToFive {
             sequence: CountBuffer::default(),
             mastered,
             demo_done: mastered != 0,
+            undo_add: false,
             misses: 0,
             records: vec![],
         }
@@ -70,6 +72,9 @@ impl AddToFive {
         })
     }
     fn target(&self) -> Option<u32> {
+        if self.undo_add {
+            return Some(self.fact.0);
+        }
         match self.node {
             Node::Base | Node::CheckBase => Some(self.fact.0),
             Node::Add | Node::Count | Node::CheckAdd | Node::Check => {
@@ -90,6 +95,12 @@ impl AddToFive {
     }
     fn prompt(&mut self) -> Vec<Effect> {
         self.sequence.reset();
+        if self.undo_add {
+            return vec![
+                Effect::StopListening,
+                Effect::Say(crate::play::undo_added_toys(self.config.language)),
+            ];
+        }
         let (a, b) = self.fact;
         let sum = a + b;
         let a_toys = toys(a);
@@ -121,6 +132,15 @@ impl AddToFive {
     fn settle(&mut self) -> Vec<Effect> {
         let mut effects = vec![];
         if self.table != self.target() {
+            return effects;
+        }
+        if self.undo_add {
+            self.undo_add = false;
+            effects.extend(self.prompt());
+            // Adding zero advances after restoring the original group.
+            if self.fact.1 == 0 {
+                effects.extend(self.settle());
+            }
             return effects;
         }
         if matches!(self.node, Node::Base | Node::CheckBase) {
@@ -458,13 +478,32 @@ impl Strategy for AddToFive {
                     return vec![];
                 }
                 self.table = if t.is_stable { t.count } else { None };
+                if !self.undo_add
+                    && matches!(
+                        self.node,
+                        Node::Add | Node::CheckAdd | Node::Count | Node::Check
+                    )
+                    && self.table.is_some_and(|n| n > self.fact.0 + self.fact.1)
+                {
+                    self.node = if matches!(self.node, Node::CheckAdd | Node::Check) {
+                        Node::CheckAdd
+                    } else {
+                        Node::Add
+                    };
+                    self.undo_add = true;
+                    return self.prompt();
+                }
                 if matches!(self.node, Node::Count | Node::Check) && self.table != self.target() {
                     self.sequence.reset();
-                    return if self.node == Node::Check {
-                        self.check_setup()
+                    // Keep the addition context while a hand obscures the toys.
+                    // A later overfull stable frame must still trigger undoing
+                    // the added group, not a fresh initial-group setup.
+                    self.node = if self.node == Node::Check {
+                        Node::CheckAdd
                     } else {
-                        self.practice()
+                        Node::Add
                     };
+                    return vec![Effect::StopListening];
                 }
                 if matches!(
                     self.node,

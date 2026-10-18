@@ -259,6 +259,12 @@ perception limits. The shared runtime is not a claim that the lessons teach the
 same operation: subtraction removes toys, missing quantities add to a target,
 comparison counts two supplies, and sharing deals alternately to two guests.
 
+When an addition adds too many toys, undo the entire newly added group first.
+The tutor waits for the original group, then repeats the same addition request.
+It never asks a beginner to subtract the excess. This applies to picnic baskets
+and the physical addition/missing-quantity stages in lessons 5, 7, and 9.
+See the [physical correction graph](https://github.com/sealsbroken/unmath/wiki/Lesson-2-Add-up-to-five#too-many-toys-were-added).
+
 ## Integration behavior
 
 `unmath::ID` and `unmath::ADDITION_ID` expose the first two strategy IDs. Registration includes all ten

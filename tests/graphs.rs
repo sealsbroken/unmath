@@ -45,61 +45,59 @@ fn every_question_graph_is_acyclic_with_reachable_nodes_and_success_rest_exits()
         }
         lessons += 1;
         let page = std::fs::read_to_string(&path).unwrap();
-        let graph = page
-            .split("```mermaid\n")
-            .nth(1)
-            .expect("a rendered graph")
-            .split("```")
-            .next()
-            .unwrap();
-        let mut edges: BTreeMap<String, Vec<String>> = BTreeMap::new();
-        let mut nodes = BTreeSet::new();
-        for line in graph.lines() {
-            if let Some((from, to)) = line.split_once("-->") {
-                let from = node(from);
-                let to = to.trim();
-                let to = if let Some(label) = to.strip_prefix('|') {
-                    label.split_once('|').expect("closed edge label").1
-                } else {
-                    to
-                };
-                let to = node(to);
-                assert!(
-                    !from.is_empty() && !to.is_empty(),
-                    "{}: {line}",
-                    path.display()
-                );
-                nodes.insert(from.clone());
-                nodes.insert(to.clone());
-                edges.entry(from).or_default().push(to);
+        let graphs: Vec<_> = page.split("```mermaid\n").skip(1).collect();
+        assert!(!graphs.is_empty(), "a rendered graph");
+        for block in graphs {
+            let graph = block.split("```").next().unwrap();
+            let mut edges: BTreeMap<String, Vec<String>> = BTreeMap::new();
+            let mut nodes = BTreeSet::new();
+            for line in graph.lines() {
+                if let Some((from, to)) = line.split_once("-->") {
+                    let from = node(from);
+                    let to = to.trim();
+                    let to = if let Some(label) = to.strip_prefix('|') {
+                        label.split_once('|').expect("closed edge label").1
+                    } else {
+                        to
+                    };
+                    let to = node(to);
+                    assert!(
+                        !from.is_empty() && !to.is_empty(),
+                        "{}: {line}",
+                        path.display()
+                    );
+                    nodes.insert(from.clone());
+                    nodes.insert(to.clone());
+                    edges.entry(from).or_default().push(to);
+                }
             }
-        }
-        assert!(nodes.contains("Choose"));
-        assert!(
-            !cycle("Choose", &edges, &mut BTreeSet::new()),
-            "{} contains a directed cycle",
-            path.display()
-        );
-        let visited = reachable("Choose", &edges);
-        assert_eq!(visited, nodes, "unreachable nodes in {}", path.display());
-        let success = ["Picnic", "Feast", "Done"]
-            .into_iter()
-            .find(|n| nodes.contains(*n))
-            .expect("a success exit");
-        assert!(nodes.contains("Rest"));
-        for n in nodes
-            .iter()
-            .filter(|n| *n != "Rest" && n.as_str() != success)
-        {
-            let paths = reachable(n, &edges);
+            assert!(nodes.contains("Choose"));
             assert!(
-                paths.contains("Rest") || paths.contains(success),
-                "dead end at {n} in {}",
+                !cycle("Choose", &edges, &mut BTreeSet::new()),
+                "{} contains a directed cycle",
                 path.display()
             );
+            let visited = reachable("Choose", &edges);
+            assert_eq!(visited, nodes, "unreachable nodes in {}", path.display());
+            let success = ["Picnic", "Feast", "Done"]
+                .into_iter()
+                .find(|n| nodes.contains(*n))
+                .expect("a success exit");
+            assert!(nodes.contains("Rest"));
+            for n in nodes
+                .iter()
+                .filter(|n| *n != "Rest" && n.as_str() != success)
+            {
+                let paths = reachable(n, &edges);
+                assert!(
+                    paths.contains("Rest") || paths.contains(success),
+                    "dead end at {n} in {}",
+                    path.display()
+                );
+            }
+            assert!(!edges.contains_key("Rest"));
+            assert!(!edges.contains_key(success));
         }
-        assert!(!edges.contains_key("Rest"));
-        assert!(!edges.contains_key(success));
     }
     assert_eq!(lessons, 10);
 }

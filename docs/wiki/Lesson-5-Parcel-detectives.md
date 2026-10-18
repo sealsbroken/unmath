@@ -75,6 +75,36 @@ flowchart TD
     Done["Lesson complete"]
 ```
 
+## Too many toys were added
+
+If the child is asked to add two toys but adds three, the tutor says:
+“Too many toys joined. Put ALL the toys you just added back beside the table.
+Leave the toys that were here before. A grown-up can help.”
+
+The child undoes the whole attempted addition. The tutor waits for the original
+stable total, then asks for the original addition again. It never asks the child
+to calculate an excess or remove just that many toys. Even passing through the
+correct combined total during removal does not bypass the reset. Setup errors
+do not score failed answers or erase completed missions. Partial additions and
+moving/unknown observations do not trigger this overshoot correction.
+
+```mermaid
+flowchart TD
+    Choose["Original toy group verified"] --> Add["Ask for the new toy group"]
+    Add -->|"Correct stable combined total"| Count["Count the combined group"]
+    Count --> Done["Continue the current mission"]
+    Add -->|"Stable total is too large"| Undo["Remove ALL toys just added; keep original toys"]
+    Undo -->|"Wait until original stable total is restored"| Retry["Ask for the SAME addition again"]
+    Retry --> Done
+    Undo -->|"Break or skip requested"| Rest["Rest; keep earned progress"]
+```
+
+This acyclic segment shows one physical setup attempt. The retry opens a new
+attempt of the same addition; it does not restart the lesson. Physical setup
+has no enforced timeout or fixed retry count. The camera verifies totals, not
+which individual toys were removed; a grown-up can help keep the original group.
+
+
 ## Six missions and acceptance
 
 1. 1 + ? = 3 → 2
