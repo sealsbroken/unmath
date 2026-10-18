@@ -15,10 +15,10 @@ fn spoken(effects: &[Effect]) -> String {
         .join(" ")
 }
 #[test]
-fn child_chooses_the_counting_adventure_with_words_or_taps() {
+fn child_chooses_the_counting_adventure_by_voice() {
     for (choice, vehicle) in [
         (Event::Said("moon".into()), "rocket"),
-        (Event::Heard(1), "bus"),
+        (Event::Said("forest".into()), "bus"),
     ] {
         let mut s = CountToFive::new(SessionConfig::default());
         let intro = s.handle(Event::Start);
@@ -26,7 +26,7 @@ fn child_chooses_the_counting_adventure_with_words_or_taps() {
         assert_eq!(s.snapshot().phase, PhaseKind::Meeting);
         assert_eq!(s.snapshot().expected_answer, None);
         s.handle(choice);
-        let first = s.handle(Event::Table(TableObservation::stable(5)));
+        let first = s.handle(Event::Table(TableObservation::stable(3)));
         assert!(spoken(&first).contains(vehicle));
         assert_eq!(s.snapshot().tasks_completed, 0); // choosing a destination is not a maths answer
         s.handle(Event::Said("help".into()));

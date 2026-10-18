@@ -60,6 +60,9 @@ plugin; existing prebuilt apps must be rebuilt with it.
 
 ## Play adventures
 
+The game is **screen free**. Every child-facing choice and question can be
+answered aloud; no lesson asks the child to operate buttons or a screen.
+
 The child chooses a forest picnic by bus or a moon picnic by rocket. Any five
 recognizable toys become passengers, then pretend snacks for bears or aliens.
 English and Russian prompts support story choices, ticket checks, basket packing,
@@ -69,7 +72,8 @@ the engine does not render story scenes or judge pretend play.
 
 ### Lesson 1: Five passengers
 
-Open the doors by counting, check each passenger's ticket, let the toys choose
+Begin with only three toy passengers, add one at a time to four and five,
+then open the doors by counting. Check each passenger's ticket, let the toys choose
 new seats, and count again to start the engine. Passing still requires two
 independent exact sequences `[1, 2, 3, 4, 5]`, with one number per real toy,
 separated by the five-toy activity
@@ -77,7 +81,15 @@ and its total. Guided practice never earns an independent sequence check.
 
 ```mermaid
 flowchart TD
-    Choose["Where shall we go: forest or moon?"] --> Setup["Can you bring five toy passengers?"]
+    Choose["Where shall we go: forest or moon?"] --> Three["Bring only three toy passengers"]
+    Three -->|"Stable total three"| CountThree["Point to each toy; count one by one to three"]
+    CountThree -->|"Full sequence"| Four["One more friend: prepare four toys"]
+    Four -->|"Stable total four"| CountFour["Count the four toys one by one"]
+    CountFour -->|"Full sequence"| Setup["One more friend: prepare five toys"]
+    CountThree -->|"Needs help"| Small
+    CountFour -->|"Needs help"| Small
+    CountThree -->|"Starts at zero"| Zero
+    CountFour -->|"Starts at zero"| Zero
     Setup -->|"Stable total five"| Doors["Point to one toy at a time; say one number per toy to open the doors"]
     Doors -->|"Full sequence"| Tickets["Point to the toys one by one; count each ticket aloud"]
     Doors -->|"Needs help"| Small["Prepare n toy passengers; first practice starts at one"]
@@ -146,7 +158,7 @@ question graphs:
 
 | Lesson | Strategy ID | Skill |
 | --- | --- | --- |
-| [1: Five passengers](https://github.com/sealsbroken/unmath/wiki/Lesson-1-Count-to-five) | `unmath-count-to-five` | Count five toys one by one |
+| [1: Five passengers](https://github.com/sealsbroken/unmath/wiki/Lesson-1-Count-to-five) | `unmath-count-to-five` | Start with three, build to five, count one by one |
 | [2: Picnic baskets](https://github.com/sealsbroken/unmath/wiki/Lesson-2-Add-up-to-five) | `unmath-add-to-five` | Combine and count within five |
 | [3: Cave train](https://github.com/sealsbroken/unmath/wiki/Lesson-3-Cave-train) | `unmath-subtract-to-five` | Taking away within five |
 | [4: Bridge builders](https://github.com/sealsbroken/unmath/wiki/Lesson-4-Bridge-builders) | `unmath-compare-to-five` | More, fewer, and equal within five |
@@ -179,8 +191,8 @@ comparison counts two supplies, and sharing deals alternately to two guests.
 ## Integration behavior
 
 `unmath::ID` and `unmath::ADDITION_ID` are unchanged. Registration includes all ten
-lessons. Choose a destination by saying `forest` / `moon` (`лес` / `луна`) or
-by tapping 1 / 2. Destination choices never score as maths answers. Help requests
+lessons. Choose a destination by saying `forest` / `moon` (`лес` / `луна`).
+Destination choices never score as maths answers. Help requests
 (`help`, `help me`, `I don't know`, `помоги`, `не знаю`) enter toy practice without
 scoring a mistake. Break requests (`stop`, `break`, `I'm tired`, `стоп`, `перерыв`,
 `я устал`, `я устала`) pause, including during toy setup.
@@ -189,9 +201,8 @@ Counting checks use full `Numbers` sequences, judged on the following `Heard`
 event so the same response cannot answer the next question. Lessons 1–2 use
 actual toys and complete spoken counts, one number per toy.
 Lesson two prepares the starting set and combined set before each independent
-count; a final-number tap cannot complete a basket. Its tutor names the total
-after the full count. Later independent arithmetic answers can still be spoken
-or tapped; guided toy counts always require the full sequence. Stable
+count; saying only the final number cannot complete a basket. Its tutor names the total
+after the full count. Later independent arithmetic accepts spoken totals; guided toy counts always require the full sequence. Stable
 table totals gate toy tasks; table changes cancel pending toy counts. The strategy
 cannot verify one touch per toy or pretend actions.
 

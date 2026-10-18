@@ -61,7 +61,7 @@ restarts. Setup itself is unscored. The camera verifies totals, not toy identiti
 the meaning of the scene, or the child's pointing.
 
 Comparison answers are `first`, `second`, or `same` (`первая`, `вторая`,
-`поровну`), or taps 1, 2, or 3. The first/second numbers are spoken in every
+`поровну`). The first/second numbers are spoken in every
 independent question. Guided supplies are counted one at a time; no app-generated
 side-by-side drawing is assumed. Adult-assisted matching can happen off-camera.
 
@@ -71,7 +71,7 @@ Strategy ID: `unmath-compare-to-five`. Use `Lesson::BridgeBuilders`
 with `Adventure::new`, or use the ID through `unmath::register` and the registry.
 English and Russian content is included.
 
-Choose forest/moon by voice or tap 1/2. Say `help` / `помоги` during a question
+Choose forest or moon by saying its name. Say `help` / `помоги` during a question
 for physical practice; this does not score an error. Say `stop`, `I'm tired`,
 `стоп`, or `я устал` to rest, including during setup. Repeat restarts the current
 prompt. Skipping a question records a skip and starts help; skipping setup pauses.

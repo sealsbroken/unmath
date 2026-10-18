@@ -74,7 +74,7 @@ Strategy ID: `unmath-share-between-two`. Use `Lesson::FairShareCafe`
 with `Adventure::new`, or use the ID through `unmath::register` and the registry.
 English and Russian content is included.
 
-Choose forest/moon by voice or tap 1/2. Say `help` / `помоги` during a question
+Choose forest or moon by saying its name. Say `help` / `помоги` during a question
 for physical practice; this does not score an error. Say `stop`, `I'm tired`,
 `стоп`, or `я устал` to rest, including during setup. Repeat restarts the current
 prompt. Skipping a question records a skip and starts help; skipping setup pauses.

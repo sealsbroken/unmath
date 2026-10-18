@@ -67,14 +67,14 @@ current count. Each mission waits for the starting group, the added group, and
 a stable combined total before listening. Toy-assisted guided responses do not complete missions. This checks
 combining quantities, including two ways to make five; it does not claim mastery
 of every addition fact or delayed retention. Both independent and guided counts require the full sequence `1..a+b`. A lone
-final number, a tap, or a sequence with skipped/repeated numbers cannot complete
+final number or a sequence with skipped/repeated numbers cannot complete
 a basket. After a correct count, the tutor names the total to connect counting
 with “how many altogether.”
 
 ## Child controls and engine behavior
 
-The same destination choices, spoken help/break requests, Repeat, and Skip as
-lesson one are available. Help rebuilds the current basket without an error
+The same spoken destination choices, help/break requests, and restart requests
+as lesson one are available; no screen interaction is required. Help rebuilds the current basket without an error
 record. Skipping toy setup pauses. Three consecutive mistakes/timeouts, Stop, or
 the task limit pause; silence does not create a failed task record. Setup has no
 timeout. The camera verifies totals, not food identities or pretend actions.

@@ -12,8 +12,8 @@ use un_engine::{
 #[test]
 fn spoken_zero_prefix_reaches_the_lesson_in_english_and_russian() {
     for (language, zero_count) in [
-        (Language::English, "zero one two three four five"),
-        (Language::Russian, "ноль один два три четыре пять"),
+        (Language::English, "zero one two three"),
+        (Language::Russian, "ноль один два три"),
     ] {
         let config = SessionConfig {
             language,
@@ -21,7 +21,7 @@ fn spoken_zero_prefix_reaches_the_lesson_in_english_and_russian() {
             ..Default::default()
         };
         let speech = Arc::new(ScriptedSpeechInput::saying(
-            vec!["1".into(), zero_count.into()],
+            vec!["forest".into(), zero_count.into()],
             Duration::from_millis(20),
         ));
         let voice = Arc::new(SilentSpeechOutput::new(false));
@@ -36,7 +36,7 @@ fn spoken_zero_prefix_reaches_the_lesson_in_english_and_russian() {
                 ..Default::default()
             },
         );
-        engine.observe_table(TableObservation::stable(5));
+        engine.observe_table(TableObservation::stable(3));
         engine.start();
         let deadline = Instant::now() + Duration::from_secs(8);
         while engine.strategy_snapshot().tasks_completed == 0 && Instant::now() < deadline {
@@ -75,10 +75,10 @@ fn an_explicit_restart_discards_the_zero_prefix_in_the_real_listener() {
     };
     let speech = Arc::new(ScriptedSpeechInput::saying(
         vec![
-            "1".into(),
+            "forest".into(),
             "zero".into(),
             "start again".into(),
-            "one two three four five".into(),
+            "one two three".into(),
         ],
         Duration::from_millis(30),
     ));
@@ -93,7 +93,7 @@ fn an_explicit_restart_discards_the_zero_prefix_in_the_real_listener() {
             ..Default::default()
         },
     );
-    engine.observe_table(TableObservation::stable(5));
+    engine.observe_table(TableObservation::stable(3));
     engine.start();
     let deadline = Instant::now() + Duration::from_secs(8);
     while engine.strategy_snapshot().tasks_completed == 0 && Instant::now() < deadline {

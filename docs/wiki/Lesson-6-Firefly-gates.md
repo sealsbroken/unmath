@@ -44,7 +44,7 @@ first when possible, and the helped mission returns later.
 5. Full sequence 1–10
 6. A separate full sequence 1–10
 
-Say every ordered sequence exactly, including two separate independent counts from one to ten. A final-number tap never passes.
+Say every ordered sequence exactly, including two separate independent counts from one to ten. A final number alone never passes.
 
 ## Toy-based help
 
@@ -59,7 +59,7 @@ restarts. Setup itself is unscored. The camera verifies totals, not toy identiti
 the meaning of the scene, or the child's pointing.
 
 Independent gates use counting mode: only the full sequence `1..n` passes.
-A missing, repeated, or extra number, or a single tap on the final number, fails
+A missing, repeated, or extra number, or saying only the final number, fails
 that attempt. The last two gates each require a separate complete count to ten.
 Guided counts never complete gates.
 
@@ -69,7 +69,7 @@ Strategy ID: `unmath-count-to-ten`. Use `Lesson::FireflyGates`
 with `Adventure::new`, or use the ID through `unmath::register` and the registry.
 English and Russian content is included.
 
-Choose forest/moon by voice or tap 1/2. Say `help` / `помоги` during a question
+Choose forest or moon by saying its name. Say `help` / `помоги` during a question
 for physical practice; this does not score an error. Say `stop`, `I'm tired`,
 `стоп`, or `я устал` to rest, including during setup. Repeat restarts the current
 prompt. Skipping a question records a skip and starts help; skipping setup pauses.

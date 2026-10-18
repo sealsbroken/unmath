@@ -33,7 +33,7 @@ Each link includes its questions, acceptance criteria, and directed cyclic graph
 
 | Lesson | Adventure | Learning goal |
 | --- | --- | --- |
-| 1 | [Five passengers](https://github.com/sealsbroken/unmath/wiki/Lesson-1-Count-to-five) | Count five real toys one by one; connect the count to the total. |
+| 1 | [Five passengers](https://github.com/sealsbroken/unmath/wiki/Lesson-1-Count-to-five) | Start with three toys, add one at a time to five, and count each toy one by one. |
 | 2 | [Picnic baskets](https://github.com/sealsbroken/unmath/wiki/Lesson-2-Add-up-to-five) | Combine two toy groups with a total up to five; count every toy in the combined basket. |
 | 3 | [Cave train](https://github.com/sealsbroken/unmath/wiki/Lesson-3-Cave-train) | Take away within five; find what remains, including none left and none taken away. |
 | 4 | [Bridge builders](https://github.com/sealsbroken/unmath/wiki/Lesson-4-Bridge-builders) | Compare groups up to five: more, fewer, or equal. |
@@ -60,10 +60,11 @@ arithmetic fact.
 
 ## How to use the course
 
-Lessons 1–5 use **five recognizable toys**; lessons 6–10 use **ten**. Story props
+Lesson 1 starts with **three toys** and grows to five. Lessons 2–5 use
+**five recognizable toys**; lessons 6–10 use **ten**. Story props
 are optional. Keep fair-share guests outside the camera's counting area.
-English and Russian prompts are included. The child can ask for help, restart a
-count, or rest; progress can be saved between sessions.
+English and Russian prompts are included. The game is screen free: the child speaks, counts, and moves toys. The child
+can ask for help, restart a count, or rest; progress can be saved between sessions.
 
 Every lesson graph is **directed and cyclic**: practice returns to questions,
 independent success advances the story, and completion/rest provide exits.

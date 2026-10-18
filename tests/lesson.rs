@@ -10,7 +10,7 @@ fn lesson() -> CountToFive {
 fn start(s: &mut CountToFive) -> Vec<Effect> {
     s.handle(Event::Start);
     s.handle(Event::Said("forest".into()));
-    s.handle(Event::Table(TableObservation::stable(5)))
+    s.handle(Event::Table(TableObservation::stable(3)))
 }
 fn count(s: &mut CountToFive, ns: &[u32]) -> Vec<Effect> {
     assert!(s.handle(Event::Numbers(ns.to_vec())).is_empty());
@@ -23,19 +23,24 @@ fn table(s: &mut CountToFive, n: u32) {
 fn two_independent_counts_separated_by_toy_activity_pass() {
     let mut s = lesson();
     start(&mut s);
-    count(&mut s, &[1, 2, 3, 4, 5]);
-    assert_eq!(s.snapshot().phase, PhaseKind::Asking);
+    assert_eq!(s.snapshot().target_count, Some(3));
+    count(&mut s, &[1, 2, 3]);
+    assert_eq!(s.snapshot().target_count, Some(4));
+    table(&mut s, 4);
+    count(&mut s, &[1, 2, 3, 4]);
+    assert_eq!(s.snapshot().target_count, Some(5));
     table(&mut s, 5);
     count(&mut s, &[1, 2, 3, 4, 5]);
-    // The preceding Heard(5) answered only the counting question, not the total.
-    assert_eq!(s.snapshot().tasks_completed, 2);
+    count(&mut s, &[1, 2, 3, 4, 5]);
+    assert_eq!(s.snapshot().tasks_completed, 4);
     s.handle(Event::Heard(5));
     let effects = count(&mut s, &[1, 2, 3, 4, 5]);
     assert!(effects.iter().any(
-        |e| matches!(e, Effect::SessionEnded(summary) if !summary.paused && summary.correct == 4)
+        |e| matches!(e,Effect::SessionEnded(summary) if !summary.paused && summary.correct==6)
     ));
     assert_eq!(s.snapshot().phase, PhaseKind::Finished);
 }
+
 #[test]
 fn last_number_taps_and_malformed_sequences_do_not_pass() {
     for ns in [
@@ -72,16 +77,17 @@ fn practice_cycles_back_to_an_independent_check() {
 fn unstable_table_invalidates_pending_count() {
     let mut s = lesson();
     start(&mut s);
-    count(&mut s, &[1, 2, 3, 4, 5]);
-    table(&mut s, 5);
-    s.handle(Event::Numbers(vec![1, 2, 3, 4, 5]));
+    count(&mut s, &[1, 2, 3]);
+    table(&mut s, 4);
+    s.handle(Event::Numbers(vec![1, 2, 3, 4]));
     s.handle(Event::Table(TableObservation::default()));
-    s.handle(Event::Heard(5));
+    s.handle(Event::Heard(4));
     assert_eq!(s.snapshot().tasks_completed, 1);
-    table(&mut s, 5);
-    s.handle(Event::Heard(5));
+    table(&mut s, 4);
+    s.handle(Event::Heard(4));
     assert_eq!(s.snapshot().correct, 1);
 }
+
 #[test]
 fn task_limit_and_silence_pause_without_mastery() {
     let mut s = CountToFive::new(SessionConfig {
@@ -89,7 +95,7 @@ fn task_limit_and_silence_pause_without_mastery() {
         ..Default::default()
     });
     start(&mut s);
-    let result = count(&mut s, &[1, 2, 3, 4, 5]);
+    let result = count(&mut s, &[1, 2, 3]);
     let summary = result
         .into_iter()
         .find_map(|e| {
@@ -105,7 +111,7 @@ fn task_limit_and_silence_pause_without_mastery() {
     summary.apply_remembered(&mut config.extra);
     let mut resumed = CountToFive::new(config);
     resumed.handle(Event::Start);
-    assert_eq!(resumed.snapshot().target_count, Some(5));
+    assert_eq!(resumed.snapshot().target_count, Some(4));
     let mut s = lesson();
     start(&mut s);
     for _ in 0..3 {
@@ -158,14 +164,14 @@ fn the_first_count_waits_for_real_toys_and_invalidates_when_the_table_changes() 
     assert_eq!(s.snapshot().phase, PhaseKind::Performing);
     count(&mut s, &[1, 2, 3, 4, 5]);
     assert_eq!(s.snapshot().tasks_completed, 0);
-    table(&mut s, 5);
+    table(&mut s, 3);
     let effects = s.handle(Event::RepeatRequested);
     assert!(un_core::strategy::spoken(&effects)
         .join(" ")
         .contains("one number for each"));
-    s.handle(Event::Numbers(vec![1, 2, 3, 4, 5]));
+    s.handle(Event::Numbers(vec![1, 2, 3]));
     s.handle(Event::Table(TableObservation::default()));
-    s.handle(Event::Heard(5));
+    s.handle(Event::Heard(3));
     assert_eq!(s.snapshot().tasks_completed, 0);
 }
 #[test]
@@ -176,17 +182,61 @@ fn pointing_at_the_toys_does_not_restart_the_question() {
     assert_eq!(asked.phase, PhaseKind::Asking);
     // A hand over the toys: the settled count holds but the table is not still.
     let moving = TableObservation {
-        count: Some(5),
+        count: Some(3),
         is_stable: false,
         groups: 1,
     };
     for _ in 0..10 {
         assert!(s.handle(Event::Table(moving)).is_empty());
         assert!(s
-            .handle(Event::Table(TableObservation::stable(5)))
+            .handle(Event::Table(TableObservation::stable(3)))
             .is_empty());
     }
     assert_eq!(s.snapshot().phase, PhaseKind::Asking);
-    count(&mut s, &[1, 2, 3, 4, 5]);
+    count(&mut s, &[1, 2, 3]);
     assert_eq!(s.snapshot().correct, 1);
+}
+
+#[test]
+fn three_available_toys_start_the_game_and_save_the_next_stop_for_later() {
+    let mut s = CountToFive::new(SessionConfig {
+        total_objects: 3,
+        ..Default::default()
+    });
+    s.handle(Event::Start);
+    s.handle(Event::Said("forest".into()));
+    table(&mut s, 3);
+    let effects = count(&mut s, &[1, 2, 3]);
+    let summary = effects
+        .into_iter()
+        .find_map(|e| {
+            if let Effect::SessionEnded(s) = e {
+                Some(s)
+            } else {
+                None
+            }
+        })
+        .unwrap();
+    assert!(summary.paused);
+    assert_eq!(summary.correct, 1);
+    let mut config = SessionConfig::default();
+    summary.apply_remembered(&mut config.extra);
+    let mut resumed = CountToFive::new(config);
+    resumed.handle(Event::Start);
+    // No five-toy mastery was earned by the three-toy warm-up.
+    assert_eq!(resumed.snapshot().level, 0);
+    resumed.handle(Event::Said("forest".into()));
+    assert_eq!(resumed.snapshot().target_count, Some(4));
+}
+
+#[test]
+fn the_three_and_four_toy_warmups_cannot_complete_a_count_to_five_lesson() {
+    let mut s = lesson();
+    start(&mut s);
+    count(&mut s, &[1, 2, 3]);
+    table(&mut s, 4);
+    count(&mut s, &[1, 2, 3, 4]);
+    assert_ne!(s.snapshot().phase, PhaseKind::Finished);
+    assert_eq!(s.snapshot().target_count, Some(5));
+    assert_eq!(s.snapshot().level, 0);
 }
