@@ -86,7 +86,7 @@ flowchart TD
     Choose["Count the current one-, two-, or three-toy group"] -->|"Independent success"| Done["Keep progress; continue to next question or finish"]
     Choose -->|"Starts at zero"| E0["Zero means no toys; the first toy gets one"]
     E0 --> S0
-    Choose -->|"Skips or repeats a number"| E1["Each toy gets exactly one ticket"]
+    Choose -->|"Skips or duplicates a number within one count"| E1["Each toy gets exactly one ticket"]
     E1 --> S0
     Choose -->|"Says only the final total"| E2["Listen for one number per toy"]
     E2 --> S0
@@ -116,7 +116,7 @@ flowchart TD
     Choose["Combine the current picnic basket and count every toy"] -->|"Independent success"| Done["Keep progress; continue to next question or finish"]
     Choose -->|"Starts at zero"| E0["First toy gets one"]
     E0 --> S0
-    Choose -->|"Skips, repeats, or gives only the total"| E1["Give every snack one place on the blanket"]
+    Choose -->|"Skips, duplicates within a count, or gives only the total"| E1["Give every snack one place on the blanket"]
     E1 --> S0
     S0["Count THIS assembled basket together, one toy at a time"] -->|"Guided success; no mastery credit"| Follow
     S0 -->|"Mistake at this step"| H0["Model the current settled count; one number per toy"]
@@ -194,7 +194,8 @@ Destination choices never score as maths answers. Help requests
 scoring a mistake. Break requests (`stop`, `break`, `I'm tired`, `стоп`, `перерыв`,
 `я устал`, `я устала`) pause, including during toy setup.
 
-Counting checks use full `Numbers` sequences, judged on the following `Heard`
+Counting checks accept complete repeated answers: `1, 2, 1, 2` for two toys
+counts as one correct response. They use full `Numbers` sequences, judged on the following `Heard`
 event so the same response cannot answer the next question. Lessons 1–2 use
 actual toys and complete spoken counts, one number per toy.
 Lesson two prepares the starting set and combined set before each independent

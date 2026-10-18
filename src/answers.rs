@@ -1,16 +1,33 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
-//! Shared, strict grading for toy counts. Never repair a child's sequence into a pass.
+//! Grade complete toy counts, including repetitions of the same complete answer.
 use un_core::{language::Language, strategy::Effect};
 
 pub(crate) fn valid_count(numbers: &[u32], expected: u32, heard: Option<u32>) -> bool {
-    heard == Some(expected)
-        && numbers.len() == expected as usize
-        && numbers.iter().enumerate().all(|(i, n)| *n == i as u32 + 1)
+    expected > 0
+        && heard == Some(expected)
+        && !numbers.is_empty()
+        && numbers.len().is_multiple_of(expected as usize)
+        && numbers
+            .iter()
+            .enumerate()
+            .all(|(i, n)| *n == (i % expected as usize) as u32 + 1)
 }
 pub(crate) fn bounded_count(mut numbers: Vec<u32>) -> Vec<u32> {
     // Every lesson counts at most ten. Keep ample diagnostic context, not an
     // unbounded transcript in every persisted task record. Mark truncation invalid.
     if numbers.len() > 32 {
+        // A child may repeat a complete count many times. Validate the WHOLE
+        // response before compacting it, so late mistakes cannot disappear.
+        let cycle = numbers
+            .iter()
+            .skip(1)
+            .position(|n| *n == 1)
+            .map(|i| i + 1)
+            .unwrap_or(numbers.len());
+        if cycle <= 10 && valid_count(&numbers, cycle as u32, numbers.last().copied()) {
+            numbers.truncate(cycle);
+            return numbers;
+        }
         numbers.truncate(32);
         numbers.push(u32::MAX);
     }
@@ -93,5 +110,49 @@ impl CountBuffer {
     }
     pub fn ignore_discarded_tail(&mut self, n: u32) -> bool {
         self.discarded_tail.take() == Some(n)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn complete_answer_repetitions_are_valid_and_bounded_for_every_toy_count() {
+        for n in 1..=10 {
+            let answer: Vec<_> = (1..=n).collect();
+            for repetitions in [1, 2, 3, 40, 1000] {
+                let response = answer.repeat(repetitions);
+                assert!(valid_count(&response, n, Some(n)));
+                let stored = bounded_count(response);
+                assert!(stored.len() <= 32);
+                assert!(valid_count(&stored, n, Some(n)));
+                assert!(!valid_count(&stored, n, Some(n + 1)));
+            }
+        }
+    }
+
+    #[test]
+    fn repeats_do_not_hide_zero_skips_stutters_overcounts_or_incomplete_repetitions() {
+        for response in [
+            vec![],
+            vec![2],
+            vec![1, 1, 2],
+            vec![1, 2, 2],
+            vec![1, 2, 1],
+            vec![1, 2, 1, 3],
+            vec![1, 2, 3, 1, 2],
+            vec![0, 1, 2, 1, 2],
+            vec![1, 2, 0, 1, 2],
+        ] {
+            assert!(
+                !valid_count(&response, 2, response.last().copied()),
+                "{response:?}"
+            );
+        }
+        let mut late_error = [1, 2].repeat(100);
+        late_error[151] = 3;
+        assert!(!valid_count(&bounded_count(late_error), 2, Some(2)));
+        assert!(!valid_count(&[], 0, Some(0))); // zero uses the separate empty-set rule
     }
 }

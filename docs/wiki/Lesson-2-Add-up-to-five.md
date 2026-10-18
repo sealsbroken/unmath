@@ -20,6 +20,14 @@ joining made the total, and return to the missions. Use the actual toy basket fo
 
 ## Acyclic teaching and correction paths
 
+A child may repeat the whole correct answer. For two toys, `1, 2, 1, 2`
+(or “один, два, один, два”) is one successful response. Each repetition must be
+a complete `1..n` count, in order, ending at the actual toy total. Repetitions
+never earn extra task completions or replace a later independent question.
+Skipped numbers, incomplete restarts, and repeating one number inside a count
+remain correction cases. Long valid repetitions are checked in full, then
+compacted for bounded saved diagnostics; a late error is never discarded.
+
 After an incorrect spoken answer, the next teaching question begins with
 **“А ты уверен?”** in Russian (**“Are you sure?”** in English). The prefix is
 spoken once, after any setup wait; skips and silence do not trigger it.
@@ -42,7 +50,7 @@ flowchart TD
     Choose["Combine the current picnic basket and count every toy"] -->|"Independent success"| Done["Keep progress; continue to next question or finish"]
     Choose -->|"Starts at zero"| E0["First toy gets one"]
     E0 --> S0
-    Choose -->|"Skips, repeats, or gives only the total"| E1["Give every snack one place on the blanket"]
+    Choose -->|"Skips, duplicates within a count, or gives only the total"| E1["Give every snack one place on the blanket"]
     E1 --> S0
     S0["Count THIS assembled basket together, one toy at a time"] -->|"Guided success; no mastery credit"| Follow
     S0 -->|"Mistake at this step"| H0["Model the current settled count; one number per toy"]
@@ -112,7 +120,7 @@ current count. Each mission waits for the starting group, the added group, and
 a stable combined total before listening. Toy-assisted guided responses do not complete missions. This checks
 combining quantities, including two ways to make five; it does not claim mastery
 of every addition fact or delayed retention. Both independent and guided counts require the full sequence `1..a+b`. A lone
-final number or a sequence with skipped/repeated numbers cannot complete
+final number or a sequence with skipped/duplicated numbers within a count cannot complete
 a basket. After a correct count, the tutor names the total to connect counting
 with “how many altogether.”
 

@@ -73,7 +73,7 @@ fn zero_start_is_rejected_and_explained_in_both_languages_in_all_ten_lessons() {
     }
 }
 #[test]
-fn every_single_edit_of_a_count_is_rejected() {
+fn malformed_count_edits_are_rejected_but_complete_answer_repetitions_are_legal() {
     for id in ids() {
         let template = counting(&id, Language::English);
         let n = template.snapshot().expected_answer.unwrap();
@@ -111,8 +111,11 @@ fn every_single_edit_of_a_count_is_rejected() {
         mutations.push(ns);
         mutations.push(vec![1; 10000]);
         for ns in mutations {
-            if ns == good {
-                continue;
+            if !ns.is_empty()
+                && ns.len().is_multiple_of(good.len())
+                && ns.chunks(good.len()).all(|part| part == good)
+            {
+                continue; // repeating the entire correct answer is legal, including one toy
             }
             let mut s = counting(&id, Language::English);
             let before = s.snapshot();
@@ -129,6 +132,26 @@ fn every_single_edit_of_a_count_is_rejected() {
             before.correct,
             "mismatched tail: {id}"
         );
+    }
+}
+#[test]
+fn repeated_complete_answers_score_once_across_all_lessons_and_languages() {
+    for id in ids() {
+        for language in [Language::English, Language::Russian] {
+            for times in [2, 3, 100] {
+                let mut s = counting(&id, language);
+                let before = s.snapshot();
+                let n = before.expected_answer.unwrap();
+                let answer: Vec<_> = (1..=n).collect();
+                respond(s.as_mut(), answer.repeat(times), n);
+                assert_eq!(
+                    s.snapshot().tasks_completed,
+                    before.tasks_completed + 1,
+                    "{id}"
+                );
+                assert_eq!(s.snapshot().correct, before.correct + 1, "{id}");
+            }
+        }
     }
 }
 #[test]

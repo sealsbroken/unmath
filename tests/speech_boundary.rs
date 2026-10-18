@@ -104,3 +104,58 @@ fn an_explicit_restart_discards_the_zero_prefix_in_the_real_listener() {
     assert_eq!(snap.correct, 1);
     engine.close();
 }
+
+#[test]
+fn repeated_complete_two_toy_answers_are_accepted_in_single_and_split_utterances() {
+    for (language, utterance) in [
+        (Language::Russian, "один два"),
+        (Language::English, "one two"),
+    ] {
+        for split in [false, true] {
+            let mut config = SessionConfig {
+                language,
+                max_tasks: 20,
+                ..Default::default()
+            };
+            config
+                .extra
+                .insert("unmath.lesson1.warmup_three.v1".into(), "2".into());
+            let script = if split {
+                vec![utterance.to_string(), utterance.to_string()]
+            } else {
+                vec![format!("{utterance} {utterance}")]
+            };
+            let speech = Arc::new(ScriptedSpeechInput::saying(
+                script,
+                Duration::from_millis(20),
+            ));
+            let voice = Arc::new(SilentSpeechOutput::new(false));
+            let engine = Engine::new(
+                Box::new(unmath::CountToThree::new(config.clone())),
+                config,
+                Some(speech),
+                voice.clone(),
+                EngineOptions {
+                    chime: false,
+                    log: Some(Arc::new(|_| {})),
+                    ..Default::default()
+                },
+            );
+            engine.observe_table(TableObservation::stable(2));
+            engine.start();
+            let deadline = Instant::now() + Duration::from_secs(8);
+            while engine.strategy_snapshot().tasks_completed == 0 && Instant::now() < deadline {
+                std::thread::sleep(Duration::from_millis(10));
+            }
+            let snapshot = engine.strategy_snapshot();
+            let said = voice.spoken_joined();
+            engine.close();
+            assert_eq!(
+                snapshot.tasks_completed, 1,
+                "{language:?}, split={split}: {said}"
+            );
+            assert_eq!(snapshot.correct, 1, "{language:?}, split={split}: {said}");
+            assert_eq!(snapshot.target_count, Some(3));
+        }
+    }
+}

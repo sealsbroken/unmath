@@ -9,6 +9,14 @@ Example question: “The gate needs eight glowing keys! Count from one to eight 
 
 ## Acyclic teaching and correction paths
 
+A child may repeat the whole correct answer. For two toys, `1, 2, 1, 2`
+(or “один, два, один, два”) is one successful response. Each repetition must be
+a complete `1..n` count, in order, ending at the actual toy total. Repetitions
+never earn extra task completions or replace a later independent question.
+Skipped numbers, incomplete restarts, and repeating one number inside a count
+remain correction cases. Long valid repetitions are checked in full, then
+compacted for bounded saved diagnostics; a late error is never discarded.
+
 After an incorrect spoken answer, the next teaching question begins with
 **“А ты уверен?”** in Russian (**“Are you sure?”** in English). The prefix is
 spoken once, after any setup wait; skips and silence do not trigger it.
@@ -31,7 +39,7 @@ flowchart TD
     Choose["Count the firefly keys in order"] -->|"Independent success"| Done["Keep progress; continue to next question or finish"]
     Choose -->|"Starts at zero"| E0["First key gets one"]
     E0 --> S0
-    Choose -->|"Skips or repeats a number"| E1["Give each key exactly one number"]
+    Choose -->|"Skips or duplicates a number within one count"| E1["Give each key exactly one number"]
     E1 --> S0
     Choose -->|"Only final number or past the last key"| E2["Count every key once and stop at the last"]
     E2 --> S0

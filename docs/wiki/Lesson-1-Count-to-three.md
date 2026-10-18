@@ -16,6 +16,14 @@ complete. With fewer toys, progress is saved at the next stop.
 
 ## Acyclic teaching and correction paths
 
+A child may repeat the whole correct answer. For two toys, `1, 2, 1, 2`
+(or “один, два, один, два”) is one successful response. Each repetition must be
+a complete `1..n` count, in order, ending at the actual toy total. Repetitions
+never earn extra task completions or replace a later independent question.
+Skipped numbers, incomplete restarts, and repeating one number inside a count
+remain correction cases. Long valid repetitions are checked in full, then
+compacted for bounded saved diagnostics; a late error is never discarded.
+
 After an incorrect spoken answer, the next teaching question begins with
 **“А ты уверен?”** in Russian (**“Are you sure?”** in English). The prefix is
 spoken once, after any setup wait; skips and silence do not trigger it.
@@ -38,7 +46,7 @@ flowchart TD
     Choose["Count the current one-, two-, or three-toy group"] -->|"Independent success"| Done["Keep progress; continue to next question or finish"]
     Choose -->|"Starts at zero"| E0["Zero means no toys; the first toy gets one"]
     E0 --> S0
-    Choose -->|"Skips or repeats a number"| E1["Each toy gets exactly one ticket"]
+    Choose -->|"Skips or duplicates a number within one count"| E1["Each toy gets exactly one ticket"]
     E1 --> S0
     Choose -->|"Says only the final total"| E2["Listen for one number per toy"]
     E2 --> S0
@@ -60,7 +68,7 @@ flowchart TD
 Opening counts of one and two never declare mastery. The child must say the
 full sequence `1, 2, 3` independently for three actual toys, complete a ticket
 count and its total, then independently count `1, 2, 3` again for departure.
-A final number alone, zero-start, skipped or repeated number cannot pass a
+A final number alone, zero-start, skipped or duplicated number within a count cannot pass a
 sequence check. The uninterrupted route takes six scored questions.
 
 ## Screen-free controls and progress

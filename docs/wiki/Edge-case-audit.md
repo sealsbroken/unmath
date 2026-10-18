@@ -23,10 +23,10 @@ Zero is accepted when answering an empty-group question, such as `2 - 2`.
 ```mermaid
 flowchart TD
     Count["Point to toys; say one number per toy"] --> Check{"What was heard?"}
-    Check -->|"Exact sequence from one, matching the toy total"| Progress["Advance the lesson"]
+    Check -->|"One or more complete counts from one, each matching the toy total"| Progress["Advance the lesson"]
     Check -->|"Starts at zero, or contains zero with toys present"| Zero["Zero means no toys; first toy gets one"]
     Zero --> Practice["Prepare toys and try a fresh count"]
-    Check -->|"Skipped, repeated, reversed, incomplete, or extra numbers"| Practice
+    Check -->|"Skipped, duplicated within a count, reversed, incomplete, or extra numbers"| Practice
     Check -->|"Final number only or inconsistent trailing answer"| Practice
     Practice --> Count
     Check -->|"Third unsuccessful attempt or task limit"| Rest["Rest and save progress"]
@@ -40,16 +40,25 @@ sequence check.
 
 ## Counterexamples and expected behavior
 
+A child may repeat the whole correct answer. For two toys, `1, 2, 1, 2`
+(or “один, два, один, два”) is one successful response. Each repetition must be
+a complete `1..n` count, in order, ending at the actual toy total. Repetitions
+never earn extra task completions or replace a later independent question.
+Skipped numbers, incomplete restarts, and repeating one number inside a count
+remain correction cases. Long valid repetitions are checked in full, then
+compacted for bounded saved diagnostics; a late error is never discarded.
+
 | Input or situation | Behavior covered by tests |
 | --- | --- |
 | `0,1,2,3…`, or zero inserted in the middle | Reject; explain zero versus the first toy; practice this same toy group before a fresh follow-up |
 | Starts at two or another number | Reject; ask to start at one |
 | Missing a number | Reject; count again in order |
-| Repeated number | Reject; one number per toy |
+| Whole correct answer repeated, e.g. `1,2,1,2` for two toys | Accept once; repeating a complete count is legal |
+| Number duplicated inside a count, e.g. `1,1,2` for two toys | Correct the one-to-one count; this is not a repetition of the whole answer |
 | Reversed or swapped numbers | Reject |
 | Goes past the last toy | Reject; stop after each toy was counted once |
 | Says only the total, or taps it during a counting task | Cannot satisfy a full count |
-| Count has 10,000 entries | Reject; keep bounded diagnostic context instead of persisting the entire transcript |
+| Count has 10,000 entries | Validate the whole response; compact complete repeated answers, otherwise preserve a bounded invalid diagnostic |
 | A correct `Numbers` sequence followed by a conflicting `Heard` | Reject; the final event must agree |
 | Partial `Counted` chunks, including pauses | Never score before the final `Numbers`/`Heard` pair |
 | `start again`, `restart`, `сначала` | Clear the pending count and reissue the current prompt; no error score |
