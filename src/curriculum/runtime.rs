@@ -146,7 +146,7 @@ impl Adventure {
             } else {
                 Words::new(
                     "Point to the toys one by one. Say one number for each toy, starting at one, until every toy has been counted. We can take our time!",
-                    "Показывай на игрушки по одной. Называй по одному числу для каждой, начиная с одного, пока не посчитаешь все. Мы не спешим!",
+                    "Показывай на каждую игрушку по очереди и считай. Начни с одного и посчитай все игрушки. Мы не спешим!",
                 )
             }),
             Effect::listen(
@@ -283,7 +283,7 @@ impl Adventure {
         if success {
             effects.push(Effect::Celebrate);
         }
-        effects.push(self.say(&if success {Words::new("Adventure complete! Give your toy friends a cheer. You solved every mission!", "Приключение завершено! Порадуйся вместе с игрушечными друзьями. Ты решил все задания!")} else {Words::new("Let's rest. Our friends will keep this adventure ready for next time.", "Давай отдохнём. Друзья сохранят приключение до следующего раза.")}));
+        effects.push(self.say(&if success {Words::new("Adventure complete! Give your toy friends a cheer. You solved every mission!", "Приключение завершено! Порадуйся вместе с игрушечными друзьями. Все задания выполнены!")} else {Words::new("Let's rest. Our friends will keep this adventure ready for next time.", "Давай отдохнём. Продолжим приключение в следующий раз.")}));
         effects.push(Effect::SessionEnded(summary));
         effects
     }
@@ -324,7 +324,7 @@ impl Strategy for Adventure {
                     return self.finish(false);
                 }
                 if self.config.total_objects < self.lesson.required_toys() {
-                    let mut effects=vec![self.say(&Words::new(format!("Ask a grown-up to find {} recognizable toys for this adventure. We can play it when they're ready.",self.lesson.required_toys()),format!("Для приключения нужно игрушек: {}. Попроси взрослого подготовить их, и мы сыграем позже.",self.lesson.required_toys())))];
+                    let mut effects=vec![self.say(&Words::new(format!("Ask a grown-up to find {} recognizable toys for this adventure. We can play it when they're ready.",self.lesson.required_toys()),format!("Попроси взрослого подготовить {} для игры. Продолжим, когда всё будет готово.",crate::russian::toys(self.lesson.required_toys()))))];
                     effects.extend(self.finish(false));
                     return effects;
                 }

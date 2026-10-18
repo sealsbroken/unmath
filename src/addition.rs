@@ -2,6 +2,7 @@
 //! Addition with nonnegative operands and a total no greater than five.
 use crate::answers::{count_feedback, safe_config, saved_mask, valid_count, CountBuffer};
 use crate::play::{invitation, wants_break, wants_help, wants_restart, Place};
+use crate::russian::{toys, treats};
 use std::sync::Arc;
 use un_core::{language::Language, strategy::*};
 
@@ -89,13 +90,17 @@ impl AddToFive {
         self.sequence.reset();
         let (a, b) = self.fact;
         let sum = a + b;
+        let a_toys = toys(a);
+        let b_toys = toys(b);
+        let a_treats = treats(a);
+        let b_treats = treats(b);
         let friends = self.place.friends(self.config.language);
         let line = match self.node {
-            Node::Base | Node::CheckBase => self.say(format!("Let's pack a picnic for our friends! Pretend each toy is a snack. Put {a} toy snacks on the table, then move your hands away. A grown-up can help."), format!("Собираем пикник для друзей! Пусть игрушки будут угощениями. Положи на стол {a} игрушек и убери руки. Взрослый может помочь.")),
-            Node::Add | Node::CheckAdd => self.say(if b == 0 { "Our friend brought an empty basket! Add zero: leave the toy snacks as they are.".into() } else { format!("Our friend brings {b} more snacks! Can you add {b} toys to our {a}, then move your hands away?") }, if b == 0 { "Друг принёс пустую корзинку! Прибавь ноль: оставь игрушечные угощения как есть.".into() } else { format!("Друг принёс ещё {b} угощений! Добавь {b} игрушек к нашим {a} и убери руки.") }),
-            Node::Count if sum > 0 => self.say(format!("Our picnic basket has {a} snacks and {b} more. Point to the toy snacks one by one. Say one number for each toy, starting at one, until every snack has been counted."), format!("В корзинке {a} угощений и ещё {b}. Показывай на игрушечные угощения по одному. Называй по одному числу для каждого, начиная с одного, пока не посчитаешь все.")),
+            Node::Base | Node::CheckBase => self.say(format!("Let's pack a picnic for our friends! Pretend each toy is a snack. Put {a} toy snacks on the table, then move your hands away. A grown-up can help."), format!("Собираем пикник для друзей! Пусть игрушки будут угощениями. Положи на стол {a_toys} и убери руки. Взрослый может помочь.")),
+            Node::Add | Node::CheckAdd => self.say(if b == 0 { "Our friend brought an empty basket! Add zero: leave the toy snacks as they are.".into() } else { format!("Our friend brings {b} more snacks! Can you add {b} toys to our {a}, then move your hands away?") }, if b == 0 { "Друг принёс пустую корзинку! Прибавь ноль: оставь игрушечные угощения как есть.".into() } else { format!("Друг принёс ещё {b_treats}! Добавь ещё {b_toys} и убери руки.") }),
+            Node::Count if sum > 0 => self.say(format!("Our picnic basket has {a} snacks and {b} more. Point to the toy snacks one by one. Say one number for each toy, starting at one, until every snack has been counted."), format!("В корзинке было {a_treats}. Добавили ещё {b_treats}. Показывай на каждую игрушку по очереди и считай. Начни с одного.")),
             Node::Count => self.say("There are no toys. How many is that?".into(), "Игрушек нет. Сколько это?".into()),
-            Node::Check => self.say(format!("Picnic mission {} of 7! The {friends} have {a} snacks and bring {b} more. Point to the toy snacks one by one and say one number for each, starting at one, until you have counted every snack.", self.mastered.count_ones() + 1), format!("Задание для пикника {} из 7! У {friends} есть {a} угощений, они принесли ещё {b}. Показывай на игрушечные угощения по одному и называй по одному числу для каждого, начиная с одного, пока не посчитаешь все.", self.mastered.count_ones() + 1)),
+            Node::Check => self.say(format!("Picnic mission {} of 7! The {friends} have {a} snacks and bring {b} more. Point to the toy snacks one by one and say one number for each, starting at one, until you have counted every snack.", self.mastered.count_ones() + 1), format!("Задание для пикника {} из 7! У {friends} есть {a_treats}. Они принесли ещё {b_treats}. Показывай на каждую игрушку по очереди и считай. Начни с одного.", self.mastered.count_ones() + 1)),
             _ => return vec![],
         };
         let mut effects = vec![Effect::StopListening, line];
@@ -203,7 +208,7 @@ impl AddToFive {
         effects.push(if success {
             self.say(
                 "The picnic is ready! You joined our snacks and found how many altogether. Time for a pretend feast!".into(),
-                "Пикник готов! Ты соединил угощения и узнал, сколько всего. Пора играть в праздничный обед!".into(),
+                "Всё готово для пикника! Мы сложили угощения вместе и посчитали их. Угостим друзей понарошку!".into(),
             )
         } else {
             self.say(
@@ -262,7 +267,7 @@ impl AddToFive {
             if !guided {
                 effects.push(self.say(
                     format!("You counted {sum} snacks altogether!"),
-                    format!("Всего ты насчитал угощений: {sum}!"),
+                    format!("Всего получилось {}!", treats(sum)),
                 ));
                 effects.push(Effect::Celebrate);
                 let (en, ru) = match self.mastered.count_ones() {
@@ -284,7 +289,7 @@ impl AddToFive {
                     ),
                     5 => (
                         "Offer a pretend snack to your favorite toy!",
-                        "Угости любимую игрушку воображаемым угощением!",
+                        "Представь, что угощаешь любимую игрушку!",
                     ),
                     _ => (
                         "Give our picnic chef a high five!",
@@ -325,7 +330,10 @@ impl AddToFive {
                 effects.push(Effect::HighlightCount(sum));
                 effects.push(self.say(
                     format!("There are {sum} altogether. Let's try joining the toys again."),
-                    format!("Всего {sum}. Попробуем ещё раз соединить игрушки."),
+                    format!(
+                        "Всего получилось {}. Давай снова сложим игрушки вместе.",
+                        treats(sum)
+                    ),
                 ));
             }
             effects.extend(self.practice());

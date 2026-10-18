@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 use super::*;
+use crate::russian::{blocks, keys, parcels, passengers, pods, toys, travelers, treats};
 impl Lesson {
     pub fn goal(self) -> &'static str {
         match self {
@@ -16,7 +17,7 @@ impl Lesson {
     pub(super) fn welcome(self) -> Words {
         match self {
             Self::CaveTrain => Words::new("You're our train driver! Toys are passengers. Help them get off at their caves.", "Ты машинист! Игрушки — пассажиры. Помоги им выйти у своих пещер."),
-            Self::BridgeBuilders => Words::new("Our friends need bridges! Toys are building blocks. Choose which team has the supplies we need.", "Друзьям нужны мосты! Игрушки — стройматериалы. Выбери команду с нужным запасом."),
+            Self::BridgeBuilders => Words::new("Our friends need bridges! Toys are building blocks. Choose which team has the supplies we need.", "Друзьям нужны мосты! Игрушки — строительные блоки. Выбери команду с нужным количеством блоков."),
             Self::ParcelDetectives => Words::new("Detective, some parcels are missing! Toys are parcels. Can you finish our deliveries?", "Детектив, посылки потерялись! Игрушки — посылки. Помоги собрать заказы."),
             Self::FireflyGates => Words::new("The fireflies hid some pretend gates! Toys are glowing keys. Count to open each gate.", "Светлячки спрятали воображаемые ворота! Игрушки — светящиеся ключи. Считай, чтобы открывать ворота."),
             Self::SupplyLaunch => Words::new("Mission control needs you! Toys are cargo pods. Join the loads so our supplies can launch.", "Центр управления ждёт тебя! Игрушки — грузовые капсулы. Соедини грузы для запуска."),
@@ -32,9 +33,9 @@ impl Lesson {
             Self::ParcelDetectives => [(1,3),(2,5),(3,4),(4,5),(0,2),(5,5)].into_iter().map(|(a,total)| missing(a,total,false)).collect(),
             Self::FireflyGates => [6,7,8,9,10,10].into_iter().enumerate().map(|(i,n)| {
                 Mission { name: format!("gate {}: count 1..{n}", i+1),
-                    question: if i==5 { Words::new("The final gate! Can you count from one to ten again, all by yourself?", "Последние ворота! Посчитай снова от одного до десяти самостоятельно.") } else { Words::new(format!("The firefly gate needs {n} glowing keys! Count from one to {n} to open it."),format!("Воротам светлячков нужно ключей: {n}! Посчитай от одного до {n}, чтобы открыть их.")) },
-                    answer: Answer::Sequence(n), stages: vec![stage(n,format!("Pretend these {n} toys are glowing keys. Put them on the table, then move your hands away."),format!("Игрушки — светящиеся ключи. Положи их на стол. Нужно ровно {n}. Убери руки."))],
-                    explanation: Words::new(format!("We counted one key for each number, all the way to {n}."),format!("На каждое число мы показали один ключ и досчитали до {n}.")), reward: Words::new("Swing the pretend gate open and flutter like a firefly!", "Открой воображаемые ворота и полетай, как светлячок!") }
+                    question: if i==5 { Words::new("The final gate! Can you count from one to ten again, all by yourself?", "Последние ворота! Посчитай снова от одного до десяти самостоятельно.") } else { Words::new(format!("The firefly gate needs {n} glowing keys! Count from one to {n} to open it."),format!("Для ворот светлячков соберём {}! Посчитай ключи по порядку, начиная с одного, чтобы открыть ворота.", keys(n))) },
+                    answer: Answer::Sequence(n), stages: vec![stage(n,format!("Pretend these {n} toys are glowing keys. Put them on the table, then move your hands away."),format!("Игрушки — светящиеся ключи. Положи на стол {} и убери руки.", toys(n)))],
+                    explanation: Words::new(format!("We counted one key for each number, all the way to {n}."),"Каждому ключу досталось одно число. Мы посчитали все ключи."), reward: Words::new("Swing the pretend gate open and flutter like a firefly!", "Открой воображаемые ворота и полетай, как светлячок!") }
             }).collect(),
             Self::SupplyLaunch => [(5,1),(4,3),(5,3),(4,5),(5,5),(6,2)].into_iter().map(|(a,b)| add(a,b)).collect(),
             Self::HomewardTrail => [(6,1),(7,3),(8,2),(9,4),(10,5),(10,10)].into_iter().map(|(a,b)| subtract(a,b,true)).collect(),
@@ -51,25 +52,40 @@ fn stage(count: u32, en: String, ru: String) -> Stage {
 }
 fn subtract(a: u32, b: u32, home: bool) -> Mission {
     let remain = a - b;
+    let departure = if b == 0 {
+        "На остановке никто не остаётся.".to_string()
+    } else if b == 1 {
+        "На остановке остаётся один путешественник.".to_string()
+    } else {
+        format!("На остановке остаются {}.", travelers(b))
+    };
+    let remove = if b == 0 {
+        "Никто не выходит. Оставь все игрушки на столе и убери руки.".to_string()
+    } else {
+        format!(
+            "Убери со стола {}. Остальные оставь на столе и убери руки.",
+            toys(b)
+        )
+    };
     let action = if home {
         "stop to camp"
     } else {
         "get off at the cave"
     };
-    Mission { name: format!("{a} - {b}"), question: Words::new(format!("There are {a} travelers. Then {b} {action}. How many are still traveling?"),format!("Ехали путешественники: {a}. На остановке остались: {b}. Сколько едет дальше?")), answer: Answer::Number(remain),
-        stages: vec![stage(a,format!("Line up {a} toy travelers on the table. Move your hands away when ready."),format!("Выстрой игрушечных путешественников на столе. Нужно ровно {a}. Убери руки.")), stage(remain,format!("Let {b} toys {action}: take them off the table. Keep the rest here, then move your hands away."),format!("Убери со стола игрушки, которые остались на остановке: {b}. Остальных оставь и убери руки."))],
+    Mission { name: format!("{a} - {b}"), question: Words::new(format!("There are {a} travelers. Then {b} {action}. How many are still traveling?"),format!("В пути {}. {departure} Сколько путешественников едет дальше?", travelers(a))), answer: Answer::Number(remain),
+        stages: vec![stage(a,format!("Line up {a} toy travelers on the table. Move your hands away when ready."),format!("Выстрой на столе {}. Это путешественники. Убери руки.", toys(a))), stage(remain,format!("Let {b} toys {action}: take them off the table. Keep the rest here, then move your hands away."),remove)],
         explanation: Words::new(format!("We started with {a}, took away {b}, and {remain} stayed. {a} minus {b} is {remain}."),format!("Было {a}, убрали {b}, осталось {remain}. {a} минус {b} равно {remain}.")), reward: if home { Words::new("Make a little tent with your hands. The travelers have a camp!", "Сложи ладошки домиком. У путешественников есть лагерь!") } else { Words::new("Toot toot! Pretend to steer our train to the next cave!", "Ту-ту! Веди воображаемый поезд к следующей пещере!") } }
 }
 fn add(a: u32, b: u32) -> Mission {
     let total = a + b;
-    Mission { name: format!("{a} + {b}"), question: Words::new(format!("One cargo ship brings {a} pods. Another brings {b}. How many pods can we launch altogether?"),format!("Один корабль привёз груз: {a}. Второй привёз ещё: {b}. Сколько всего грузовых капсул отправим?")), answer: Answer::Number(total),
-        stages: vec![stage(a,format!("Put {a} toy cargo pods on the table. Move your hands away."),format!("Поставь грузовые капсулы на стол. Нужно ровно {a}. Убери руки.")),stage(total,format!("Bring {b} more toy pods to join them, then move your hands away."),format!("Добавь ещё грузовые капсулы: {b}. Убери руки."))],
+    Mission { name: format!("{a} + {b}"), question: Words::new(format!("One cargo ship brings {a} pods. Another brings {b}. How many pods can we launch altogether?"),format!("Один корабль привёз {}. Второй привёз ещё {}. Сколько всего грузовых капсул отправим?", pods(a), pods(b))), answer: Answer::Number(total),
+        stages: vec![stage(a,format!("Put {a} toy cargo pods on the table. Move your hands away."),format!("Поставь на стол {}. Это грузовые капсулы. Убери руки.", toys(a))),stage(total,format!("Bring {b} more toy pods to join them, then move your hands away."),format!("Добавь ещё {} и убери руки.", toys(b)))],
         explanation: Words::new(format!("Joining {a} and {b} made {total}. {a} plus {b} is {total}."),format!("Соединили {a} и {b}, получили {total}. {a} плюс {b} равно {total}.")), reward: Words::new("Make a launch sound and lift your pretend cargo ship!", "Издай звук запуска и подними воображаемый корабль!") }
 }
 fn missing(a: u32, total: u32, ferry: bool) -> Mission {
     let needed = total - a;
-    Mission { name: format!("{a} + ? = {total}"), question: if ferry { Words::new(format!("Our ferry has ten seats and {a} passengers. How many more can board to fill it?"),format!("На пароме десять мест. Пассажиров уже: {a}. Сколько ещё нужно, чтобы занять все места?")) } else { Words::new(format!("The delivery needs {total} parcels. We have {a}. How many more parcels do we need?"),format!("Для заказа нужно посылок: {total}. Уже есть: {a}. Сколько ещё нужно?")) }, answer: Answer::Number(needed),
-        stages: vec![stage(a,format!("Put our starting group of {a} toys on the table. Move your hands away."),format!("Поставь начальную группу игрушек на стол. Нужно ровно {a}. Убери руки.")),stage(total,format!("Add toys one at a time until there are {total}. Count only the NEW toys as you add them. A grown-up can help. Move your hands away."),format!("Добавляй игрушки по одной, пока всего не станет {total}. Считай только НОВЫЕ игрушки. Взрослый может помочь. Убери руки."))],
+    Mission { name: format!("{a} + ? = {total}"), question: if ferry { Words::new(format!("Our ferry has ten seats and {a} passengers. How many more can board to fill it?"),format!("На пароме десять мест. На борту {}. Сколько ещё пассажиров может сесть, чтобы занять все места?", passengers(a))) } else { Words::new(format!("The delivery needs {total} parcels. We have {a}. How many more parcels do we need?"),format!("Для заказа соберём {}. Уже собрали {}. Сколько посылок нужно добавить?", parcels(total), parcels(a))) }, answer: Answer::Number(needed),
+        stages: vec![stage(a,format!("Put our starting group of {a} toys on the table. Move your hands away."),if a == 0 { "Сначала убери все игрушки со стола и убери руки.".into() } else { format!("Сначала поставь на стол {} и убери руки.", toys(a)) }),stage(total,format!("Add toys one at a time until there are {total}. Count only the NEW toys as you add them. A grown-up can help. Move your hands away."),format!("Добавляй игрушки по одной, пока всего не станет {total}. Считай только НОВЫЕ игрушки. Взрослый может помочь. Убери руки."))],
         explanation: Words::new(format!("We had {a} and added {needed} new toys to reach {total}. The missing number is {needed}."),format!("Было {a}, добавили {needed}, получили {total}. Недостающее число — {needed}.")), reward: if ferry { Words::new("Ding ding! Wave the pretend ferry away from the shore!", "Динь-динь! Помаши парому, который отплывает от берега!") } else { Words::new("Stamp your pretend parcel and deliver it to a toy friend!", "Поставь воображаемую печать и доставь посылку игрушечному другу!") } }
 }
 fn compare(a: u32, b: u32, more: bool) -> Mission {
@@ -89,16 +105,16 @@ fn compare(a: u32, b: u32, more: bool) -> Mission {
     } else {
         "The second team is the one we need."
     };
-    Mission { name: format!("compare {a}, {b}: {kind}"), question: Words::new(format!("First team has {a} blocks. Second team has {b}. Which team has {kind}, or are they the same? Say first, second, or same."),format!("У первой команды блоков: {a}. У второй: {b}. Где {kind_ru}, или поровну? Скажи первая, вторая или поровну.")), answer: Answer::Choice(choice),
-        stages: vec![stage(a,format!("Build the first team's supply: put {a} toy blocks on the table. Count them, then move your hands away."),format!("Собери запас первой команды. Положи на стол блоки: {a}. Убери руки.")),stage(b,format!("Now replace them with the second team's {b} blocks. Count them. An adult can help line up two groups off-camera for matching. Move your hands away."),format!("Теперь замени их запасом второй команды: {b}. Взрослый может помочь сопоставить две группы вне кадра. Убери руки."))],
-        explanation: Words::new(format!("We compared {a} and {b}. {solution} Pairing one block from each group helps us see what is left."),format!("Сравнили {a} и {b}. Ответ: {}. Сопоставляем блоки по одному из каждой группы и смотрим, остались ли лишние.", if choice==3 {"поровну"} else if choice==1 {"первая команда"} else {"вторая команда"})), reward: Words::new("Stretch your arms into a pretend bridge for our friends!", "Раскинь руки и построй воображаемый мост для друзей!") }
+    Mission { name: format!("compare {a}, {b}: {kind}"), question: Words::new(format!("First team has {a} blocks. Second team has {b}. Which team has {kind}, or are they the same? Say first, second, or same."),format!("У первой команды {}. У второй — {}. У какой команды блоков {kind_ru}? Или у обеих поровну? Скажи: первая, вторая или поровну.", blocks(a), blocks(b))), answer: Answer::Choice(choice),
+        stages: vec![stage(a,format!("Build the first team's supply: put {a} toy blocks on the table. Count them, then move your hands away."),format!("Собери запас первой команды. Положи на стол {} и убери руки.", blocks(a))),stage(b,format!("Now replace them with the second team's {b} blocks. Count them. An adult can help line up two groups off-camera for matching. Move your hands away."),format!("Теперь убери эти блоки и положи на стол {} для второй команды. Попроси взрослого помочь сравнить две группы рядом со столом. Убери руки.", blocks(b)))],
+        explanation: Words::new(format!("We compared {a} and {b}. {solution} Pairing one block from each group helps us see what is left."),format!("Сравнили {a} и {b}. Ответ: {}. Составим пары: один блок из первой группы и один из второй. Посмотрим, остались ли лишние блоки.", if choice==3 {"поровну"} else if choice==1 {"первая команда"} else {"вторая команда"})), reward: Words::new("Stretch your arms into a pretend bridge for our friends!", "Раскинь руки и построй воображаемый мост для друзей!") }
 }
 fn share(total: u32, transfer: bool) -> Mission {
     let each = total / 2;
-    Mission { name: format!("share {total} between 2{}",if transfer {" again"} else {""}), question: Words::new(format!("{}There are {total} treats for two guests. Both must get the same. How many treats should EACH guest get?",if transfer {"Two new guests arrived! "} else {""}),format!("{}Угощений всего: {total}. Гостей двое. Каждому нужно поровну. Сколько получит КАЖДЫЙ?",if transfer {"Пришли два новых гостя! "} else {""})), answer: Answer::Number(each),
+    Mission { name: format!("share {total} between 2{}",if transfer {" again"} else {""}), question: Words::new(format!("{}There are {total} treats for two guests. Both must get the same. How many treats should EACH guest get?",if transfer {"Two new guests arrived! "} else {""}),format!("{}У нас {} для двух гостей. Разделим их поровну. Сколько угощений получит каждый гость?",if transfer {"Пришли два новых гостя! "} else {""}, treats(total))), answer: Answer::Number(each),
         stages: vec![
-            stage(total,format!("Put {total} toy treats on the table. Choose two pretend guests outside the camera's toy area, then move your hands away."),format!("Положи игрушечные угощения на стол: {total}. Выбери двух гостей вне области подсчёта камеры. Убери руки.")),
-            stage(each,"Give one toy treat to the first guest, one to the second, and repeat until all are shared. Ask a grown-up to help. Put ONLY the first guest's share on the table, then move your hands away.".into(),"Раздавай по одному: сначала первому гостю, потом второму, пока не раздашь всё. Взрослый может помочь. Положи на стол ТОЛЬКО долю первого гостя и убери руки.".into()),
-            stage(each,"Now replace those treats with ONLY the second guest's share. Move your hands away, then count that share too.".into(),"Теперь замени угощения на столе ТОЛЬКО долей второго гостя. Убери руки, затем посчитай и эту долю.".into())],
-        explanation: Words::new(format!("Give one treat to the first guest, one to the second, and repeat. Ask a grown-up to help check equal groups. With {total} treats, each guest gets {each}."),format!("Дай угощение первому гостю, потом второму. Продолжай по очереди. Попроси взрослого проверить, что поровну. Из {total} угощений каждый получит {each}.")), reward: Words::new("Pretend to serve both guests. What happy munching sounds do they make?", "Угости обоих гостей понарошку. Как они довольно хрумкают?") }
+            stage(total,format!("Put {total} toy treats on the table. Choose two pretend guests outside the camera's toy area, then move your hands away."),format!("Положи на стол {}. Это угощения. Посади двух игрушечных гостей рядом со столом. Убери руки.", toys(total))),
+            stage(each,"Give one toy treat to the first guest, one to the second, and repeat until all are shared. Ask a grown-up to help. Put ONLY the first guest's share on the table, then move your hands away.".into(),"Раздавай по одному угощению каждому гостю по очереди, пока не раздашь всё. Попроси взрослого помочь. Положи на стол только угощения первого гостя и убери руки.".into()),
+            stage(each,"Now replace those treats with ONLY the second guest's share. Move your hands away, then count that share too.".into(),"Теперь убери угощения первого гостя со стола. Положи на стол только угощения второго гостя. Убери руки и посчитай эти угощения.".into())],
+        explanation: Words::new(format!("Give one treat to the first guest, one to the second, and repeat. Ask a grown-up to help check equal groups. With {total} treats, each guest gets {each}."),format!("Давай по одному угощению каждому гостю по очереди. Попроси взрослого проверить, всем ли поровну. Каждому достанется {}.", treats(each))), reward: Words::new("Pretend to serve both guests. What happy munching sounds do they make?", "Угости обоих гостей понарошку. Как они довольно хрумкают?") }
 }

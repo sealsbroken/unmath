@@ -5,6 +5,7 @@ mod answers;
 use answers::{count_feedback, safe_config, valid_count, CountBuffer};
 pub mod curriculum;
 mod play;
+mod russian;
 pub use addition::{AddToFive, AddToFiveFactory, ADDITION_ID};
 use play::{invitation, wants_break, wants_help, wants_restart, Place};
 

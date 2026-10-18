@@ -180,7 +180,7 @@ fn russian_prompts_registration_and_silence_work() {
     let effects = s.handle(Event::RepeatRequested);
     assert!(un_core::strategy::spoken(&effects)
         .join(" ")
-        .contains("по одному"));
+        .contains("по очереди и считай"));
     for _ in 0..3 {
         s.handle(Event::NothingHeard);
     }
