@@ -117,3 +117,23 @@ fn prepare_picnic(s: &mut AddToFive) -> Vec<Effect> {
     }
     effects
 }
+#[test]
+fn the_place_is_taken_wherever_the_child_names_it() {
+    use un_core::strategy::*;
+    for (said, picked) in [
+        ("Лес лес", true),
+        ("давай в лес!", true),
+        ("Луну", true),
+        ("the moon please", true),
+        ("лес или луна", false),
+        ("без", false),
+    ] {
+        let mut s = unmath::CountToFive::new(SessionConfig {
+            max_tasks: 40,
+            ..Default::default()
+        });
+        s.handle(Event::Start);
+        s.handle(Event::Said(said.into()));
+        assert_eq!(s.snapshot().phase != PhaseKind::Meeting, picked, "{said}");
+    }
+}

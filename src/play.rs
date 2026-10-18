@@ -19,10 +19,19 @@ impl Place {
             _ => None,
         }
     }
+    /// The place the child named, wherever in what they said ("лес лес", "давай в лес!", "the
+    /// moon please"); nothing when they named neither, or both.
     pub fn from_words(s: &str) -> Option<Self> {
-        match normalized(s).as_str() {
-            "forest" | "the forest" | "лес" | "в лес" => Some(Self::Forest),
-            "moon" | "the moon" | "луна" | "на луну" => Some(Self::Moon),
+        let words = normalized(s);
+        let forest = words
+            .split(' ')
+            .any(|w| matches!(w, "forest" | "лес" | "леса" | "лесу" | "лесной"));
+        let moon = words
+            .split(' ')
+            .any(|w| matches!(w, "moon" | "луна" | "луну" | "луне" | "луны"));
+        match (forest, moon) {
+            (true, false) => Some(Self::Forest),
+            (false, true) => Some(Self::Moon),
             _ => None,
         }
     }
