@@ -18,88 +18,38 @@ snacks one by one and say one number for each, starting at one.”
 If the child asks for help, build that basket with toys, count it, explain how
 joining made the total, and return to the missions. Use the actual toy basket for each count.
 
-## Acyclic correction paths
+## Acyclic teaching and correction paths
 
-Each scored question has a forward path: first attempt, a specific correction,
-a fresh attempt, another correction, and a final attempt. A correct answer
-advances to the next question; three consecutive misses pause. Completed work
-is kept. A mistake never sends the child to the first question.
+A wrong answer opens the teaching branch below automatically. Each box is a
+child action or a smaller question; it is not a replay of the original stem.
+The child keeps completed missions. A failed guided response stays at that
+physical step. Once the groups are understood, later errors revisit only the
+remaining concept. English and Russian use the same transitions.
 
-The diagram expands the ordinary answer/correction route into separate attempt
-nodes, so it is acyclic. It omits table-waiting events, replay requests, and the
-optional physical-help walkthrough. Help keeps the current mission; mistakes
-during help retry the current physical stage. After help, the same mission gets
-a fresh independent check. Guided work never earns independent mastery.
-The task limit or a requested break may pause earlier than shown.
+The graph unfolds a correction episode into distinct forward nodes. `Continue`
+is a boundary to the next forward correction episode at the indicated step,
+not a jump to the first question. Further scored steps are bounded by the session
+task budget; break, skip during setup, or repeated misses can pause. Replaying
+a prompt and waiting for stable toys do not advance the teaching graph.
+Guided work does not earn mastery: a fresh follow-up is required.
 
 ```mermaid
 flowchart TD
-    Choose["Choose forest or moon; prepare the current toys"] --> Q0A1
-    Q0A1["Opening: join one toy and one toy; count both: attempt 1"] -->|"Correct"| Q1A1
-    Q0A1 -->|"Mistake or skip"| Q0C1["Point to each toy once; start at one; keep the assembled basket"]
-    Q0C1 --> Q0A2["Same question: attempt 2"]
-    Q0A2 -->|"Correct"| Q1A1
-    Q0A2 -->|"Mistake or skip"| Q0C2["Repeat the local hint; keep this question"]
-    Q0C2 --> Q0A3["Same question: attempt 3"]
-    Q0A3 -->|"Correct"| Q1A1
-    Q0A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q1A1["Basket: 1 plus 2; count each toy: attempt 1"] -->|"Correct"| Q2A1
-    Q1A1 -->|"Mistake or skip"| Q1C1["Point to each toy once; start at one; keep the assembled basket"]
-    Q1C1 --> Q1A2["Same question: attempt 2"]
-    Q1A2 -->|"Correct"| Q2A1
-    Q1A2 -->|"Mistake or skip"| Q1C2["Repeat the local hint; keep this question"]
-    Q1C2 --> Q1A3["Same question: attempt 3"]
-    Q1A3 -->|"Correct"| Q2A1
-    Q1A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q2A1["Basket: 2 plus 2; count each toy: attempt 1"] -->|"Correct"| Q3A1
-    Q2A1 -->|"Mistake or skip"| Q2C1["Point to each toy once; start at one; keep the assembled basket"]
-    Q2C1 --> Q2A2["Same question: attempt 2"]
-    Q2A2 -->|"Correct"| Q3A1
-    Q2A2 -->|"Mistake or skip"| Q2C2["Repeat the local hint; keep this question"]
-    Q2C2 --> Q2A3["Same question: attempt 3"]
-    Q2A3 -->|"Correct"| Q3A1
-    Q2A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q3A1["Basket: 2 plus 3; count each toy: attempt 1"] -->|"Correct"| Q4A1
-    Q3A1 -->|"Mistake or skip"| Q3C1["Point to each toy once; start at one; keep the assembled basket"]
-    Q3C1 --> Q3A2["Same question: attempt 2"]
-    Q3A2 -->|"Correct"| Q4A1
-    Q3A2 -->|"Mistake or skip"| Q3C2["Repeat the local hint; keep this question"]
-    Q3C2 --> Q3A3["Same question: attempt 3"]
-    Q3A3 -->|"Correct"| Q4A1
-    Q3A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q4A1["Basket: 3 plus 1; count each toy: attempt 1"] -->|"Correct"| Q5A1
-    Q4A1 -->|"Mistake or skip"| Q4C1["Point to each toy once; start at one; keep the assembled basket"]
-    Q4C1 --> Q4A2["Same question: attempt 2"]
-    Q4A2 -->|"Correct"| Q5A1
-    Q4A2 -->|"Mistake or skip"| Q4C2["Repeat the local hint; keep this question"]
-    Q4C2 --> Q4A3["Same question: attempt 3"]
-    Q4A3 -->|"Correct"| Q5A1
-    Q4A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q5A1["Basket: 1 plus 4; count each toy: attempt 1"] -->|"Correct"| Q6A1
-    Q5A1 -->|"Mistake or skip"| Q5C1["Point to each toy once; start at one; keep the assembled basket"]
-    Q5C1 --> Q5A2["Same question: attempt 2"]
-    Q5A2 -->|"Correct"| Q6A1
-    Q5A2 -->|"Mistake or skip"| Q5C2["Repeat the local hint; keep this question"]
-    Q5C2 --> Q5A3["Same question: attempt 3"]
-    Q5A3 -->|"Correct"| Q6A1
-    Q5A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q6A1["Basket: 3 plus 0; count each toy: attempt 1"] -->|"Correct"| Q7A1
-    Q6A1 -->|"Mistake or skip"| Q6C1["Point to each toy once; start at one; keep the assembled basket"]
-    Q6C1 --> Q6A2["Same question: attempt 2"]
-    Q6A2 -->|"Correct"| Q7A1
-    Q6A2 -->|"Mistake or skip"| Q6C2["Repeat the local hint; keep this question"]
-    Q6C2 --> Q6A3["Same question: attempt 3"]
-    Q6A3 -->|"Correct"| Q7A1
-    Q6A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q7A1["Basket: 1 plus 1; count each toy: attempt 1"] -->|"Correct"| Done
-    Q7A1 -->|"Mistake or skip"| Q7C1["Point to each toy once; start at one; keep the assembled basket"]
-    Q7C1 --> Q7A2["Same question: attempt 2"]
-    Q7A2 -->|"Correct"| Done
-    Q7A2 -->|"Mistake or skip"| Q7C2["Repeat the local hint; keep this question"]
-    Q7C2 --> Q7A3["Same question: attempt 3"]
-    Q7A3 -->|"Correct"| Done
-    Q7A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Done["Lesson complete"]
+    Choose["Combine the current picnic basket and count every toy"] -->|"Independent success"| Done["Keep progress; continue to next question or finish"]
+    Choose -->|"Starts at zero"| E0["First toy gets one"]
+    E0 --> S0
+    Choose -->|"Skips, repeats, or gives only the total"| E1["Give every snack one place on the blanket"]
+    E1 --> S0
+    S0["Count THIS assembled basket together, one toy at a time"] -->|"Guided success; no mastery credit"| Follow
+    S0 -->|"Mistake at this step"| H0["Model the current settled count; one number per toy"]
+    H0 --> R0["New guided attempt at this SAME step"]
+    R0 -->|"Guided success"| Follow
+    R0 -->|"Needs another teaching step"| Continue["Next forward correction episode; keep learned steps"]
+    Follow["Fresh count of every snack without a tutor model"] -->|"Independent success"| Done
+    Follow -->|"Still needs help"| Focus["Keep the assembled basket; repeat the one-to-one teaching step"]
+    Focus --> Continue
+    Choose -->|"Break or budget reached"| Rest["Rest; save earned progress"]
+    Continue -->|"Child requests rest, task limit, or three consecutive misses"| Rest
 ```
 
 
@@ -147,7 +97,8 @@ which individual toys were removed; a grown-up can help keep the original group.
 
 The opening demonstration is guided `1 + 1`. Missions start at `1 + 2`, then
 visit each unfinished basket, with `1 + 1` checked independently later. A failed
-count gets a local hint and another attempt with the same basket. Explicit help
+count opens a modeled one-to-one counting question for that same basket, then
+a fresh independent count. Explicit help
 rebuilds that basket and then checks it independently; completed missions stay complete. Adding zero needs no camera change.
 
 ## What counts as success?

@@ -112,10 +112,15 @@ fn every_help_path_uses_real_toys_then_rechecks_the_same_mission() {
         assert_eq!(s.snapshot().level, 0, "guided work never earns mastery");
         assert_eq!(s.snapshot().phase, PhaseKind::Asking);
         assert_eq!(
-            s.snapshot().task.unwrap(),
-            original,
-            "recheck the helped mission"
+            s.snapshot().task.unwrap().split(" (").next(),
+            original.split(" (").next(),
+            "keep the helped mission"
         );
+        if lesson == Lesson::BridgeBuilders {
+            answer(&mut s, lesson); // identify the unmatched row
+            answer(&mut s, lesson); // link unmatched blocks to more/equal
+            assert_eq!(s.snapshot().level, 0);
+        }
         // The same mission must now pass independently.
         for _ in 0..lesson.mission_count() {
             answer(&mut s, lesson);
@@ -135,8 +140,7 @@ fn wrong_answers_skips_and_taps_cannot_fake_counting_or_guided_success() {
             s.handle(Event::Heard(99));
         }
         assert_eq!(s.snapshot().level, 0);
-        assert_eq!(s.snapshot().phase, PhaseKind::Asking);
-        assert_eq!(s.snapshot().expected_answer, Some(n));
+        assert_eq!(s.snapshot().phase, PhaseKind::Performing);
         s.handle(Event::Said("help".into()));
         let target = s.snapshot().target_count.unwrap();
         s.handle(Event::Table(TableObservation::stable(target)));
@@ -306,10 +310,14 @@ fn mistakes_preserve_the_current_mission_and_guided_stage() {
         let before = s.snapshot();
         s.handle(Event::Heard(99));
         let after = s.snapshot();
-        assert_eq!(after.task, before.task, "{lesson:?}");
-        assert_eq!(after.phase, PhaseKind::Asking);
+        assert_eq!(
+            after.task.as_ref().unwrap().split(" (").next(),
+            before.task.as_ref().unwrap().split(" (").next(),
+            "{lesson:?}"
+        );
+        assert_eq!(after.phase, PhaseKind::Performing);
         assert_eq!(after.level, 1);
-        assert_eq!(after.expected_answer, before.expected_answer);
+        assert_eq!(after.expected_answer, None);
         s.handle(Event::Said("help".into()));
         let n = s.snapshot().target_count.unwrap();
         s.handle(Event::Table(TableObservation::stable(n)));

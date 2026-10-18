@@ -197,10 +197,16 @@ fn a_mistake_keeps_the_current_basket_and_completed_missions() {
     count(&mut s, &[0, 1, 2, 3, 4]);
     let after = s.snapshot();
     assert_eq!(after.phase, PhaseKind::Asking);
-    assert_eq!(after.task, before.task);
+    assert_eq!(
+        after.task.as_ref().unwrap().split(" (").next(),
+        before.task.as_ref().unwrap().split(" (").next()
+    );
+    assert!(after.task.unwrap().contains("guided"));
     assert_eq!(after.target_count, before.target_count);
     assert_eq!(after.level, 1);
     assert_eq!(after.tasks_completed, before.tasks_completed + 1);
+    count(&mut s, &[1, 2, 3, 4]);
+    assert_eq!(s.snapshot().level, 1, "modeled repair cannot earn mastery");
     count(&mut s, &[1, 2, 3, 4]);
     assert_eq!(s.snapshot().level, 2);
 }

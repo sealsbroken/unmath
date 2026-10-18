@@ -7,72 +7,55 @@ Friends need bridges. Choose the team with more supplies, fewer supplies, or the
 
 Example question: “First team has two blocks. Second team has four. Which has MORE, or are they the same?”
 
-## Acyclic correction paths
+## Acyclic teaching and correction paths
 
-Each scored question has a forward path: first attempt, a specific correction,
-a fresh attempt, another correction, and a final attempt. A correct answer
-advances to the next question; three consecutive misses pause. Completed work
-is kept. A mistake never sends the child to the first question.
+A wrong answer opens the teaching branch below automatically. Each box is a
+child action or a smaller question; it is not a replay of the original stem.
+The child keeps completed missions. A failed guided response stays at that
+physical step. Once the groups are understood, later errors revisit only the
+remaining concept. English and Russian use the same transitions.
 
-The diagram expands the ordinary answer/correction route into separate attempt
-nodes, so it is acyclic. It omits table-waiting events, replay requests, and the
-optional physical-help walkthrough. Help keeps the current mission; mistakes
-during help retry the current physical stage. After help, the same mission gets
-a fresh independent check. Guided work never earns independent mastery.
-The task limit or a requested break may pause earlier than shown.
+The graph unfolds a correction episode into distinct forward nodes. `Continue`
+is a boundary to the next forward correction episode at the indicated step,
+not a jump to the first question. Further scored steps are bounded by the session
+task budget; break, skip during setup, or repeated misses can pause. Replaying
+a prompt and waiting for stable toys do not advance the teaching graph.
+Guided work does not earn mastery: a fresh follow-up is required.
 
 ```mermaid
 flowchart TD
-    Choose["Choose forest or moon; prepare the current toys"] --> Q0A1
-    Q0A1["Compare 2 and 4: more or equal?: attempt 1"] -->|"Correct"| Q1A1
-    Q0A1 -->|"Mistake or skip"| Q0C1["Pair one block from each team; look for blocks without a partner"]
-    Q0C1 --> Q0A2["Same question: attempt 2"]
-    Q0A2 -->|"Correct"| Q1A1
-    Q0A2 -->|"Mistake or skip"| Q0C2["Repeat the local hint; keep this question"]
-    Q0C2 --> Q0A3["Same question: attempt 3"]
-    Q0A3 -->|"Correct"| Q1A1
-    Q0A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q1A1["Compare 5 and 3: fewer or equal?: attempt 1"] -->|"Correct"| Q2A1
-    Q1A1 -->|"Mistake or skip"| Q1C1["Pair one block from each team; look for blocks without a partner"]
-    Q1C1 --> Q1A2["Same question: attempt 2"]
-    Q1A2 -->|"Correct"| Q2A1
-    Q1A2 -->|"Mistake or skip"| Q1C2["Repeat the local hint; keep this question"]
-    Q1C2 --> Q1A3["Same question: attempt 3"]
-    Q1A3 -->|"Correct"| Q2A1
-    Q1A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q2A1["Compare 3 and 3: more or equal?: attempt 1"] -->|"Correct"| Q3A1
-    Q2A1 -->|"Mistake or skip"| Q2C1["Pair one block from each team; look for blocks without a partner"]
-    Q2C1 --> Q2A2["Same question: attempt 2"]
-    Q2A2 -->|"Correct"| Q3A1
-    Q2A2 -->|"Mistake or skip"| Q2C2["Repeat the local hint; keep this question"]
-    Q2C2 --> Q2A3["Same question: attempt 3"]
-    Q2A3 -->|"Correct"| Q3A1
-    Q2A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q3A1["Compare 4 and 1: more or equal?: attempt 1"] -->|"Correct"| Q4A1
-    Q3A1 -->|"Mistake or skip"| Q3C1["Pair one block from each team; look for blocks without a partner"]
-    Q3C1 --> Q3A2["Same question: attempt 2"]
-    Q3A2 -->|"Correct"| Q4A1
-    Q3A2 -->|"Mistake or skip"| Q3C2["Repeat the local hint; keep this question"]
-    Q3C2 --> Q3A3["Same question: attempt 3"]
-    Q3A3 -->|"Correct"| Q4A1
-    Q3A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q4A1["Compare 2 and 5: fewer or equal?: attempt 1"] -->|"Correct"| Q5A1
-    Q4A1 -->|"Mistake or skip"| Q4C1["Pair one block from each team; look for blocks without a partner"]
-    Q4C1 --> Q4A2["Same question: attempt 2"]
-    Q4A2 -->|"Correct"| Q5A1
-    Q4A2 -->|"Mistake or skip"| Q4C2["Repeat the local hint; keep this question"]
-    Q4C2 --> Q4A3["Same question: attempt 3"]
-    Q4A3 -->|"Correct"| Q5A1
-    Q4A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q5A1["Compare 1 and 1: fewer or equal?: attempt 1"] -->|"Correct"| Done
-    Q5A1 -->|"Mistake or skip"| Q5C1["Pair one block from each team; look for blocks without a partner"]
-    Q5C1 --> Q5A2["Same question: attempt 2"]
-    Q5A2 -->|"Correct"| Done
-    Q5A2 -->|"Mistake or skip"| Q5C2["Repeat the local hint; keep this question"]
-    Q5C2 --> Q5A3["Same question: attempt 3"]
-    Q5A3 -->|"Correct"| Done
-    Q5A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Done["Lesson complete"]
+    Choose["Which team has MORE, FEWER, or an EQUAL supply?"] -->|"Independent success"| Done["Keep progress; continue to next question or finish"]
+    Choose -->|"Chooses the wrong side for fewer"| E0["Fewer is the row that runs out first when pairing"]
+    E0 --> S0
+    Choose -->|"Chooses a side when groups are equal"| E1["If every block has a partner, the amounts are equal"]
+    E1 --> S0
+    Choose -->|"Other wrong choice"| E2["Count and match the two supplies"]
+    E2 --> S0
+    S0["Prepare and count the FIRST team blocks"] -->|"Guided success; no mastery credit"| S1
+    S0 -->|"Mistake at this step"| H0["Model the current settled count; one number per toy"]
+    H0 --> R0["New guided attempt at this SAME step"]
+    R0 -->|"Guided success"| S1
+    R0 -->|"Needs another teaching step"| Continue["Next forward correction episode; keep learned steps"]
+    S1["Prepare and count the SECOND team blocks"] -->|"Guided success; no mastery credit"| S2
+    S1 -->|"Mistake at this step"| H1["Model the current settled count; one number per toy"]
+    H1 --> R1["New guided attempt at this SAME step"]
+    R1 -->|"Guided success"| S2
+    R1 -->|"Needs another teaching step"| Continue["Next forward correction episode; keep learned steps"]
+    S2["Pair the rows: WHICH team has blocks WITHOUT a partner?"] -->|"Guided success; no mastery credit"| S3
+    S2 -->|"Mistake at this step"| H2["Make pairs again; look for blocks without partners"]
+    H2 --> R2["New guided attempt at this SAME step"]
+    R2 -->|"Guided success"| S3
+    R2 -->|"Needs another teaching step"| Continue["Next forward correction episode; keep learned steps"]
+    S3["Do the unmatched blocks mean MORE, FEWER, or SAME?"] -->|"Guided success; no mastery credit"| Follow
+    S3 -->|"Mistake at this step"| H3["Leftover blocks mean more; no leftovers in either row means equal"]
+    H3 --> R3["New guided attempt at this SAME step"]
+    R3 -->|"Guided success"| Follow
+    R3 -->|"Needs another teaching step"| Continue["Next forward correction episode; keep learned steps"]
+    Follow["This bridge needs MORE or FEWER: which team should we choose?"] -->|"Independent success"| Done
+    Follow -->|"Still needs help"| Focus["If the rows are known, revisit only pairing or more/fewer vocabulary"]
+    Focus --> Continue
+    Choose -->|"Break or budget reached"| Rest["Rest; save earned progress"]
+    Continue -->|"Child requests rest, task limit, or three consecutive misses"| Rest
 ```
 
 ## Six missions and acceptance
@@ -94,8 +77,7 @@ Correctly choose first, second, or same on all six missions, including both more
 
 Each camera-visible stage waits for its required stable total and a complete
 spoken count (or zero for an empty group). A disturbed table cancels the pending
-answer without scoring an error. A wrong guided count is modeled, then preparation
-restarts. Setup itself is unscored. The camera verifies totals, not toy identities,
+answer without scoring an error. A wrong guided count is modeled, then that same physical stage is tried again. Setup itself is unscored. The camera verifies totals, not toy identities,
 the meaning of the scene, or the child's pointing.
 
 Comparison answers are `first`, `second`, or `same` (`первая`, `вторая`,

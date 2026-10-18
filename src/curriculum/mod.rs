@@ -131,6 +131,7 @@ struct Stage {
 }
 #[derive(Clone)]
 struct Mission {
+    comparison: Option<bool>,
     name: String,
     question: Words,
     answer: Answer,

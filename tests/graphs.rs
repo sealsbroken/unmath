@@ -90,7 +90,7 @@ fn every_question_graph_is_acyclic_with_reachable_nodes_and_success_rest_exits()
             {
                 let paths = reachable(n, &edges);
                 assert!(
-                    paths.contains("Rest") || paths.contains(success),
+                    paths.contains("Rest") || paths.contains(success) || paths.contains("Continue"),
                     "dead end at {n} in {}",
                     path.display()
                 );

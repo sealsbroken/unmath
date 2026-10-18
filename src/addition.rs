@@ -38,6 +38,8 @@ pub struct AddToFive {
     mastered: u32,
     demo_done: bool,
     undo_add: bool,
+    repair_return: Option<Node>,
+    rechecking: bool,
     misses: u32,
     records: Vec<TaskRecord>,
 }
@@ -61,6 +63,8 @@ impl AddToFive {
             mastered,
             demo_done: mastered != 0,
             undo_add: false,
+            repair_return: None,
+            rechecking: false,
             misses: 0,
             records: vec![],
         }
@@ -111,12 +115,29 @@ impl AddToFive {
         let line = match self.node {
             Node::Base | Node::CheckBase => self.say(format!("Let's pack a picnic for our friends! Pretend each toy is a snack. Put {a} toy snacks on the table, then move your hands away. A grown-up can help."), format!("Собираем пикник для друзей! Пусть игрушки будут угощениями. Положи на стол {a_toys} и убери руки. Взрослый может помочь.")),
             Node::Add | Node::CheckAdd => self.say(if b == 0 { "Our friend brought an empty basket! Add zero: leave the toy snacks as they are.".into() } else { format!("Our friend brings {b} more snacks! Can you add {b} toys to our {a}, then move your hands away?") }, if b == 0 { "Друг принёс пустую корзинку! Прибавь ноль: оставь игрушечные угощения как есть.".into() } else { format!("Друг принёс ещё {b_treats}! Добавь ещё {b_toys} и убери руки.") }),
+            Node::Count if self.repair_return.is_some() => self.say(
+                "Let's give every snack one place on our picnic blanket. Point to each toy once and count in order from one. Stop after the last toy.".into(),
+                "Дадим каждому угощению место на пледе. Показывай на каждую игрушку по очереди и считай с одного. После последней игрушки остановись.".into()),
             Node::Count if sum > 0 => self.say(format!("Our picnic basket has {a} snacks and {b} more. Point to the toy snacks one by one. Say one number for each toy, starting at one, until every snack has been counted."), format!("В корзинке было {a_treats}. Добавили ещё {b_treats}. Показывай на каждую игрушку по очереди и считай. Начни с одного.")),
             Node::Count => self.say("There are no toys. How many is that?".into(), "Игрушек нет. Сколько это?".into()),
+            Node::Check if self.rechecking => self.say(
+                "Our picnic blanket is packed. Now count every toy snack once, all by yourself, starting at one.".into(),
+                "Угощения на пледе. Теперь посчитай каждую игрушку один раз, без подсказки. Начни с одного.".into()),
             Node::Check => self.say(format!("Picnic mission {} of 7! The {friends} have {a} snacks and bring {b} more. Point to the toy snacks one by one and say one number for each, starting at one, until you have counted every snack.", self.mastered.count_ones() + 1), format!("Задание для пикника {} из 7! У {friends} есть {a_treats}. Они принесли ещё {b_treats}. Показывай на каждую игрушку по очереди и считай. Начни с одного.", self.mastered.count_ones() + 1)),
             _ => return vec![],
         };
         let mut effects = vec![Effect::StopListening, line];
+        if self.node == Node::Count && self.repair_return.is_some() {
+            effects.push(Effect::HighlightCount(sum));
+            let count = (1..=sum)
+                .map(|n| n.to_string())
+                .collect::<Vec<_>>()
+                .join(", ");
+            effects.push(self.say(
+                format!("Let's count together: {count}. Your turn."),
+                format!("Посчитаем вместе: {count}. Теперь твоя очередь."),
+            ));
+        }
         if matches!(self.node, Node::Count | Node::Check) {
             effects.push(Effect::listen(
                 if sum > 0 {
@@ -272,6 +293,7 @@ impl AddToFive {
         if correct {
             self.misses = 0;
             if !guided {
+                self.rechecking = false;
                 self.mastered |= 1 << self.index;
                 self.index = (self.index + 1) % FACTS.len();
             }
@@ -285,6 +307,13 @@ impl AddToFive {
             return self.finish(false);
         }
         if correct {
+            if guided {
+                if let Some(node) = self.repair_return.take() {
+                    self.node = node;
+                    self.rechecking = true;
+                    return self.prompt();
+                }
+            }
             let mut effects = vec![];
             if !guided {
                 effects.push(self.say(
@@ -362,7 +391,12 @@ impl AddToFive {
                     ),
                 ));
             }
-            // Keep the assembled basket and retry this count, not its setup.
+            // Keep the assembled basket, but teach one-to-one counting before
+            // asking for another independent count.
+            if self.node == Node::Check {
+                self.repair_return = Some(Node::Check);
+                self.node = Node::Count;
+            }
             effects.extend(self.prompt());
             effects
         }

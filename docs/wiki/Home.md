@@ -70,11 +70,37 @@ English and Russian prompts are included. The game is screen free: the child spe
 can ask for help, restart a count, or rest; progress can be saved between sessions.
 
 Every lesson graph shows **acyclic correction paths**: attempts are distinct nodes.
-A mistake stays at the current question, success advances, and rest preserves progress.
-Optional help and replay events are described separately from the diagrams.
+A mistake opens concrete teaching subquestions, success advances, and rest preserves progress.
+Further correction episodes continue from the current learning step.
 Pretend rewards are spoken invitations, not new engine animations.
 
 [Detailed curriculum and prerequisites](https://github.com/sealsbroken/unmath/blob/main/docs/CURRICULUM.md)
 · [Edge-case audit and counterexamples](Edge-case-audit)
 
 Wiki sources are maintained in the repository under `docs/wiki`.
+
+## Corrections follow the learning progression
+
+Mistakes automatically open concrete teaching steps instead of replaying the
+original question. Correct guided answers do not count as independent mastery.
+A fresh follow-up checks what the child learned. Completed missions stay saved;
+a mistake inside a guided stage retries that stage. After an entire walkthrough,
+later mistakes revisit the final group or the remaining comparison concept.
+
+| Lesson | Correction builds on | Teaching path |
+| --- | --- | --- |
+| 1: counting to three | Pointing and one-to-one matching | Give each toy one ticket; model this same small group; count again without a model. |
+| 2: addition to five | Counting concrete toys | Give every snack one place; count the assembled basket; then a fresh full count. No subtraction of an excess. |
+| 3: subtraction to five | Counting to five | Count starting travelers; move the requested travelers aside; count only those remaining, including none. |
+| 4: comparison | Counting and matching | Count first row; count second row; pair blocks; identify unmatched row; learn more/fewer/equal; choose the needed team. No subtraction. |
+| 5: missing quantities | Counting and adding one at a time | Count starting parcels; fill target; isolate and count only NEW parcels. No subtraction rule. |
+| 6: counting to ten | One number per object | Prepare this gate's keys; correct zero/skips/repeats; count this group; fresh full count. Earlier gates stay complete. |
+| 7: addition to ten | Counting to ten | Count first load; join second; count the combined load; answer altogether. |
+| 8: subtraction to ten | Counting to ten and moving a group | Count travelers; move campers aside; count only those still traveling. |
+| 9: making ten | Counting and filling places | Count occupied seats; fill ferry; isolate and count only NEW arrivals. No subtraction rule. |
+| 10: sharing | Counting and taking turns | Count all treats; deal alternately; count each guest's share; answer for EACH guest. No division rule. |
+
+Diagrams show error-sensitive branches and the guided questions, including a
+forward boundary for later correction episodes. They do not claim that every
+mistake is cured by repeating the same question three times. The task budget
+bounds scored steps; physical setup has no forced time limit.

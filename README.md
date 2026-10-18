@@ -83,56 +83,23 @@ Practice counting four and five before moving on to lesson 2.
 
 ```mermaid
 flowchart TD
-    Choose["Choose forest or moon; prepare the current toys"] --> Q0A1
-    Q0A1["One toy: point and say one: attempt 1"] -->|"Correct"| Q1A1
-    Q0A1 -->|"Mistake or skip"| Q0C1["Fix the start, skipped number, or repeated number; keep the same toys"]
-    Q0C1 --> Q0A2["Same question: attempt 2"]
-    Q0A2 -->|"Correct"| Q1A1
-    Q0A2 -->|"Mistake or skip"| Q0C2["Repeat the local hint; keep this question"]
-    Q0C2 --> Q0A3["Same question: attempt 3"]
-    Q0A3 -->|"Correct"| Q1A1
-    Q0A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q1A1["Two toys: count each toy: attempt 1"] -->|"Correct"| Q2A1
-    Q1A1 -->|"Mistake or skip"| Q1C1["Fix the start, skipped number, or repeated number; keep the same toys"]
-    Q1C1 --> Q1A2["Same question: attempt 2"]
-    Q1A2 -->|"Correct"| Q2A1
-    Q1A2 -->|"Mistake or skip"| Q1C2["Repeat the local hint; keep this question"]
-    Q1C2 --> Q1A3["Same question: attempt 3"]
-    Q1A3 -->|"Correct"| Q2A1
-    Q1A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q2A1["Three toys: independent count: attempt 1"] -->|"Correct"| Q3A1
-    Q2A1 -->|"Mistake or skip"| Q2C1["Fix the start, skipped number, or repeated number; keep the same toys"]
-    Q2C1 --> Q2A2["Same question: attempt 2"]
-    Q2A2 -->|"Correct"| Q3A1
-    Q2A2 -->|"Mistake or skip"| Q2C2["Repeat the local hint; keep this question"]
-    Q2C2 --> Q2A3["Same question: attempt 3"]
-    Q2A3 -->|"Correct"| Q3A1
-    Q2A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q3A1["Tickets: count the same three toys: attempt 1"] -->|"Correct"| Q4A1
-    Q3A1 -->|"Mistake or skip"| Q3C1["Fix the start, skipped number, or repeated number; keep the same toys"]
-    Q3C1 --> Q3A2["Same question: attempt 2"]
-    Q3A2 -->|"Correct"| Q4A1
-    Q3A2 -->|"Mistake or skip"| Q3C2["Repeat the local hint; keep this question"]
-    Q3C2 --> Q3A3["Same question: attempt 3"]
-    Q3A3 -->|"Correct"| Q4A1
-    Q3A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q4A1["How many passengers altogether?: attempt 1"] -->|"Correct"| Q5A1
-    Q4A1 -->|"Mistake or skip"| Q4C1["Fix the start, skipped number, or repeated number; keep the same toys"]
-    Q4C1 --> Q4A2["Same question: attempt 2"]
-    Q4A2 -->|"Correct"| Q5A1
-    Q4A2 -->|"Mistake or skip"| Q4C2["Repeat the local hint; keep this question"]
-    Q4C2 --> Q4A3["Same question: attempt 3"]
-    Q4A3 -->|"Correct"| Q5A1
-    Q4A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q5A1["Departure: independently count three again: attempt 1"] -->|"Correct"| Done
-    Q5A1 -->|"Mistake or skip"| Q5C1["Fix the start, skipped number, or repeated number; keep the same toys"]
-    Q5C1 --> Q5A2["Same question: attempt 2"]
-    Q5A2 -->|"Correct"| Done
-    Q5A2 -->|"Mistake or skip"| Q5C2["Repeat the local hint; keep this question"]
-    Q5C2 --> Q5A3["Same question: attempt 3"]
-    Q5A3 -->|"Correct"| Done
-    Q5A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Done["Lesson complete"]
+    Choose["Count the current one-, two-, or three-toy group"] -->|"Independent success"| Done["Keep progress; continue to next question or finish"]
+    Choose -->|"Starts at zero"| E0["Zero means no toys; the first toy gets one"]
+    E0 --> S0
+    Choose -->|"Skips or repeats a number"| E1["Each toy gets exactly one ticket"]
+    E1 --> S0
+    Choose -->|"Says only the final total"| E2["Listen for one number per toy"]
+    E2 --> S0
+    S0["Model the count of THIS settled group; point once per toy"] -->|"Guided success; no mastery credit"| Follow
+    S0 -->|"Mistake at this step"| H0["Model the current settled count; one number per toy"]
+    H0 --> R0["New guided attempt at this SAME step"]
+    R0 -->|"Guided success"| Follow
+    R0 -->|"Needs another teaching step"| Continue["Next forward correction episode; keep learned steps"]
+    Follow["Now count the ticketed toys without a model; for how-many, recall the last number"] -->|"Independent success"| Done
+    Follow -->|"Still needs help"| Focus["Keep the same group; teach one-to-one counting again"]
+    Focus --> Continue
+    Choose -->|"Break or budget reached"| Rest["Rest; save earned progress"]
+    Continue -->|"Child requests rest, task limit, or three consecutive misses"| Rest
 ```
 
 
@@ -146,78 +113,27 @@ these seven challenges; it does not claim recall of every addition fact.
 
 ```mermaid
 flowchart TD
-    Choose["Choose forest or moon; prepare the current toys"] --> Q0A1
-    Q0A1["Opening: join one toy and one toy; count both: attempt 1"] -->|"Correct"| Q1A1
-    Q0A1 -->|"Mistake or skip"| Q0C1["Point to each toy once; start at one; keep the assembled basket"]
-    Q0C1 --> Q0A2["Same question: attempt 2"]
-    Q0A2 -->|"Correct"| Q1A1
-    Q0A2 -->|"Mistake or skip"| Q0C2["Repeat the local hint; keep this question"]
-    Q0C2 --> Q0A3["Same question: attempt 3"]
-    Q0A3 -->|"Correct"| Q1A1
-    Q0A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q1A1["Basket: 1 plus 2; count each toy: attempt 1"] -->|"Correct"| Q2A1
-    Q1A1 -->|"Mistake or skip"| Q1C1["Point to each toy once; start at one; keep the assembled basket"]
-    Q1C1 --> Q1A2["Same question: attempt 2"]
-    Q1A2 -->|"Correct"| Q2A1
-    Q1A2 -->|"Mistake or skip"| Q1C2["Repeat the local hint; keep this question"]
-    Q1C2 --> Q1A3["Same question: attempt 3"]
-    Q1A3 -->|"Correct"| Q2A1
-    Q1A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q2A1["Basket: 2 plus 2; count each toy: attempt 1"] -->|"Correct"| Q3A1
-    Q2A1 -->|"Mistake or skip"| Q2C1["Point to each toy once; start at one; keep the assembled basket"]
-    Q2C1 --> Q2A2["Same question: attempt 2"]
-    Q2A2 -->|"Correct"| Q3A1
-    Q2A2 -->|"Mistake or skip"| Q2C2["Repeat the local hint; keep this question"]
-    Q2C2 --> Q2A3["Same question: attempt 3"]
-    Q2A3 -->|"Correct"| Q3A1
-    Q2A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q3A1["Basket: 2 plus 3; count each toy: attempt 1"] -->|"Correct"| Q4A1
-    Q3A1 -->|"Mistake or skip"| Q3C1["Point to each toy once; start at one; keep the assembled basket"]
-    Q3C1 --> Q3A2["Same question: attempt 2"]
-    Q3A2 -->|"Correct"| Q4A1
-    Q3A2 -->|"Mistake or skip"| Q3C2["Repeat the local hint; keep this question"]
-    Q3C2 --> Q3A3["Same question: attempt 3"]
-    Q3A3 -->|"Correct"| Q4A1
-    Q3A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q4A1["Basket: 3 plus 1; count each toy: attempt 1"] -->|"Correct"| Q5A1
-    Q4A1 -->|"Mistake or skip"| Q4C1["Point to each toy once; start at one; keep the assembled basket"]
-    Q4C1 --> Q4A2["Same question: attempt 2"]
-    Q4A2 -->|"Correct"| Q5A1
-    Q4A2 -->|"Mistake or skip"| Q4C2["Repeat the local hint; keep this question"]
-    Q4C2 --> Q4A3["Same question: attempt 3"]
-    Q4A3 -->|"Correct"| Q5A1
-    Q4A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q5A1["Basket: 1 plus 4; count each toy: attempt 1"] -->|"Correct"| Q6A1
-    Q5A1 -->|"Mistake or skip"| Q5C1["Point to each toy once; start at one; keep the assembled basket"]
-    Q5C1 --> Q5A2["Same question: attempt 2"]
-    Q5A2 -->|"Correct"| Q6A1
-    Q5A2 -->|"Mistake or skip"| Q5C2["Repeat the local hint; keep this question"]
-    Q5C2 --> Q5A3["Same question: attempt 3"]
-    Q5A3 -->|"Correct"| Q6A1
-    Q5A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q6A1["Basket: 3 plus 0; count each toy: attempt 1"] -->|"Correct"| Q7A1
-    Q6A1 -->|"Mistake or skip"| Q6C1["Point to each toy once; start at one; keep the assembled basket"]
-    Q6C1 --> Q6A2["Same question: attempt 2"]
-    Q6A2 -->|"Correct"| Q7A1
-    Q6A2 -->|"Mistake or skip"| Q6C2["Repeat the local hint; keep this question"]
-    Q6C2 --> Q6A3["Same question: attempt 3"]
-    Q6A3 -->|"Correct"| Q7A1
-    Q6A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q7A1["Basket: 1 plus 1; count each toy: attempt 1"] -->|"Correct"| Done
-    Q7A1 -->|"Mistake or skip"| Q7C1["Point to each toy once; start at one; keep the assembled basket"]
-    Q7C1 --> Q7A2["Same question: attempt 2"]
-    Q7A2 -->|"Correct"| Done
-    Q7A2 -->|"Mistake or skip"| Q7C2["Repeat the local hint; keep this question"]
-    Q7C2 --> Q7A3["Same question: attempt 3"]
-    Q7A3 -->|"Correct"| Done
-    Q7A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Done["Lesson complete"]
+    Choose["Combine the current picnic basket and count every toy"] -->|"Independent success"| Done["Keep progress; continue to next question or finish"]
+    Choose -->|"Starts at zero"| E0["First toy gets one"]
+    E0 --> S0
+    Choose -->|"Skips, repeats, or gives only the total"| E1["Give every snack one place on the blanket"]
+    E1 --> S0
+    S0["Count THIS assembled basket together, one toy at a time"] -->|"Guided success; no mastery credit"| Follow
+    S0 -->|"Mistake at this step"| H0["Model the current settled count; one number per toy"]
+    H0 --> R0["New guided attempt at this SAME step"]
+    R0 -->|"Guided success"| Follow
+    R0 -->|"Needs another teaching step"| Continue["Next forward correction episode; keep learned steps"]
+    Follow["Fresh count of every snack without a tutor model"] -->|"Independent success"| Done
+    Follow -->|"Still needs help"| Focus["Keep the assembled basket; repeat the one-to-one teaching step"]
+    Focus --> Continue
+    Choose -->|"Break or budget reached"| Rest["Rest; save earned progress"]
+    Continue -->|"Child requests rest, task limit, or three consecutive misses"| Rest
 ```
 
-Both graphs show acyclic correction paths: retry attempts are separate nodes,
-completed work stays complete, and mistakes keep the current question.
-The diagrams omit optional physical help and replay events; help returns to the
-same unfinished mission. See the [wiki](https://github.com/sealsbroken/unmath/wiki)
+Both graphs show acyclic teaching paths: mistakes open concrete guided
+subquestions before a fresh independent follow-up. Completed work stays complete.
+The Continue node marks a further correction episode at the current learning
+step; it does not restart the question or lesson. Replay events are omitted. See the [wiki](https://github.com/sealsbroken/unmath/wiki)
 for examples, acceptance criteria, child controls, and resume behavior. Page sources
 are in `docs/wiki`.
 
@@ -285,7 +201,7 @@ cannot verify one touch per toy or pretend actions.
 
 Three consecutive unsuccessful responses/timeouts or the task limit pause;
 silence creates no failed task record. Repeat reissues a prompt; Skip records
-an answer as skipped and retries the current question, while skipping toy setup pauses.
+an answer as skipped and opens the current teaching branch, while skipping toy setup pauses.
 Setup has no enforced timeout. Default ten tasks fits each uninterrupted adventure;
 use shorter sessions and resume as needed.
 

@@ -69,18 +69,27 @@ fn a_mistake_does_not_reset_the_counting_progression() {
     let before = s.snapshot();
     count(&mut s, &[1, 3]);
     assert_eq!(s.snapshot().target_count, Some(2));
-    assert_eq!(s.snapshot().task, before.task);
+    assert_ne!(s.snapshot().task, before.task);
+    assert!(s.snapshot().task.unwrap().contains("Repair"));
     assert_eq!(s.snapshot().correct, 1);
     assert_eq!(s.snapshot().phase, PhaseKind::Asking);
+    count(&mut s, &[1, 2]);
+    assert_eq!(
+        s.snapshot().target_count,
+        Some(2),
+        "repair is a teaching step"
+    );
     count(&mut s, &[1, 2]);
     assert_eq!(s.snapshot().target_count, Some(3));
     table(&mut s, 3);
     count(&mut s, &[1, 2, 3]);
     let before = s.snapshot();
     count(&mut s, &[0, 1, 2, 3]);
-    assert_eq!(s.snapshot().task, before.task);
+    assert_ne!(s.snapshot().task, before.task);
+    assert!(s.snapshot().task.unwrap().contains("Repair"));
     assert_eq!(s.snapshot().target_count, Some(3));
-    assert_eq!(s.snapshot().correct, 3);
+    assert_eq!(s.snapshot().correct, 4);
+    count(&mut s, &[1, 2, 3]);
     count(&mut s, &[1, 2, 3]);
     assert!(s.snapshot().task.unwrap().contains("Total"));
 }

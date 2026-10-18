@@ -7,72 +7,50 @@ Be a parcel detective: deliveries have a target size, but some parcels are missi
 
 Example question: “The delivery needs five parcels. We have two. How many more do we need?”
 
-## Acyclic correction paths
+## Acyclic teaching and correction paths
 
-Each scored question has a forward path: first attempt, a specific correction,
-a fresh attempt, another correction, and a final attempt. A correct answer
-advances to the next question; three consecutive misses pause. Completed work
-is kept. A mistake never sends the child to the first question.
+A wrong answer opens the teaching branch below automatically. Each box is a
+child action or a smaller question; it is not a replay of the original stem.
+The child keeps completed missions. A failed guided response stays at that
+physical step. Once the groups are understood, later errors revisit only the
+remaining concept. English and Russian use the same transitions.
 
-The diagram expands the ordinary answer/correction route into separate attempt
-nodes, so it is acyclic. It omits table-waiting events, replay requests, and the
-optional physical-help walkthrough. Help keeps the current mission; mistakes
-during help retry the current physical stage. After help, the same mission gets
-a fresh independent check. Guided work never earns independent mastery.
-The task limit or a requested break may pause earlier than shown.
+The graph unfolds a correction episode into distinct forward nodes. `Continue`
+is a boundary to the next forward correction episode at the indicated step,
+not a jump to the first question. Further scored steps are bounded by the session
+task budget; break, skip during setup, or repeated misses can pause. Replaying
+a prompt and waiting for stable toys do not advance the teaching graph.
+Guided work does not earn mastery: a fresh follow-up is required.
 
 ```mermaid
 flowchart TD
-    Choose["Choose forest or moon; prepare the current toys"] --> Q0A1
-    Q0A1["Have 1 parcel; need 3. How many more?: attempt 1"] -->|"Correct"| Q1A1
-    Q0A1 -->|"Mistake or skip"| Q0C1["Count only NEW parcels needed to fill the order"]
-    Q0C1 --> Q0A2["Same question: attempt 2"]
-    Q0A2 -->|"Correct"| Q1A1
-    Q0A2 -->|"Mistake or skip"| Q0C2["Repeat the local hint; keep this question"]
-    Q0C2 --> Q0A3["Same question: attempt 3"]
-    Q0A3 -->|"Correct"| Q1A1
-    Q0A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q1A1["Have 2 parcels; need 5. How many more?: attempt 1"] -->|"Correct"| Q2A1
-    Q1A1 -->|"Mistake or skip"| Q1C1["Count only NEW parcels needed to fill the order"]
-    Q1C1 --> Q1A2["Same question: attempt 2"]
-    Q1A2 -->|"Correct"| Q2A1
-    Q1A2 -->|"Mistake or skip"| Q1C2["Repeat the local hint; keep this question"]
-    Q1C2 --> Q1A3["Same question: attempt 3"]
-    Q1A3 -->|"Correct"| Q2A1
-    Q1A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q2A1["Have 3 parcels; need 4. How many more?: attempt 1"] -->|"Correct"| Q3A1
-    Q2A1 -->|"Mistake or skip"| Q2C1["Count only NEW parcels needed to fill the order"]
-    Q2C1 --> Q2A2["Same question: attempt 2"]
-    Q2A2 -->|"Correct"| Q3A1
-    Q2A2 -->|"Mistake or skip"| Q2C2["Repeat the local hint; keep this question"]
-    Q2C2 --> Q2A3["Same question: attempt 3"]
-    Q2A3 -->|"Correct"| Q3A1
-    Q2A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q3A1["Have 4 parcels; need 5. How many more?: attempt 1"] -->|"Correct"| Q4A1
-    Q3A1 -->|"Mistake or skip"| Q3C1["Count only NEW parcels needed to fill the order"]
-    Q3C1 --> Q3A2["Same question: attempt 2"]
-    Q3A2 -->|"Correct"| Q4A1
-    Q3A2 -->|"Mistake or skip"| Q3C2["Repeat the local hint; keep this question"]
-    Q3C2 --> Q3A3["Same question: attempt 3"]
-    Q3A3 -->|"Correct"| Q4A1
-    Q3A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q4A1["Have 0 parcels; need 2. How many more?: attempt 1"] -->|"Correct"| Q5A1
-    Q4A1 -->|"Mistake or skip"| Q4C1["Count only NEW parcels needed to fill the order"]
-    Q4C1 --> Q4A2["Same question: attempt 2"]
-    Q4A2 -->|"Correct"| Q5A1
-    Q4A2 -->|"Mistake or skip"| Q4C2["Repeat the local hint; keep this question"]
-    Q4C2 --> Q4A3["Same question: attempt 3"]
-    Q4A3 -->|"Correct"| Q5A1
-    Q4A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q5A1["Have 5 parcels; need 5. How many more?: attempt 1"] -->|"Correct"| Done
-    Q5A1 -->|"Mistake or skip"| Q5C1["Count only NEW parcels needed to fill the order"]
-    Q5C1 --> Q5A2["Same question: attempt 2"]
-    Q5A2 -->|"Correct"| Done
-    Q5A2 -->|"Mistake or skip"| Q5C2["Repeat the local hint; keep this question"]
-    Q5C2 --> Q5A3["Same question: attempt 3"]
-    Q5A3 -->|"Correct"| Done
-    Q5A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Done["Lesson complete"]
+    Choose["How many NEW parcels must be added?"] -->|"Independent success"| Done["Keep progress; continue to next question or finish"]
+    Choose -->|"Answers with the whole target"| E0["Count only the NEW parcels"]
+    E0 --> S0
+    Choose -->|"Answers with the starting group"| E1["Those parcels were here before"]
+    E1 --> S0
+    Choose -->|"All places filled but asks for more"| E2["No empty places means no new parcels"]
+    E2 --> S0
+    S0["Prepare and count the starting parcels, including zero"] -->|"Guided success; no mastery credit"| S1
+    S0 -->|"Mistake at this step"| H0["Model the current settled count; one number per toy"]
+    H0 --> R0["New guided attempt at this SAME step"]
+    R0 -->|"Guided success"| S1
+    R0 -->|"Needs another teaching step"| Continue["Next forward correction episode; keep learned steps"]
+    S1["Add to the requested target; count the combined group"] -->|"Guided success; no mastery credit"| S2
+    S1 -->|"Mistake at this step"| H1["Model the current settled count; one number per toy"]
+    H1 --> R1["New guided attempt at this SAME step"]
+    R1 -->|"Guided success"| S2
+    R1 -->|"Needs another teaching step"| Continue["Next forward correction episode; keep learned steps"]
+    S2["Keep ONLY the new parcels; count that group"] -->|"Guided success; no mastery credit"| Follow
+    S2 -->|"Mistake at this step"| H2["Model the current settled count; one number per toy"]
+    H2 --> R2["New guided attempt at this SAME step"]
+    R2 -->|"Guided success"| Follow
+    R2 -->|"Needs another teaching step"| Continue["Next forward correction episode; keep learned steps"]
+    Follow["How many parcels were missing before the NEW ones arrived?"] -->|"Independent success"| Done
+    Follow -->|"Still needs help"| Focus["Recount only the new-parcel group; do not redo learned starting groups"]
+    Focus --> Continue
+    Choose -->|"Break or budget reached"| Rest["Rest; save earned progress"]
+    Continue -->|"Child requests rest, task limit, or three consecutive misses"| Rest
 ```
 
 ## Too many toys were added
@@ -124,8 +102,7 @@ Independently find the six missing additions, including starting empty and needi
 
 Each camera-visible stage waits for its required stable total and a complete
 spoken count (or zero for an empty group). A disturbed table cancels the pending
-answer without scoring an error. A wrong guided count is modeled, then preparation
-restarts. Setup itself is unscored. The camera verifies totals, not toy identities,
+answer without scoring an error. A wrong guided count is modeled, then that same physical stage is tried again. Setup itself is unscored. The camera verifies totals, not toy identities,
 the meaning of the scene, or the child's pointing.
 
 ## Controls, progress, and integration

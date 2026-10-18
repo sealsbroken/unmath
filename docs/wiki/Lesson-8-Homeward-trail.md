@@ -7,72 +7,45 @@ Guide toy travelers home. Some stop at camp; find how many keep traveling.
 
 Example question: “Ten travelers set out. Five stop at camp. How many keep traveling?”
 
-## Acyclic correction paths
+## Acyclic teaching and correction paths
 
-Each scored question has a forward path: first attempt, a specific correction,
-a fresh attempt, another correction, and a final attempt. A correct answer
-advances to the next question; three consecutive misses pause. Completed work
-is kept. A mistake never sends the child to the first question.
+A wrong answer opens the teaching branch below automatically. Each box is a
+child action or a smaller question; it is not a replay of the original stem.
+The child keeps completed missions. A failed guided response stays at that
+physical step. Once the groups are understood, later errors revisit only the
+remaining concept. English and Russian use the same transitions.
 
-The diagram expands the ordinary answer/correction route into separate attempt
-nodes, so it is acyclic. It omits table-waiting events, replay requests, and the
-optional physical-help walkthrough. Help keeps the current mission; mistakes
-during help retry the current physical stage. After help, the same mission gets
-a fresh independent check. Guided work never earns independent mastery.
-The task limit or a requested break may pause earlier than shown.
+The graph unfolds a correction episode into distinct forward nodes. `Continue`
+is a boundary to the next forward correction episode at the indicated step,
+not a jump to the first question. Further scored steps are bounded by the session
+task budget; break, skip during setup, or repeated misses can pause. Replaying
+a prompt and waiting for stable toys do not advance the teaching graph.
+Guided work does not earn mastery: a fresh follow-up is required.
 
 ```mermaid
 flowchart TD
-    Choose["Choose forest or moon; prepare the current toys"] --> Q0A1
-    Q0A1["6 travelers; 1 stop. How many remain?: attempt 1"] -->|"Correct"| Q1A1
-    Q0A1 -->|"Mistake or skip"| Q0C1["Count only travelers still going; leave out those at camp"]
-    Q0C1 --> Q0A2["Same question: attempt 2"]
-    Q0A2 -->|"Correct"| Q1A1
-    Q0A2 -->|"Mistake or skip"| Q0C2["Repeat the local hint; keep this question"]
-    Q0C2 --> Q0A3["Same question: attempt 3"]
-    Q0A3 -->|"Correct"| Q1A1
-    Q0A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q1A1["7 travelers; 3 stop. How many remain?: attempt 1"] -->|"Correct"| Q2A1
-    Q1A1 -->|"Mistake or skip"| Q1C1["Count only travelers still going; leave out those at camp"]
-    Q1C1 --> Q1A2["Same question: attempt 2"]
-    Q1A2 -->|"Correct"| Q2A1
-    Q1A2 -->|"Mistake or skip"| Q1C2["Repeat the local hint; keep this question"]
-    Q1C2 --> Q1A3["Same question: attempt 3"]
-    Q1A3 -->|"Correct"| Q2A1
-    Q1A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q2A1["8 travelers; 2 stop. How many remain?: attempt 1"] -->|"Correct"| Q3A1
-    Q2A1 -->|"Mistake or skip"| Q2C1["Count only travelers still going; leave out those at camp"]
-    Q2C1 --> Q2A2["Same question: attempt 2"]
-    Q2A2 -->|"Correct"| Q3A1
-    Q2A2 -->|"Mistake or skip"| Q2C2["Repeat the local hint; keep this question"]
-    Q2C2 --> Q2A3["Same question: attempt 3"]
-    Q2A3 -->|"Correct"| Q3A1
-    Q2A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q3A1["9 travelers; 4 stop. How many remain?: attempt 1"] -->|"Correct"| Q4A1
-    Q3A1 -->|"Mistake or skip"| Q3C1["Count only travelers still going; leave out those at camp"]
-    Q3C1 --> Q3A2["Same question: attempt 2"]
-    Q3A2 -->|"Correct"| Q4A1
-    Q3A2 -->|"Mistake or skip"| Q3C2["Repeat the local hint; keep this question"]
-    Q3C2 --> Q3A3["Same question: attempt 3"]
-    Q3A3 -->|"Correct"| Q4A1
-    Q3A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q4A1["10 travelers; 5 stop. How many remain?: attempt 1"] -->|"Correct"| Q5A1
-    Q4A1 -->|"Mistake or skip"| Q4C1["Count only travelers still going; leave out those at camp"]
-    Q4C1 --> Q4A2["Same question: attempt 2"]
-    Q4A2 -->|"Correct"| Q5A1
-    Q4A2 -->|"Mistake or skip"| Q4C2["Repeat the local hint; keep this question"]
-    Q4C2 --> Q4A3["Same question: attempt 3"]
-    Q4A3 -->|"Correct"| Q5A1
-    Q4A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Q5A1["10 travelers; 10 stop. How many remain?: attempt 1"] -->|"Correct"| Done
-    Q5A1 -->|"Mistake or skip"| Q5C1["Count only travelers still going; leave out those at camp"]
-    Q5C1 --> Q5A2["Same question: attempt 2"]
-    Q5A2 -->|"Correct"| Done
-    Q5A2 -->|"Mistake or skip"| Q5C2["Repeat the local hint; keep this question"]
-    Q5C2 --> Q5A3["Same question: attempt 3"]
-    Q5A3 -->|"Correct"| Done
-    Q5A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
-    Done["Lesson complete"]
+    Choose["How many travelers continue after others stop?"] -->|"Independent success"| Done["Keep progress; continue to next question or finish"]
+    Choose -->|"Counts everyone before the stop"| E0["Exclude the stopped travelers"]
+    E0 --> S0
+    Choose -->|"Counts only those at camp"| E1["We need those still traveling"]
+    E1 --> S0
+    Choose -->|"Other wrong answer"| E2["Separate the two groups physically"]
+    E2 --> S0
+    S0["Prepare and count the original travelers"] -->|"Guided success; no mastery credit"| S1
+    S0 -->|"Mistake at this step"| H0["Model the current settled count; one number per toy"]
+    H0 --> R0["New guided attempt at this SAME step"]
+    R0 -->|"Guided success"| S1
+    R0 -->|"Needs another teaching step"| Continue["Next forward correction episode; keep learned steps"]
+    S1["Move the campers aside; count only those still going"] -->|"Guided success; no mastery credit"| Follow
+    S1 -->|"Mistake at this step"| H1["Model the current settled count; one number per toy"]
+    H1 --> R1["New guided attempt at this SAME step"]
+    R1 -->|"Guided success"| Follow
+    R1 -->|"Needs another teaching step"| Continue["Next forward correction episode; keep learned steps"]
+    Follow["Look at the travelers still here: how many continue?"] -->|"Independent success"| Done
+    Follow -->|"Still needs help"| Focus["Recount only those still traveling; preserve the completed steps"]
+    Focus --> Continue
+    Choose -->|"Break or budget reached"| Rest["Rest; save earned progress"]
+    Continue -->|"Child requests rest, task limit, or three consecutive misses"| Rest
 ```
 
 ## Six missions and acceptance
@@ -94,8 +67,7 @@ Independently solve all six departures, including an empty trail when everyone s
 
 Each camera-visible stage waits for its required stable total and a complete
 spoken count (or zero for an empty group). A disturbed table cancels the pending
-answer without scoring an error. A wrong guided count is modeled, then preparation
-restarts. Setup itself is unscored. The camera verifies totals, not toy identities,
+answer without scoring an error. A wrong guided count is modeled, then that same physical stage is tried again. Setup itself is unscored. The camera verifies totals, not toy identities,
 the meaning of the scene, or the child's pointing.
 
 ## Controls, progress, and integration

@@ -1,7 +1,7 @@
 # Lesson and speech-boundary audit
 
 The lesson diagrams show **acyclic correction paths**, with distinct attempt nodes.
-Mistakes preserve the current question and completed work. Tests
+Mistakes open prerequisite-based teaching branches while preserving completed work. Tests
 exercise all ten strategies, plus the real unengine speech/effect runtime.
 
 ## The zero counterexample
@@ -42,7 +42,7 @@ sequence check.
 
 | Input or situation | Behavior covered by tests |
 | --- | --- |
-| `0,1,2,3…`, or zero inserted in the middle | Reject; explain zero versus the first toy; retry the same question |
+| `0,1,2,3…`, or zero inserted in the middle | Reject; explain zero versus the first toy; practice this same toy group before a fresh follow-up |
 | Starts at two or another number | Reject; ask to start at one |
 | Missing a number | Reject; count again in order |
 | Repeated number | Reject; one number per toy |
@@ -77,6 +77,11 @@ sequence check.
 | Toys were visible before engine Start | Replay the cached observation under the strategy lock; do not wait forever for an unchanged table |
 
 ## Automated evidence
+
+- `tests/corrections.rs`: all ten lessons enter interactive correction branches
+  in both languages; guided work earns no mastery; comparison separates counting,
+  pairing, more/fewer vocabulary, and the final team choice.
+
 
 - `tests/addition_setup.rs`: overshoot rollback in both languages, repeated attempts,
   zero additions, empty starting groups, stale speech, and preserving guided stages.

@@ -10,6 +10,9 @@ enum Node {
     Check,
     Prepare,
     Guide,
+    Pair,
+    Relation,
+    Recheck,
     Paused,
     Finished,
 }
@@ -24,6 +27,8 @@ pub struct Adventure {
     index: usize,
     stage: usize,
     undo_add: Option<u32>,
+    taught: bool,
+    paired: bool,
     mastered: u32,
     place: Place,
     table: Option<u32>,
@@ -56,6 +61,8 @@ impl Adventure {
             index,
             stage: 0,
             undo_add: None,
+            taught: false,
+            paired: false,
             mastered,
             place,
             table: None,
@@ -71,7 +78,9 @@ impl Adventure {
         match self.node {
             Node::Idle => PhaseKind::Idle,
             Node::Choose => PhaseKind::Meeting,
-            Node::Check | Node::Guide => PhaseKind::Asking,
+            Node::Check | Node::Guide | Node::Pair | Node::Relation | Node::Recheck => {
+                PhaseKind::Asking
+            }
             Node::Prepare => PhaseKind::Performing,
             Node::Paused => PhaseKind::Paused,
             Node::Finished => PhaseKind::Finished,
@@ -89,7 +98,24 @@ impl Adventure {
     fn expected(&self) -> Option<u32> {
         match self.node {
             Node::Choose => None,
-            Node::Check => Some(self.mission().answer.expected()),
+            Node::Check | Node::Recheck => Some(self.mission().answer.expected()),
+            Node::Relation => Some(
+                if self.mission().stages[0].count == self.mission().stages[1].count {
+                    3
+                } else {
+                    1
+                },
+            ),
+            Node::Pair => {
+                let stages = &self.mission().stages;
+                Some(if stages[0].count == stages[1].count {
+                    3
+                } else if stages[0].count > stages[1].count {
+                    1
+                } else {
+                    2
+                })
+            }
             Node::Guide => self.target(),
             _ => None,
         }
@@ -125,6 +151,62 @@ impl Adventure {
         self.undo_add = None;
         self.stage = 0;
         self.prepare()
+    }
+    fn correction(&mut self) -> Vec<Effect> {
+        if self.taught {
+            if self.lesson == Lesson::BridgeBuilders {
+                return if self.paired {
+                    self.relation_question()
+                } else {
+                    self.pair_question()
+                };
+            }
+            self.stage = self.mission().stages.len() - 1;
+            self.prepare()
+        } else {
+            self.guide()
+        }
+    }
+    fn pair_question(&mut self) -> Vec<Effect> {
+        self.node = Node::Pair;
+        self.sequence.reset();
+        vec![Effect::StopListening, self.say(&Words::new(
+            "Ask a grown-up to keep both rows beside the table. Pair one block from the first team with one from the second. Which team has blocks WITHOUT a partner? Say first, second, or same if none are left.",
+            "Попроси взрослого оставить оба ряда рядом со столом. Составь пары: один блок первой команды и один второй. У какой команды остались блоки БЕЗ пары? Скажи: первая, вторая или поровну, если таких блоков нет.")),
+            Effect::listen(ListenMode::Voice, self.config.answer_timeout)]
+    }
+    fn relation_question(&mut self) -> Vec<Effect> {
+        self.node = Node::Relation;
+        self.sequence.reset();
+        let equal = self.mission().stages[0].count == self.mission().stages[1].count;
+        let words = if equal {
+            Words::new("Every block has a partner. Are the amounts the SAME, or does one team have more? Say same or more.",
+                "У каждого блока есть пара. У команд ПОРОВНУ или у одной больше? Скажи: поровну или больше.")
+        } else {
+            Words::new("One row has blocks left without partners. Does THAT row have MORE or FEWER blocks? Say more or fewer.",
+                "В одном ряду остались блоки без пары. В ЭТОМ ряду блоков БОЛЬШЕ или МЕНЬШЕ? Скажи: больше или меньше.")
+        };
+        vec![
+            Effect::StopListening,
+            self.say(&words),
+            Effect::listen(ListenMode::Voice, self.config.answer_timeout),
+        ]
+    }
+    fn followup(&mut self) -> Vec<Effect> {
+        self.node = Node::Recheck;
+        self.sequence.reset();
+        vec![
+            Effect::StopListening,
+            self.say(&self.mission().followup(self.lesson)),
+            Effect::listen(
+                if matches!(self.mission().answer, Answer::Sequence(_)) {
+                    ListenMode::Counting
+                } else {
+                    ListenMode::Voice
+                },
+                self.config.answer_timeout,
+            ),
+        ]
     }
     fn prepare(&mut self) -> Vec<Effect> {
         self.node = Node::Prepare;
@@ -172,9 +254,13 @@ impl Adventure {
     }
     fn answer(&mut self, number: Option<u32>, skipped: bool) -> Vec<Effect> {
         let sequence = self.sequence.take().unwrap_or_default();
-        let guided = self.node == Node::Guide;
+        let pairing = self.node == Node::Pair;
+        let relation = self.node == Node::Relation;
+        let guided = self.node == Node::Guide || pairing || relation;
         let expected = self.expected().expect("answers only in questions");
-        let needs_sequence = if guided {
+        let needs_sequence = if pairing || relation {
+            false
+        } else if guided {
             expected > 0
         } else {
             matches!(self.mission().answer, Answer::Sequence(_))
@@ -189,13 +275,18 @@ impl Adventure {
             .then(|| count_feedback(&sequence, expected, self.config.language));
         self.records.push(TaskRecord {
             task: format!(
-                "{}: {}{}",
+                "{}: {}",
                 self.mission().name,
-                if guided { "guided" } else { "independent" },
-                if guided {
-                    format!(" stage {}", self.stage + 1)
+                if pairing {
+                    "guided pairing".into()
+                } else if relation {
+                    "guided comparison words".into()
+                } else if guided {
+                    format!("guided stage {}", self.stage + 1)
+                } else if self.node == Node::Recheck {
+                    "independent follow-up".into()
                 } else {
-                    String::new()
+                    "independent".into()
                 }
             ),
             answers: if needs_sequence {
@@ -225,7 +316,7 @@ impl Adventure {
             let mut effects = vec![Effect::StopListening];
             let has_feedback = feedback.is_some();
             effects.extend(feedback);
-            if guided {
+            if guided && !pairing && !relation {
                 if expected > 0 {
                     effects.push(Effect::HighlightCount(expected));
                 }
@@ -242,34 +333,60 @@ impl Adventure {
                     format!("Посчитаем вместе: {count}. Попробуем с игрушками ещё раз."),
                 )));
             }
-            // A wrong response stays at this question or this guided stage.
-            // Explicit help opens the physical walkthrough.
-            if guided {
+            if relation {
+                effects.push(self.say(&Words::new(
+                    "More means there are blocks left without partners. Fewer means the other row runs out first. If every block has a partner, the amounts are the same.",
+                    "Больше — значит остались блоки без пары. Меньше — значит блоки закончились раньше. Если у всех блоков есть пара, то поровну.")));
+                effects.extend(self.relation_question());
+            } else if pairing {
+                effects.push(self.say(&self.lesson.correction()));
+                effects.extend(self.pair_question());
+            } else if guided {
                 effects.extend(self.guide_question());
             } else {
                 if !has_feedback {
-                    effects.push(self.say(&self.lesson.correction()));
+                    effects.push(self.say(&self.mission().error(self.lesson, number)));
                 }
-                effects.extend(self.check());
+                effects.extend(self.correction());
             }
             return effects;
+        }
+        if pairing {
+            self.paired = true;
+            return self.relation_question();
+        }
+        if relation {
+            return self.followup();
         }
         if guided {
             self.stage += 1;
             if self.stage < self.mission().stages.len() {
                 return self.prepare();
             }
-            let mut effects = vec![Effect::StopListening, self.say(&self.mission().explanation)];
-            // Return to this mission for an independent answer; keep completed work.
-            effects.extend(self.check());
+            let mut effects = vec![
+                Effect::StopListening,
+                self.say(&Words::new(
+                    "You counted the toys. Let's use what you found.",
+                    "Игрушки посчитаны. Теперь посмотрим, что мы узнали.",
+                )),
+            ];
+            self.taught = true;
+            if self.lesson == Lesson::BridgeBuilders {
+                effects.extend(self.pair_question());
+            } else {
+                effects.extend(self.followup());
+            }
             effects
         } else {
             let mut effects = vec![
                 Effect::StopListening,
                 Effect::Celebrate,
+                self.say(&self.mission().explanation),
                 self.say(&self.mission().reward),
             ];
             self.index = (self.index + 1) % self.missions.len();
+            self.taught = false;
+            self.paired = false;
             effects.extend(self.check());
             effects
         }
@@ -326,7 +443,13 @@ impl Adventure {
     fn active(&self) -> bool {
         matches!(
             self.node,
-            Node::Choose | Node::Check | Node::Prepare | Node::Guide
+            Node::Choose
+                | Node::Check
+                | Node::Prepare
+                | Node::Guide
+                | Node::Pair
+                | Node::Relation
+                | Node::Recheck
         )
     }
 }
@@ -367,12 +490,35 @@ impl Strategy for Adventure {
             Event::Said(s) if self.active() && wants_break(&s) => self.finish(false),
             Event::Heard(n) if self.node == Node::Choose => self.choose(Place::from_number(n)),
             Event::Said(s) if self.node == Node::Choose => self.choose(Place::from_words(&s)),
-            Event::Said(s) if wants_help(&s) && matches!(self.node, Node::Check | Node::Guide) => {
-                self.guide()
+            Event::Said(s)
+                if wants_help(&s)
+                    && matches!(
+                        self.node,
+                        Node::Check | Node::Guide | Node::Pair | Node::Relation | Node::Recheck
+                    ) =>
+            {
+                if self.node == Node::Guide {
+                    self.prepare()
+                } else {
+                    self.correction()
+                }
+            }
+            Event::Said(s) if self.node == Node::Relation => {
+                let answer = match normalized(&s).as_str() {
+                    "more" | "больше" => Some(1),
+                    "fewer" | "less" | "меньше" => Some(2),
+                    "same" | "equal" | "поровну" | "одинаково" => Some(3),
+                    _ => None,
+                };
+                answer
+                    .map(|n| self.answer(Some(n), false))
+                    .unwrap_or_default()
             }
             Event::Said(s)
-                if self.node == Node::Check
-                    && matches!(self.mission().answer, Answer::Choice(_)) =>
+                if matches!(
+                    self.node,
+                    Node::Check | Node::Pair | Node::Relation | Node::Recheck
+                ) && matches!(self.mission().answer, Answer::Choice(_)) =>
             {
                 let choice = match normalized(&s).as_str() {
                     "first" | "the first" | "первая" | "первый" => Some(1),
@@ -427,11 +573,21 @@ impl Strategy for Adventure {
                     vec![]
                 }
             }
-            Event::Numbers(ns) if matches!(self.node, Node::Check | Node::Guide) => {
+            Event::Numbers(ns)
+                if matches!(
+                    self.node,
+                    Node::Check | Node::Guide | Node::Pair | Node::Relation | Node::Recheck
+                ) =>
+            {
                 self.sequence.set(ns);
                 vec![]
             }
-            Event::Heard(n) if matches!(self.node, Node::Check | Node::Guide) => {
+            Event::Heard(n)
+                if matches!(
+                    self.node,
+                    Node::Check | Node::Guide | Node::Pair | Node::Relation | Node::Recheck
+                ) =>
+            {
                 self.answer(Some(n), false)
             }
             Event::NothingHeard if self.active() && self.node != Node::Prepare => {
@@ -442,6 +598,9 @@ impl Strategy for Adventure {
                 match self.node {
                     Node::Choose => invitation(&self.config),
                     Node::Guide => self.guide_question(),
+                    Node::Pair => self.pair_question(),
+                    Node::Relation => self.relation_question(),
+                    Node::Recheck => self.followup(),
                     _ => self.check(),
                 }
             }
@@ -449,9 +608,17 @@ impl Strategy for Adventure {
                 Node::Choose => invitation(&self.config),
                 Node::Prepare => self.prepare(),
                 Node::Guide => self.guide_question(),
+                Node::Pair => self.pair_question(),
+                Node::Relation => self.relation_question(),
+                Node::Recheck => self.followup(),
                 _ => self.check(),
             },
-            Event::SkipRequested if matches!(self.node, Node::Check | Node::Guide) => {
+            Event::SkipRequested
+                if matches!(
+                    self.node,
+                    Node::Check | Node::Guide | Node::Pair | Node::Relation | Node::Recheck
+                ) =>
+            {
                 self.answer(None, true)
             }
             Event::SkipRequested if self.node == Node::Choose => self.choose(Some(self.place)),
@@ -470,7 +637,13 @@ impl Strategy for Adventure {
                 "{}: {} ({})",
                 self.lesson.title(),
                 self.mission().name,
-                if matches!(self.node, Node::Guide | Node::Prepare) {
+                if self.node == Node::Relation {
+                    "guided comparison words"
+                } else if self.node == Node::Pair {
+                    "guided pairing"
+                } else if self.node == Node::Recheck {
+                    "independent follow-up"
+                } else if matches!(self.node, Node::Guide | Node::Prepare) {
                     "guided"
                 } else {
                     "independent"

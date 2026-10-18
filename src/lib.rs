@@ -22,6 +22,7 @@ enum Question {
     Warmup(u32),
     First,
     Practice(u32),
+    Repair(u32),
     Toys,
     Total,
     Final,
@@ -38,6 +39,8 @@ pub struct CountToThree {
     sequence: CountBuffer,
     first_success: bool,
     resume_after_practice: Question,
+    repair_return: Question,
+    rechecking: bool,
     attempts: u32,
     misses: u32,
     records: Vec<TaskRecord>,
@@ -70,6 +73,8 @@ impl CountToThree {
             sequence: CountBuffer::default(),
             first_success,
             resume_after_practice: question,
+            repair_return: question,
+            rechecking: false,
             attempts: 0,
             misses: 0,
             records: vec![],
@@ -77,7 +82,7 @@ impl CountToThree {
     }
     fn target(&self) -> Option<u32> {
         match self.question {
-            Question::Warmup(n) | Question::Practice(n) => Some(n),
+            Question::Warmup(n) | Question::Practice(n) | Question::Repair(n) => Some(n),
             Question::First | Question::Final | Question::Toys | Question::Total => Some(3),
         }
     }
@@ -97,7 +102,21 @@ impl CountToThree {
             Place::Forest => "Друг едет в автобусе!",
             Place::Moon => "Друг летит в ракете!",
         };
+        if self.rechecking && !matches!(self.question, Question::Repair(_) | Question::Practice(_))
+        {
+            return if self.question == Question::Total {
+                self.text(
+                    "Remember the last number you said. How many toys have tickets?",
+                    "Вспомни последнее число. Сколько игрушек получили билеты?",
+                )
+            } else {
+                self.text("The tickets are ready. Now point to each toy and count them all by yourself.", "Билеты готовы. Теперь покажи на каждую игрушку и посчитай все игрушки без подсказки.")
+            };
+        }
         match self.question {
+            Question::Repair(_) => self.text(
+                "Let's give each toy one ticket. Point to each toy once and say one number for it. Start at one. Stop after the last toy.",
+                "Дадим каждой игрушке один билет. Показывай на каждую игрушку по очереди и называй одно число. Начни с одного. После последней игрушки остановись."),
             Question::Warmup(1) => self.text(
                 &format!("A friend rides our {vehicle}! Point to the toy. One! Say one."),
                 &format!("{ride} Покажи на игрушку. Один! Скажи: один."),
@@ -155,7 +174,7 @@ impl CountToThree {
         }
         self.phase = PhaseKind::Asking;
         let mut effects = vec![];
-        if let Question::Practice(n) = self.question {
+        if let Question::Practice(n) | Question::Repair(n) = self.question {
             // Model only a verified set. Setup is requested before modeling otherwise.
             if self.table == Some(n) {
                 effects.push(Effect::HighlightCount(n));
@@ -205,7 +224,11 @@ impl CountToThree {
             if mastered {
                 String::new()
             } else {
-                match self.question {
+                match if matches!(self.question, Question::Repair(_)) {
+                    self.repair_return
+                } else {
+                    self.question
+                } {
                     Question::Warmup(2) => "2",
                     Question::First => "3",
                     _ => "1",
@@ -275,6 +298,7 @@ impl CountToThree {
         }
         if correct {
             if let Question::Warmup(n) = self.question {
+                self.rechecking = false;
                 self.question = if n == 1 {
                     Question::Warmup(2)
                 } else {
@@ -302,6 +326,7 @@ impl CountToThree {
         effects.extend(feedback);
         if correct {
             self.misses = 0;
+            self.rechecking = false;
             effects.push(Effect::Say(self.place.cheer(self.config.language).into()));
             self.question = match self.question {
                 Question::Warmup(_) => unreachable!("warm-up success advances above"),
@@ -311,6 +336,10 @@ impl CountToThree {
                 }
                 Question::Practice(n) if n < 3 => Question::Practice(n + 1),
                 Question::Practice(_) => self.resume_after_practice,
+                Question::Repair(_) => {
+                    self.rechecking = true;
+                    self.repair_return
+                }
                 Question::Toys => Question::Total,
                 Question::Total => {
                     effects.push(Effect::Say(self.text(
@@ -326,12 +355,12 @@ impl CountToThree {
             if self.misses >= 3 {
                 return self.finish(false);
             }
-            // Correct the current response without discarding the child's place.
-            if self.question == Question::Total {
-                effects.push(Effect::Say(self.text(
-                    "Think of the last number you said when you counted the toys. How many are there?",
-                    "Вспомни последнее число при счёте игрушек. Сколько их всего?",
-                )));
+            // Teach one-to-one counting with this group; never shrink it or
+            // award an independent success for the tutor-modeled count.
+            if !matches!(self.question, Question::Repair(_) | Question::Practice(_)) {
+                self.repair_return = self.question;
+                self.rechecking = false;
+                self.question = Question::Repair(expected);
             }
         }
         effects.extend(self.ask());
