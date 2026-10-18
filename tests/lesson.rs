@@ -240,3 +240,40 @@ fn the_three_and_four_toy_warmups_cannot_complete_a_count_to_five_lesson() {
     assert_eq!(s.snapshot().target_count, Some(5));
     assert_eq!(s.snapshot().level, 0);
 }
+#[test]
+fn toys_already_on_the_table_move_the_warmup_on() {
+    let opening = |s: &mut CountToFive| {
+        s.handle(Event::Start);
+        s.handle(Event::Said("forest".into()))
+    };
+    // Four toys out before the game: the first count is of four, with the opening line.
+    let mut s = lesson();
+    table(&mut s, 4);
+    let said = un_core::strategy::spoken(&opening(&mut s)).join(" ");
+    assert_eq!(s.snapshot().phase, PhaseKind::Asking);
+    assert_eq!(s.snapshot().target_count, Some(4));
+    assert!(said.contains("captain"), "{said}");
+    // Five out: straight to the count to five.
+    let mut s = lesson();
+    table(&mut s, 5);
+    opening(&mut s);
+    assert_eq!(s.snapshot().phase, PhaseKind::Asking);
+    assert_eq!(s.snapshot().target_count, Some(5));
+    // Seven out: five are needed, the tutor says how many to take away.
+    let mut s = lesson();
+    table(&mut s, 7);
+    let said = un_core::strategy::spoken(&opening(&mut s)).join(" ");
+    assert_eq!(s.snapshot().phase, PhaseKind::Performing);
+    assert!(said.contains("Take 2 away"), "{said}");
+    table(&mut s, 5);
+    assert_eq!(s.snapshot().phase, PhaseKind::Asking);
+    // Two out: one more is needed for the three-toy start.
+    let mut s = lesson();
+    table(&mut s, 2);
+    let said = un_core::strategy::spoken(&opening(&mut s)).join(" ");
+    assert!(said.contains("Add 1 more"), "{said}");
+    // A fourth toy put out while waiting: the game starts at four.
+    table(&mut s, 4);
+    assert_eq!(s.snapshot().target_count, Some(4));
+    assert_eq!(s.snapshot().phase, PhaseKind::Asking);
+}

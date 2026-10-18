@@ -39,6 +39,8 @@ pub struct CountToFive {
     attempts: u32,
     misses: u32,
     records: Vec<TaskRecord>,
+    /// A warm-up count has been done: the next one is a friend joining, not the opening.
+    opened: bool,
 }
 
 impl CountToFive {
@@ -70,6 +72,7 @@ impl CountToFive {
             attempts: 0,
             misses: 0,
             records: vec![],
+            opened: false,
         }
     }
     fn target(&self) -> Option<u32> {
@@ -91,7 +94,7 @@ impl CountToFive {
     fn prompt(&self) -> String {
         let vehicle = self.place.vehicle(self.config.language);
         match self.question {
-            Question::Warmup(3) => self.text(
+            Question::Warmup(_) if !self.opened => self.text(
                 &format!("You're the captain of our {vehicle}! Our first three friends are waiting. Point to one toy at a time and say one number for each, starting at one."),
                 &format!("Ты капитан! Готовим {vehicle} к поездке. Первые три друга уже ждут. Показывай на игрушки по одному и называй по одному числу для каждой, начиная с одного.")),
             Question::Warmup(_) => self.text(
@@ -111,8 +114,37 @@ impl CountToFive {
                 "Проверяем билеты! Показывай на игрушки по одной. Называй по одному числу для каждой, начиная с одного. Считай, пока у всех не будет билета."),
         }
     }
+    /// Toys already on the table move the warm-up on: with four out the game starts at four,
+    /// with five (or more) it goes straight to the count to five. The warm-up never moves back.
+    fn fit_warmup(&mut self) {
+        if let (Question::Warmup(n), Some(t)) = (self.question, self.table) {
+            let t = t.min(5).min(self.config.total_objects);
+            if t > n {
+                self.question = if t == 5 {
+                    Question::First
+                } else {
+                    Question::Warmup(t)
+                };
+            }
+        }
+    }
+    /// What to do to the table: put `n` toys out, or add or take away the difference.
+    fn setup_line(&self, n: u32) -> String {
+        match self.table {
+            Some(t) if t < n => self.text(
+                &format!("Our next stop needs {n} toy passengers, and {t} are on the table. Add {} more, then move your hands away.", n - t),
+                &format!("На остановке ждут {n} игрушечных пассажиров, а на столе игрушек: {t}. Добавь ещё: {}. Потом убери руки.", n - t)),
+            Some(t) if t > n => self.text(
+                &format!("Our next stop needs {n} toy passengers, and {t} are on the table. Take {} away, then move your hands away.", t - n),
+                &format!("На остановке ждут {n} игрушечных пассажиров, а на столе игрушек: {t}. Убери лишние: {}. Потом убери руки.", t - n)),
+            _ => self.text(
+                &format!("Our next stop needs {n} toy passengers! Can you put them on the table? Move your hands away to check the tickets. A grown-up can help."),
+                &format!("На остановке ждут {n} игрушечных пассажиров! Поставь их на стол и убери руки, чтобы проверить билеты. Взрослый может помочь.")),
+        }
+    }
     fn ask(&mut self) -> Vec<Effect> {
         self.sequence.reset();
+        self.fit_warmup();
         if let Some(n) = self.target() {
             if n > self.config.total_objects {
                 let mut effects = vec![Effect::Say(self.text(
@@ -123,10 +155,7 @@ impl CountToFive {
             }
             if self.table != Some(n) {
                 self.phase = PhaseKind::Performing;
-                return vec![Effect::StopListening, Effect::Say(match self.config.language {
-                    Language::English => format!("Our next stop needs {n} toy passengers! Can you put them on the table? Move your hands away to check the tickets. A grown-up can help."),
-                    Language::Russian => format!("На остановке ждут {n} игрушечных пассажиров! Поставь их на стол и убери руки, чтобы проверить билеты. Взрослый может помочь."),
-                })];
+                return vec![Effect::StopListening, Effect::Say(self.setup_line(n))];
             }
         }
         self.phase = PhaseKind::Asking;
@@ -251,6 +280,7 @@ impl CountToFive {
         }
         if correct {
             if let Question::Warmup(n) = self.question {
+                self.opened = true;
                 self.question = if n == 3 {
                     Question::Warmup(4)
                 } else {
@@ -419,6 +449,9 @@ impl Strategy for CountToFive {
                 if matches!(self.phase, PhaseKind::Asking | PhaseKind::Performing)
                     && self.target().is_some()
                 {
+                    if self.phase == PhaseKind::Performing {
+                        self.fit_warmup();
+                    }
                     if self.phase == PhaseKind::Performing && self.table == self.target() {
                         return self.ask();
                     }
