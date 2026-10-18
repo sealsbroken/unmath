@@ -1,5 +1,5 @@
 - [Course 1: goals and lessons](Home)
-- [Lesson 1: Five passengers](Lesson-1-Count-to-five)
+- [Lesson 1: Three passengers](Lesson-1-Count-to-three)
 - [Lesson 2: Picnic baskets](Lesson-2-Add-up-to-five)
 - [Lesson 3: Cave train](Lesson-3-Cave-train)
 - [Lesson 4: Bridge builders](Lesson-4-Bridge-builders)

@@ -33,7 +33,7 @@ Each link includes its questions, acceptance criteria, and directed cyclic graph
 
 | Lesson | Adventure | Learning goal |
 | --- | --- | --- |
-| 1 | [Five passengers](https://github.com/sealsbroken/unmath/wiki/Lesson-1-Count-to-five) | Start with three toys, add one at a time to five, and count each toy one by one. |
+| 1 | [Three passengers](https://github.com/sealsbroken/unmath/wiki/Lesson-1-Count-to-three) | Start with one toy, add one at a time to three, and count each toy one by one. |
 | 2 | [Picnic baskets](https://github.com/sealsbroken/unmath/wiki/Lesson-2-Add-up-to-five) | Combine two toy groups with a total up to five; count every toy in the combined basket. |
 | 3 | [Cave train](https://github.com/sealsbroken/unmath/wiki/Lesson-3-Cave-train) | Take away within five; find what remains, including none left and none taken away. |
 | 4 | [Bridge builders](https://github.com/sealsbroken/unmath/wiki/Lesson-4-Bridge-builders) | Compare groups up to five: more, fewer, or equal. |
@@ -60,7 +60,7 @@ arithmetic fact.
 
 ## How to use the course
 
-Lesson 1 starts with **three toys** and grows to five. Lessons 2–5 use
+Lesson 1 starts with **one toy** and grows to three. Lessons 2–5 use
 **five recognizable toys**; lessons 6–10 use **ten**. Story props
 are optional. Keep fair-share guests outside the camera's counting area.
 English and Russian prompts are included. The game is screen free: the child speaks, counts, and moves toys. The child
@@ -76,7 +76,8 @@ Pretend rewards are spoken invitations, not new engine animations.
 ## Prerequisites and progression
 
 Lesson 1 starts the course without assuming prior arithmetic. Lesson 2 builds on
-counting five. Lessons 3–5 explore taking away, comparison, and missing quantities
+counting five. After lesson 1, practice four and five with a grown-up before
+starting lesson 2. Lessons 3–5 explore taking away, comparison, and missing quantities
 within that familiar range. Lesson 6 extends counting to ten before lessons 7–9
 apply combining, taking away, and completing to larger quantities. Lesson 10
 uses counting and equality to introduce fair sharing.
@@ -90,7 +91,7 @@ age/grade assignment. A child may revisit a prerequisite and resume later.
 reducers; lessons 3–10 use `curriculum::Adventure` with separate mission content
 and physical help stages. Checkpoints are versioned and isolated per lesson.
 
-Lesson 1 requires independent one-by-one counts of five, with a total question
+Lesson 1 requires independent one-by-one counts of three, with a total question
 and a fresh departure count. Lesson 2 has seven independently counted picnic
 baskets. Lessons 3–10 each have six independent challenges. Their individual
 pages define the exact checks; these are representative activities, not exhaustive

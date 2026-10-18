@@ -12,9 +12,9 @@ use std::sync::Arc;
 use un_core::language::Language;
 use un_core::strategy::*;
 
-pub const ID: &str = "unmath-count-to-five";
-const PROGRESS: &str = "unmath.lesson1.one_by_one.v2";
-const WARMUP: &str = "unmath.lesson1.warmup.v3";
+pub const ID: &str = "unmath-count-to-three";
+const PROGRESS: &str = "unmath.lesson1.count_three.v1";
+const WARMUP: &str = "unmath.lesson1.warmup_three.v1";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Question {
@@ -28,7 +28,7 @@ enum Question {
 
 /// Lesson one: two independent full counts, separated by counting real toys.
 /// Only full Numbers sequences are accepted for counting; taps never prove mastery.
-pub struct CountToFive {
+pub struct CountToThree {
     config: SessionConfig,
     place: Place,
     question: Question,
@@ -39,11 +39,9 @@ pub struct CountToFive {
     attempts: u32,
     misses: u32,
     records: Vec<TaskRecord>,
-    /// A warm-up count has been done: the next one is a friend joining, not the opening.
-    opened: bool,
 }
 
-impl CountToFive {
+impl CountToThree {
     pub fn new(config: SessionConfig) -> Self {
         let config = safe_config(config);
         let first_success = config.extra.get(PROGRESS).is_some_and(|v| v == "true");
@@ -56,9 +54,9 @@ impl CountToFive {
             Question::Toys
         } else {
             match config.extra.get(WARMUP).map(String::as_str) {
-                Some("4") => Question::Warmup(4),
-                Some("5") => Question::First,
-                _ => Question::Warmup(3),
+                Some("2") => Question::Warmup(2),
+                Some("3") => Question::First,
+                _ => Question::Warmup(1),
             }
         };
         Self {
@@ -72,17 +70,16 @@ impl CountToFive {
             attempts: 0,
             misses: 0,
             records: vec![],
-            opened: false,
         }
     }
     fn target(&self) -> Option<u32> {
         match self.question {
             Question::Warmup(n) | Question::Practice(n) => Some(n),
-            Question::First | Question::Final | Question::Toys | Question::Total => Some(5),
+            Question::First | Question::Final | Question::Toys | Question::Total => Some(3),
         }
     }
     fn expected(&self) -> u32 {
-        self.target().unwrap_or(5)
+        self.target().unwrap_or(3)
     }
     fn text(&self, en: &str, ru: &str) -> String {
         match self.config.language {
@@ -94,57 +91,43 @@ impl CountToFive {
     fn prompt(&self) -> String {
         let vehicle = self.place.vehicle(self.config.language);
         match self.question {
-            Question::Warmup(n) if !self.opened => self.text(
-                &format!("You're the captain of our {vehicle}! Our first {} friends are waiting. Point to one toy at a time and say one number for each, starting at one.", if n == 4 { "four" } else { "three" }),
-                &format!("Ты капитан! Готовим {vehicle} к поездке. Первые {} друга уже ждут. Показывай на игрушки по одному и называй по одному числу для каждой, начиная с одного.", if n == 4 { "четыре" } else { "три" })),
+            Question::Warmup(1) => self.text(
+                &format!("A friend rides our {vehicle}! Point to the toy. One! Say one."),
+                &format!("Друг едет в {vehicle}! Покажи на игрушку. Один! Скажи: один."),
+            ),
             Question::Warmup(_) => self.text(
-                "One more friend has joined us! Point to the toys one by one and say one number for each, starting at one.",
-                "К нам присоединился ещё один друг! Показывай на игрушки по одному и называй по одному числу для каждой, начиная с одного."),
+                "One more friend! Point to each toy. One, two! Your turn.",
+                "Ещё один друг! Покажи на каждую игрушку. Один, два! Теперь ты.",
+            ),
             Question::First => self.text(
-                &format!("You're the captain of our {vehicle}! Point to one toy passenger at a time and say one number for each to open the doors. Start at one and keep going until every toy has a number."),
-                &format!("Ты капитан! Открой {vehicle}: показывай на игрушечных пассажиров по одному и называй по одному числу для каждого. Начни с одного и считай, пока у каждой игрушки не будет числа.")),
+                "Three friends! Point to each toy. Say one number for each. Start at one.",
+                "Три друга! Показывай на игрушки по одному. Каждой — своё число. Начни с одного.",
+            ),
             Question::Final => self.text(
-                "Everyone is aboard! Point to each toy passenger, one by one, and say one number for each to start our adventure.",
-                "Все на борту! Показывай на игрушечных пассажиров по одному и называй по одному числу для каждого, чтобы отправиться в путь!"),
+                "Ready to go? Point to each toy and count again!",
+                "Поехали? Покажи на каждую игрушку и посчитай ещё раз!",
+            ),
             Question::Total => self.text(
                 "How many passengers are coming to our picnic?",
-                "Сколько пассажиров едет на наш пикник?"),
+                "Сколько пассажиров едет на наш пикник?",
+            ),
             _ => self.text(
-                "Ticket check! Point to the toys one by one. Say one number for each toy, starting at one. Keep going until every toy has a ticket.",
-                "Проверяем билеты! Показывай на игрушки по одной. Называй по одному числу для каждой, начиная с одного. Считай, пока у всех не будет билета."),
+                "Tickets! Point to each toy. Say one number for each toy. Start at one.",
+                "Билеты! Показывай на игрушки по одному. Каждой — своё число. Начни с одного.",
+            ),
         }
     }
-    /// Toys already on the table move the warm-up on: with four out the game starts at four,
-    /// with five (or more) it goes straight to the count to five. The warm-up never moves back.
-    fn fit_warmup(&mut self) {
-        if let (Question::Warmup(n), Some(t)) = (self.question, self.table) {
-            let t = t.min(5).min(self.config.total_objects);
-            if t > n {
-                self.question = if t == 5 {
-                    Question::First
-                } else {
-                    Question::Warmup(t)
-                };
-            }
-        }
-    }
-    /// What to do to the table: put `n` toys out, or add or take away the difference.
+    /// Always keep the opening at one, even when extra toys are visible.
     fn setup_line(&self, n: u32) -> String {
-        match self.table {
-            Some(t) if t < n => self.text(
-                &format!("Our next stop needs {n} toy passengers, and {t} are on the table. Add {} more, then move your hands away.", n - t),
-                &format!("На остановке ждут {n} игрушечных пассажиров, а на столе игрушек: {t}. Добавь ещё: {}. Потом убери руки.", n - t)),
-            Some(t) if t > n => self.text(
-                &format!("Our next stop needs {n} toy passengers, and {t} are on the table. Take {} away, then move your hands away.", t - n),
-                &format!("На остановке ждут {n} игрушечных пассажиров, а на столе игрушек: {t}. Убери лишние: {}. Потом убери руки.", t - n)),
-            _ => self.text(
-                &format!("Our next stop needs {n} toy passengers! Can you put them on the table? Move your hands away to check the tickets. A grown-up can help."),
-                &format!("На остановке ждут {n} игрушечных пассажиров! Поставь их на стол и убери руки, чтобы проверить билеты. Взрослый может помочь.")),
-        }
+        self.text(
+            &format!(
+                "Put {n} toy passengers here. Keep the other toys aside. A grown-up can help."
+            ),
+            &format!("Поставь сюда игрушки: {n}. Остальные пока отложи. Взрослый может помочь."),
+        )
     }
     fn ask(&mut self) -> Vec<Effect> {
         self.sequence.reset();
-        self.fit_warmup();
         if let Some(n) = self.target() {
             if n > self.config.total_objects {
                 let mut effects = vec![Effect::Say(self.text(
@@ -165,8 +148,8 @@ impl CountToFive {
             if self.table == Some(n) {
                 effects.push(Effect::HighlightCount(n));
                 let words = match self.config.language {
-                    Language::English => ["one", "two", "three", "four", "five"],
-                    Language::Russian => ["один", "два", "три", "четыре", "пять"],
+                    Language::English => ["one", "two", "three"],
+                    Language::Russian => ["один", "два", "три"],
                 };
                 effects.push(Effect::Say(format!(
                     "{}. {}",
@@ -211,9 +194,9 @@ impl CountToFive {
                 String::new()
             } else {
                 match self.question {
-                    Question::Warmup(4) => "4",
-                    Question::First => "5",
-                    _ => "3",
+                    Question::Warmup(2) => "2",
+                    Question::First => "3",
+                    _ => "1",
                 }
                 .into()
             },
@@ -240,8 +223,8 @@ impl CountToFive {
         }
         effects.push(Effect::Say(if mastered {
             self.text(
-                "You counted to five by yourself! Everyone has a ticket. Off to our picnic!",
-                "Ты самостоятельно посчитал до пяти! У всех есть билеты. Едем на пикник!",
+                "You counted to three by yourself! Everyone has a ticket. Off to our picnic!",
+                "Ты самостоятельно посчитал до трёх! У всех есть билеты. Едем на пикник!",
             )
         } else {
             self.text(
@@ -257,7 +240,7 @@ impl CountToFive {
         let expected = self.expected();
         let correct = !skipped
             && if self.question == Question::Total {
-                answer == Some(5)
+                answer == Some(3)
             } else {
                 valid_count(&numbers, expected, answer)
             };
@@ -280,9 +263,8 @@ impl CountToFive {
         }
         if correct {
             if let Question::Warmup(n) = self.question {
-                self.opened = true;
-                self.question = if n == 3 {
-                    Question::Warmup(4)
+                self.question = if n == 1 {
+                    Question::Warmup(2)
                 } else {
                     Question::First
                 };
@@ -315,13 +297,13 @@ impl CountToFive {
                     self.first_success = true;
                     Question::Toys
                 }
-                Question::Practice(n) if n < 5 => Question::Practice(n + 1),
+                Question::Practice(n) if n < 3 => Question::Practice(n + 1),
                 Question::Practice(_) => Question::First,
                 Question::Toys => Question::Total,
                 Question::Total => {
                     effects.push(Effect::Say(self.text(
-                        "Let the five passengers choose new seats! Move the toys around, then we can start the engine.",
-                        "Пусть пять пассажиров выберут новые места! Передвинь игрушки, а потом заведём мотор.",
+                        "New seats! Move the toys around. Then count again.",
+                        "Пусть три пассажира выберут новые места! Передвинь игрушки, а потом заведём мотор.",
                     )));
                     Question::Final
                 }
@@ -348,7 +330,7 @@ impl CountToFive {
     }
 }
 
-impl Strategy for CountToFive {
+impl Strategy for CountToThree {
     fn handle(&mut self, event: Event) -> Vec<Effect> {
         if matches!(&event, Event::Heard(n) if self.sequence.ignore_discarded_tail(*n)) {
             return vec![];
@@ -361,15 +343,15 @@ impl Strategy for CountToFive {
                 if self.config.max_tasks == 0 {
                     return self.finish(false);
                 }
-                if self.config.total_objects < 3 {
-                    let mut effects = vec![Effect::Say(self.text("Ask a grown-up to prepare three toys. We can play when they are ready.", "Попроси взрослого подготовить три игрушки. Сыграем, когда они будут готовы."))];
+                if self.config.total_objects < 1 {
+                    let mut effects = vec![Effect::Say(self.text("Ask a grown-up to prepare one toy. We can play when they are ready.", "Попроси взрослого подготовить одну игрушку. Сыграем, когда они будут готовы."))];
                     effects.extend(self.finish(false));
                     return effects;
                 }
                 if self.first_success
                     || matches!(
                         self.config.extra.get(WARMUP).map(String::as_str),
-                        Some("4" | "5")
+                        Some("2" | "3")
                     )
                 {
                     self.ask()
@@ -449,9 +431,6 @@ impl Strategy for CountToFive {
                 if matches!(self.phase, PhaseKind::Asking | PhaseKind::Performing)
                     && self.target().is_some()
                 {
-                    if self.phase == PhaseKind::Performing {
-                        self.fit_warmup();
-                    }
                     if self.phase == PhaseKind::Performing && self.table == self.target() {
                         return self.ask();
                     }
@@ -505,25 +484,29 @@ impl Strategy for CountToFive {
 }
 
 #[derive(Default)]
-pub struct CountToFiveFactory;
-impl StrategyFactory for CountToFiveFactory {
+pub struct CountToThreeFactory;
+impl StrategyFactory for CountToThreeFactory {
     fn info(&self) -> StrategyInfo {
         StrategyInfo {
             id: ID.into(),
-            title: "Lesson 1: five passengers".into(),
-            description: "Captain a bus or rocket, check toy tickets, and count five passengers."
+            title: "Lesson 1: three passengers".into(),
+            description: "Captain a bus or rocket, check toy tickets, and count three passengers."
                 .into(),
             languages: vec![Language::English, Language::Russian],
             license: "LGPL-3.0-or-later".into(),
         }
     }
     fn create(&self, config: &SessionConfig) -> Box<dyn Strategy> {
-        Box::new(CountToFive::new(config.clone()))
+        Box::new(CountToThree::new(config.clone()))
     }
 }
 pub fn register(registry: &mut StrategyRegistry) {
-    registry.register(Arc::new(CountToFiveFactory));
+    registry.register(Arc::new(CountToThreeFactory));
     registry.register(Arc::new(AddToFiveFactory));
     curriculum::register(registry);
 }
-inventory::submit! { LinkedStrategy(|| Arc::new(CountToFiveFactory)) }
+inventory::submit! { LinkedStrategy(|| Arc::new(CountToThreeFactory)) }
+
+/// Compatibility name; lesson one now teaches counting to three.
+pub type CountToFive = CountToThree;
+pub use CountToThreeFactory as CountToFiveFactory;

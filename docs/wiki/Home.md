@@ -26,6 +26,9 @@ These are concrete quantity skills. Fast recall, written arithmetic, formal
 division notation, and mastery of every possible number fact are not course
 requirements.
 
+Before lesson 2, practice counting four and five with a grown-up. Lesson 1
+only establishes counting to three.
+
 ## Lessons
 
 Follow this single sequence; return to an earlier lesson whenever useful.
@@ -33,7 +36,7 @@ Each link includes its questions, acceptance criteria, and directed cyclic graph
 
 | Lesson | Adventure | Learning goal |
 | --- | --- | --- |
-| 1 | [Five passengers](Lesson-1-Count-to-five) | Start with three toys, add one at a time to five, and count each toy one by one. |
+| 1 | [Three passengers](Lesson-1-Count-to-three) | Start with one toy, add one at a time to three, and count each toy one by one. |
 | 2 | [Picnic baskets](Lesson-2-Add-up-to-five) | Combine two toy groups with a total up to five; count every toy in the combined basket. |
 | 3 | [Cave train](Lesson-3-Cave-train) | Take away within five; find what remains, including none left and none taken away. |
 | 4 | [Bridge builders](Lesson-4-Bridge-builders) | Compare groups up to five: more, fewer, or equal. |
@@ -60,7 +63,7 @@ arithmetic fact.
 
 ## How to use the course
 
-Lesson 1 starts with **three toys** and grows to five. Lessons 2–5 use
+Lesson 1 starts with **one toy** and grows to three. Lessons 2–5 use
 **five recognizable toys**; lessons 6–10 use **ten**. Story props
 are optional. Keep fair-share guests outside the camera's counting area.
 English and Russian prompts are included. The game is screen free: the child speaks, counts, and moves toys. The child

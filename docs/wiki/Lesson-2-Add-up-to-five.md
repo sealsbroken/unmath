@@ -1,5 +1,8 @@
 # Lesson 2: Picnic baskets
 
+Prerequisite: count real toys one by one to five. Lesson 1 now stops at three;
+practice four and five with a grown-up before beginning these missions.
+
 The passengers have arrived, and the child is in charge of the picnic. Choose
 **forest** to feed pretend bears or **moon** to feed pretend aliens. Any toy can
 stand for a snack; no real food or special props are needed.

@@ -26,7 +26,7 @@ fn child_chooses_the_counting_adventure_by_voice() {
         assert_eq!(s.snapshot().phase, PhaseKind::Meeting);
         assert_eq!(s.snapshot().expected_answer, None);
         s.handle(choice);
-        let first = s.handle(Event::Table(TableObservation::stable(3)));
+        let first = s.handle(Event::Table(TableObservation::stable(1)));
         assert!(spoken(&first).contains(vehicle));
         assert_eq!(s.snapshot().tasks_completed, 0); // choosing a destination is not a maths answer
         s.handle(Event::Said("help".into()));

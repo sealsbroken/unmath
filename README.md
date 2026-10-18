@@ -3,7 +3,10 @@
 Ten play-based arithmetic lessons for unengine apps. It depends only on the public `un-core`
 strategy interface, performs no I/O, and uses no network services.
 
-Lesson IDs: `unmath-count-to-five` and `unmath-add-to-five`.
+Lesson one now registers `unmath-count-to-three`; update apps using the old
+`unmath-count-to-five` ID. `CountToFive` remains a Rust compatibility alias.
+
+Lesson IDs: `unmath-count-to-three` and `unmath-add-to-five`.
 English and Russian prompts are included. `unmath::register` registers all ten.
 
 ## Plug into an app
@@ -41,11 +44,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-Select **Lesson 1: five passengers** in the app's strategy selector. Registration
+Select **Lesson 1: three passengers** in the app's strategy selector. Registration
 also participates in `inventory`, so a CLI product can retain the crate with
 `unmath::register(&mut un_core::strategy::StrategyRegistry::new());` before
 calling `un_cli::main()`. Select it with
-`lesson --strategy unmath-count-to-five`.
+`lesson --strategy unmath-count-to-three`.
 
 For a mobile product, call this in the Rust startup function invoked by the app,
 before listing or creating sessions:
@@ -63,47 +66,46 @@ plugin; existing prebuilt apps must be rebuilt with it.
 The game is **screen free**. Every child-facing choice and question can be
 answered aloud; no lesson asks the child to operate buttons or a screen.
 
-The child chooses a forest picnic by bus or a moon picnic by rocket. Any five
+The child chooses a forest picnic by bus or a moon picnic by rocket. Up to five
 recognizable toys become passengers, then pretend snacks for bears or aliens.
 English and Russian prompts support story choices, ticket checks, basket packing,
 and playful celebrations. Say `help` to build with toys, or `stop` / `I'm tired`
 to pause. No special props are needed. Pretend actions are spoken invitations;
 the engine does not render story scenes or judge pretend play.
 
-### Lesson 1: Five passengers
+### Lesson 1: Three passengers
 
-Begin with only three toy passengers, add one at a time to four and five,
-then open the doors by counting. Check each passenger's ticket, let the toys choose
-new seats, and count again to start the engine. Passing still requires two
-independent exact sequences `[1, 2, 3, 4, 5]`, with one number per real toy,
-separated by the five-toy activity
-and its total. Guided practice never earns an independent sequence check.
+Begin with one toy, then two, then three. Model “one” and “one, two” in
+short spoken turns. The child points to every toy and counts independently to
+three, checks tickets, answers how many, and counts again to depart.
+Only complete independent sequences `[1, 2, 3]` satisfy the completion checks.
+Practice counting four and five before moving on to lesson 2.
 
 ```mermaid
 flowchart TD
-    Choose["Where shall we go: forest or moon?"] --> Three["Bring only three toy passengers"]
-    Three -->|"Stable total three"| CountThree["Point to each toy; count one by one to three"]
-    CountThree -->|"Full sequence"| Four["One more friend: prepare four toys"]
-    Four -->|"Stable total four"| CountFour["Count the four toys one by one"]
-    CountFour -->|"Full sequence"| Setup["One more friend: prepare five toys"]
-    CountThree -->|"Needs help"| Small
-    CountFour -->|"Needs help"| Small
-    CountThree -->|"Starts at zero"| Zero
-    CountFour -->|"Starts at zero"| Zero
-    Setup -->|"Stable total five"| Doors["Point to one toy at a time; say one number per toy to open the doors"]
+    Choose["Where shall we go: forest or moon?"] --> One["Put just one toy here; keep others aside"]
+    One -->|"Stable total one"| CountOne["Point: one! Say one"]
+    CountOne -->|"Full sequence"| Two["One more friend: prepare two toys"]
+    Two -->|"Stable total two"| CountTwo["Point: one, two! Your turn"]
+    CountTwo -->|"Full sequence"| Setup["One more friend: prepare three toys"]
+    CountOne -->|"Needs help"| Small
+    CountTwo -->|"Needs help"| Small
+    CountOne -->|"Starts at zero"| Zero
+    CountTwo -->|"Starts at zero"| Zero
+    Setup -->|"Stable total three"| Doors["Point to each toy; count independently to three"]
     Doors -->|"Full sequence"| Tickets["Point to the toys one by one; count each ticket aloud"]
     Doors -->|"Needs help"| Small["Prepare n toy passengers; first practice starts at one"]
     Tickets -->|"Full sequence"| Total["How many passengers are coming to our picnic?"]
     Tickets -->|"Needs help"| Small
-    Total -->|"Five"| Seats["Let the five passengers choose new seats"]
+    Total -->|"Three"| Seats["Let the three passengers choose new seats"]
     Total -->|"Other answer"| Tickets
     Seats --> Engine["Point to each passenger again; count one by one to start our adventure"]
     Engine -->|"Full sequence and earlier independent success"| Picnic["Off to the picnic! Lesson complete"]
     Engine -->|"Needs help"| Small
     Small -->|"Required toys ready"| Model["Tutor counts the tickets; can you try by yourself?"]
-    Model -->|"Correct; fewer than five"| More["Next stop: one more passenger"]
+    Model -->|"Correct; fewer than three"| More["Next stop: one more passenger"]
     More --> Small
-    Model -->|"Correct at five"| Doors
+    Model -->|"Correct at three"| Doors
     Model -->|"Needs help: same set or smaller on second miss"| Small
     Model -->|"Three consecutive misses"| Rest["Park and rest; save progress"]
     Doors -->|"Starts at zero with toys"| Zero["Zero means no toys; first toy gets one"]
@@ -158,7 +160,7 @@ question graphs:
 
 | Lesson | Strategy ID | Skill |
 | --- | --- | --- |
-| [1: Five passengers](https://github.com/sealsbroken/unmath/wiki/Lesson-1-Count-to-five) | `unmath-count-to-five` | Start with three, build to five, count one by one |
+| [1: Three passengers](https://github.com/sealsbroken/unmath/wiki/Lesson-1-Count-to-three) | `unmath-count-to-three` | Start with one, build to three, count one by one |
 | [2: Picnic baskets](https://github.com/sealsbroken/unmath/wiki/Lesson-2-Add-up-to-five) | `unmath-add-to-five` | Combine and count within five |
 | [3: Cave train](https://github.com/sealsbroken/unmath/wiki/Lesson-3-Cave-train) | `unmath-subtract-to-five` | Taking away within five |
 | [4: Bridge builders](https://github.com/sealsbroken/unmath/wiki/Lesson-4-Bridge-builders) | `unmath-compare-to-five` | More, fewer, and equal within five |
@@ -215,9 +217,10 @@ use shorter sessions and resume as needed.
 Persist `SessionSummary.remember` via `apply_remembered`, then supply it in the
 next `SessionConfig.extra`. Counting keeps the first independent toy-count
 success under
-`unmath.lesson1.one_by_one.v2`;
+`unmath.lesson1.count_three.v1`;
 addition keeps completed picnic missions under `unmath.lesson2.one_by_one.v3`.
-Older recitation/final-number checkpoints are not reused. Each lesson also
+Warm-up progress uses `unmath.lesson1.warmup_three.v1`. Older five-toy and
+recitation/final-number checkpoints are not reused. Each lesson also
 remembers its destination.
 Completion clears its checkpoint. Only `PhaseKind::Finished` and a non-paused
 summary mean completion; `correct` also includes guided responses.

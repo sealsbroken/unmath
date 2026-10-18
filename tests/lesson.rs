@@ -1,40 +1,40 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 use un_core::strategy::*;
-use unmath::{CountToFive, ID};
-fn lesson() -> CountToFive {
-    CountToFive::new(SessionConfig {
+use unmath::{CountToThree, ID};
+fn lesson() -> CountToThree {
+    CountToThree::new(SessionConfig {
         max_tasks: 40,
         ..Default::default()
     })
 }
-fn start(s: &mut CountToFive) -> Vec<Effect> {
+fn start(s: &mut CountToThree) -> Vec<Effect> {
     s.handle(Event::Start);
     s.handle(Event::Said("forest".into()));
-    s.handle(Event::Table(TableObservation::stable(3)))
+    s.handle(Event::Table(TableObservation::stable(1)))
 }
-fn count(s: &mut CountToFive, ns: &[u32]) -> Vec<Effect> {
+fn count(s: &mut CountToThree, ns: &[u32]) -> Vec<Effect> {
     assert!(s.handle(Event::Numbers(ns.to_vec())).is_empty());
     s.handle(Event::Heard(*ns.last().unwrap()))
 }
-fn table(s: &mut CountToFive, n: u32) {
+fn table(s: &mut CountToThree, n: u32) {
     s.handle(Event::Table(TableObservation::stable(n)));
 }
 #[test]
 fn two_independent_counts_separated_by_toy_activity_pass() {
     let mut s = lesson();
     start(&mut s);
+    assert_eq!(s.snapshot().target_count, Some(1));
+    count(&mut s, &[1]);
+    assert_eq!(s.snapshot().target_count, Some(2));
+    table(&mut s, 2);
+    count(&mut s, &[1, 2]);
     assert_eq!(s.snapshot().target_count, Some(3));
+    table(&mut s, 3);
     count(&mut s, &[1, 2, 3]);
-    assert_eq!(s.snapshot().target_count, Some(4));
-    table(&mut s, 4);
-    count(&mut s, &[1, 2, 3, 4]);
-    assert_eq!(s.snapshot().target_count, Some(5));
-    table(&mut s, 5);
-    count(&mut s, &[1, 2, 3, 4, 5]);
-    count(&mut s, &[1, 2, 3, 4, 5]);
+    count(&mut s, &[1, 2, 3]);
     assert_eq!(s.snapshot().tasks_completed, 4);
-    s.handle(Event::Heard(5));
-    let effects = count(&mut s, &[1, 2, 3, 4, 5]);
+    s.handle(Event::Heard(3));
+    let effects = count(&mut s, &[1, 2, 3]);
     assert!(effects.iter().any(
         |e| matches!(e,Effect::SessionEnded(summary) if !summary.paused && summary.correct==6)
     ));
@@ -57,7 +57,7 @@ fn last_number_taps_and_malformed_sequences_do_not_pass() {
     }
     let mut s = lesson();
     start(&mut s);
-    s.handle(Event::Heard(5));
+    s.handle(Event::Heard(3));
     assert_eq!(s.snapshot().correct, 0);
 }
 #[test]
@@ -65,11 +65,11 @@ fn practice_cycles_back_to_an_independent_check() {
     let mut s = lesson();
     start(&mut s);
     count(&mut s, &[1, 3]);
-    for n in 1..=5 {
+    for n in 1..=3 {
         table(&mut s, n);
         count(&mut s, &(1..=n).collect::<Vec<_>>());
     }
-    assert_eq!(s.snapshot().target_count, Some(5));
+    assert_eq!(s.snapshot().target_count, Some(3));
     assert!(s.snapshot().task.unwrap().contains("First"));
     assert_ne!(s.snapshot().phase, PhaseKind::Finished);
 }
@@ -77,25 +77,25 @@ fn practice_cycles_back_to_an_independent_check() {
 fn unstable_table_invalidates_pending_count() {
     let mut s = lesson();
     start(&mut s);
-    count(&mut s, &[1, 2, 3]);
-    table(&mut s, 4);
-    s.handle(Event::Numbers(vec![1, 2, 3, 4]));
+    count(&mut s, &[1]);
+    table(&mut s, 2);
+    s.handle(Event::Numbers(vec![1, 2]));
     s.handle(Event::Table(TableObservation::default()));
-    s.handle(Event::Heard(4));
+    s.handle(Event::Heard(2));
     assert_eq!(s.snapshot().tasks_completed, 1);
-    table(&mut s, 4);
-    s.handle(Event::Heard(4));
+    table(&mut s, 2);
+    s.handle(Event::Heard(2));
     assert_eq!(s.snapshot().correct, 1);
 }
 
 #[test]
 fn task_limit_and_silence_pause_without_mastery() {
-    let mut s = CountToFive::new(SessionConfig {
+    let mut s = CountToThree::new(SessionConfig {
         max_tasks: 1,
         ..Default::default()
     });
     start(&mut s);
-    let result = count(&mut s, &[1, 2, 3]);
+    let result = count(&mut s, &[1]);
     let summary = result
         .into_iter()
         .find_map(|e| {
@@ -109,9 +109,9 @@ fn task_limit_and_silence_pause_without_mastery() {
     assert!(summary.paused);
     let mut config = SessionConfig::default();
     summary.apply_remembered(&mut config.extra);
-    let mut resumed = CountToFive::new(config);
+    let mut resumed = CountToThree::new(config);
     resumed.handle(Event::Start);
-    assert_eq!(resumed.snapshot().target_count, Some(4));
+    assert_eq!(resumed.snapshot().target_count, Some(2));
     let mut s = lesson();
     start(&mut s);
     for _ in 0..3 {
@@ -132,8 +132,7 @@ fn registration_deduplicates_and_creates() {
 fn help_is_modeled_after_the_required_toys_arrive() {
     let mut s = lesson();
     start(&mut s);
-    count(&mut s, &[1, 3]);
-    let effects = s.handle(Event::Table(TableObservation::stable(1)));
+    let effects = count(&mut s, &[1, 3]);
     assert!(effects.contains(&Effect::HighlightCount(1)));
     assert!(effects
         .iter()
@@ -142,14 +141,14 @@ fn help_is_modeled_after_the_required_toys_arrive() {
 
 #[test]
 fn russian_prompts_and_repeat_preserve_question() {
-    let mut s = CountToFive::new(SessionConfig {
+    let mut s = CountToThree::new(SessionConfig {
         language: un_core::language::Language::Russian,
         ..Default::default()
     });
     let first = start(&mut s);
     assert!(first
         .iter()
-        .any(|e| matches!(e, Effect::Say(text) if text.contains("по одному"))));
+        .any(|e| matches!(e, Effect::Say(text) if text.contains("Один"))));
     assert_eq!(first, s.handle(Event::RepeatRequested));
     s.handle(Event::SkipRequested);
     assert_eq!(s.snapshot().correct, 0);
@@ -162,13 +161,13 @@ fn the_first_count_waits_for_real_toys_and_invalidates_when_the_table_changes() 
     s.handle(Event::Start);
     s.handle(Event::Heard(1));
     assert_eq!(s.snapshot().phase, PhaseKind::Performing);
-    count(&mut s, &[1, 2, 3, 4, 5]);
+    count(&mut s, &[1]);
     assert_eq!(s.snapshot().tasks_completed, 0);
-    table(&mut s, 3);
+    table(&mut s, 1);
     let effects = s.handle(Event::RepeatRequested);
     assert!(un_core::strategy::spoken(&effects)
         .join(" ")
-        .contains("one number for each"));
+        .contains("Say one"));
     s.handle(Event::Numbers(vec![1, 2, 3]));
     s.handle(Event::Table(TableObservation::default()));
     s.handle(Event::Heard(3));
@@ -182,31 +181,31 @@ fn pointing_at_the_toys_does_not_restart_the_question() {
     assert_eq!(asked.phase, PhaseKind::Asking);
     // A hand over the toys: the settled count holds but the table is not still.
     let moving = TableObservation {
-        count: Some(3),
+        count: Some(1),
         is_stable: false,
         groups: 1,
     };
     for _ in 0..10 {
         assert!(s.handle(Event::Table(moving)).is_empty());
         assert!(s
-            .handle(Event::Table(TableObservation::stable(3)))
+            .handle(Event::Table(TableObservation::stable(1)))
             .is_empty());
     }
     assert_eq!(s.snapshot().phase, PhaseKind::Asking);
-    count(&mut s, &[1, 2, 3]);
+    count(&mut s, &[1]);
     assert_eq!(s.snapshot().correct, 1);
 }
 
 #[test]
-fn three_available_toys_start_the_game_and_save_the_next_stop_for_later() {
-    let mut s = CountToFive::new(SessionConfig {
-        total_objects: 3,
+fn one_available_toy_start_the_game_and_save_the_next_stop_for_later() {
+    let mut s = CountToThree::new(SessionConfig {
+        total_objects: 1,
         ..Default::default()
     });
     s.handle(Event::Start);
     s.handle(Event::Said("forest".into()));
-    table(&mut s, 3);
-    let effects = count(&mut s, &[1, 2, 3]);
+    table(&mut s, 1);
+    let effects = count(&mut s, &[1]);
     let summary = effects
         .into_iter()
         .find_map(|e| {
@@ -221,59 +220,54 @@ fn three_available_toys_start_the_game_and_save_the_next_stop_for_later() {
     assert_eq!(summary.correct, 1);
     let mut config = SessionConfig::default();
     summary.apply_remembered(&mut config.extra);
-    let mut resumed = CountToFive::new(config);
+    let mut resumed = CountToThree::new(config);
     resumed.handle(Event::Start);
-    // No five-toy mastery was earned by the three-toy warm-up.
+    // The one-toy warm-up did not earn three-toy mastery.
     assert_eq!(resumed.snapshot().level, 0);
     resumed.handle(Event::Said("forest".into()));
-    assert_eq!(resumed.snapshot().target_count, Some(4));
+    assert_eq!(resumed.snapshot().target_count, Some(2));
 }
 
 #[test]
-fn the_three_and_four_toy_warmups_cannot_complete_a_count_to_five_lesson() {
+fn the_one_and_two_toy_warmups_cannot_complete_a_count_to_three_lesson() {
     let mut s = lesson();
     start(&mut s);
-    count(&mut s, &[1, 2, 3]);
-    table(&mut s, 4);
-    count(&mut s, &[1, 2, 3, 4]);
+    count(&mut s, &[1]);
+    table(&mut s, 2);
+    count(&mut s, &[1, 2]);
     assert_ne!(s.snapshot().phase, PhaseKind::Finished);
-    assert_eq!(s.snapshot().target_count, Some(5));
+    assert_eq!(s.snapshot().target_count, Some(3));
     assert_eq!(s.snapshot().level, 0);
 }
 #[test]
-fn toys_already_on_the_table_move_the_warmup_on() {
-    let opening = |s: &mut CountToFive| {
+fn extra_toys_never_skip_the_one_toy_opening() {
+    for n in [2, 3, 4, 5, 7] {
+        let mut s = lesson();
+        table(&mut s, n);
         s.handle(Event::Start);
-        s.handle(Event::Said("forest".into()))
-    };
-    // Four toys out before the game: the first count is of four, with the opening line.
-    let mut s = lesson();
-    table(&mut s, 4);
-    let said = un_core::strategy::spoken(&opening(&mut s)).join(" ");
-    assert_eq!(s.snapshot().phase, PhaseKind::Asking);
-    assert_eq!(s.snapshot().target_count, Some(4));
-    assert!(said.contains("first four friends"), "{said}");
-    // Five out: straight to the count to five.
-    let mut s = lesson();
-    table(&mut s, 5);
-    opening(&mut s);
-    assert_eq!(s.snapshot().phase, PhaseKind::Asking);
-    assert_eq!(s.snapshot().target_count, Some(5));
-    // Seven out: five are needed, the tutor says how many to take away.
-    let mut s = lesson();
-    table(&mut s, 7);
-    let said = un_core::strategy::spoken(&opening(&mut s)).join(" ");
-    assert_eq!(s.snapshot().phase, PhaseKind::Performing);
-    assert!(said.contains("Take 2 away"), "{said}");
-    table(&mut s, 5);
-    assert_eq!(s.snapshot().phase, PhaseKind::Asking);
-    // Two out: one more is needed for the three-toy start.
-    let mut s = lesson();
-    table(&mut s, 2);
-    let said = un_core::strategy::spoken(&opening(&mut s)).join(" ");
-    assert!(said.contains("Add 1 more"), "{said}");
-    // A fourth toy put out while waiting: the game starts at four.
-    table(&mut s, 4);
-    assert_eq!(s.snapshot().target_count, Some(4));
-    assert_eq!(s.snapshot().phase, PhaseKind::Asking);
+        let effects = s.handle(Event::Said("forest".into()));
+        assert_eq!(s.snapshot().target_count, Some(1));
+        assert_eq!(s.snapshot().phase, PhaseKind::Performing);
+        assert!(un_core::strategy::spoken(&effects)
+            .join(" ")
+            .contains("other toys aside"));
+        table(&mut s, 1);
+        assert_eq!(s.snapshot().phase, PhaseKind::Asking);
+        assert_eq!(s.snapshot().tasks_completed, 0);
+    }
+}
+
+#[test]
+fn old_five_toy_checkpoints_do_not_skip_the_new_opening() {
+    let mut config = SessionConfig::default();
+    config
+        .extra
+        .insert("unmath.lesson1.one_by_one.v2".into(), "true".into());
+    config
+        .extra
+        .insert("unmath.lesson1.warmup.v3".into(), "5".into());
+    let mut s = CountToThree::new(config);
+    start(&mut s);
+    assert_eq!(s.snapshot().target_count, Some(1));
+    assert_eq!(s.snapshot().correct, 0);
 }

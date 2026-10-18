@@ -12,8 +12,8 @@ use un_engine::{
 #[test]
 fn spoken_zero_prefix_reaches_the_lesson_in_english_and_russian() {
     for (language, zero_count) in [
-        (Language::English, "zero one two three"),
-        (Language::Russian, "ноль один два три"),
+        (Language::English, "zero one"),
+        (Language::Russian, "ноль один"),
     ] {
         let config = SessionConfig {
             language,
@@ -36,7 +36,7 @@ fn spoken_zero_prefix_reaches_the_lesson_in_english_and_russian() {
                 ..Default::default()
             },
         );
-        engine.observe_table(TableObservation::stable(3));
+        engine.observe_table(TableObservation::stable(1));
         engine.start();
         let deadline = Instant::now() + Duration::from_secs(8);
         while engine.strategy_snapshot().tasks_completed == 0 && Instant::now() < deadline {
@@ -78,7 +78,7 @@ fn an_explicit_restart_discards_the_zero_prefix_in_the_real_listener() {
             "forest".into(),
             "zero".into(),
             "start again".into(),
-            "one two three".into(),
+            "one".into(),
         ],
         Duration::from_millis(30),
     ));
@@ -93,7 +93,7 @@ fn an_explicit_restart_discards_the_zero_prefix_in_the_real_listener() {
             ..Default::default()
         },
     );
-    engine.observe_table(TableObservation::stable(3));
+    engine.observe_table(TableObservation::stable(1));
     engine.start();
     let deadline = Instant::now() + Duration::from_secs(8);
     while engine.strategy_snapshot().tasks_completed == 0 && Instant::now() < deadline {
