@@ -252,7 +252,7 @@ fn toys_already_on_the_table_move_the_warmup_on() {
     let said = un_core::strategy::spoken(&opening(&mut s)).join(" ");
     assert_eq!(s.snapshot().phase, PhaseKind::Asking);
     assert_eq!(s.snapshot().target_count, Some(4));
-    assert!(said.contains("captain"), "{said}");
+    assert!(said.contains("first four friends"), "{said}");
     // Five out: straight to the count to five.
     let mut s = lesson();
     table(&mut s, 5);

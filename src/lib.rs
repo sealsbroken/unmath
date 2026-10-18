@@ -94,9 +94,9 @@ impl CountToFive {
     fn prompt(&self) -> String {
         let vehicle = self.place.vehicle(self.config.language);
         match self.question {
-            Question::Warmup(_) if !self.opened => self.text(
-                &format!("You're the captain of our {vehicle}! Our first three friends are waiting. Point to one toy at a time and say one number for each, starting at one."),
-                &format!("Ты капитан! Готовим {vehicle} к поездке. Первые три друга уже ждут. Показывай на игрушки по одному и называй по одному числу для каждой, начиная с одного.")),
+            Question::Warmup(n) if !self.opened => self.text(
+                &format!("You're the captain of our {vehicle}! Our first {} friends are waiting. Point to one toy at a time and say one number for each, starting at one.", if n == 4 { "four" } else { "three" }),
+                &format!("Ты капитан! Готовим {vehicle} к поездке. Первые {} друга уже ждут. Показывай на игрушки по одному и называй по одному числу для каждой, начиная с одного.", if n == 4 { "четыре" } else { "три" })),
             Question::Warmup(_) => self.text(
                 "One more friend has joined us! Point to the toys one by one and say one number for each, starting at one.",
                 "К нам присоединился ещё один друг! Показывай на игрушки по одному и называй по одному числу для каждой, начиная с одного."),
