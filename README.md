@@ -245,3 +245,7 @@ builds need testing in the product. No `unengine` changes are required.
 This repository is licensed under the GNU Lesser General Public License,
 version 3 or (at your option) any later version (`LGPL-3.0-or-later`).
 See [LICENSE](LICENSE) and the incorporated [GPL terms](LICENSE.GPL).
+
+---
+
+Contact: [lead@onym.app](mailto:lead@onym.app)
