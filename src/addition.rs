@@ -436,6 +436,12 @@ impl Strategy for AddToFive {
                 self.finish(false)
             }
             Event::Table(t) => {
+                // A moving table that still shows the settled count (a hand pointing at the
+                // toys) changes nothing; only a lost or different count does. Pointing used to
+                // restart the question on every frame.
+                if !t.is_stable && t.count.is_some() && t.count == self.table {
+                    return vec![];
+                }
                 self.table = if t.is_stable { t.count } else { None };
                 if matches!(self.node, Node::Count | Node::Check) && self.table != self.target() {
                     self.sequence.reset();

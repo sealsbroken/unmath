@@ -168,3 +168,25 @@ fn the_first_count_waits_for_real_toys_and_invalidates_when_the_table_changes() 
     s.handle(Event::Heard(5));
     assert_eq!(s.snapshot().tasks_completed, 0);
 }
+#[test]
+fn pointing_at_the_toys_does_not_restart_the_question() {
+    let mut s = lesson();
+    start(&mut s);
+    let asked = s.snapshot();
+    assert_eq!(asked.phase, PhaseKind::Asking);
+    // A hand over the toys: the settled count holds but the table is not still.
+    let moving = TableObservation {
+        count: Some(5),
+        is_stable: false,
+        groups: 1,
+    };
+    for _ in 0..10 {
+        assert!(s.handle(Event::Table(moving)).is_empty());
+        assert!(s
+            .handle(Event::Table(TableObservation::stable(5)))
+            .is_empty());
+    }
+    assert_eq!(s.snapshot().phase, PhaseKind::Asking);
+    count(&mut s, &[1, 2, 3, 4, 5]);
+    assert_eq!(s.snapshot().correct, 1);
+}
