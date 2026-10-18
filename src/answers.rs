@@ -36,14 +36,14 @@ pub(crate) fn bounded_count(mut numbers: Vec<u32>) -> Vec<u32> {
 pub(crate) fn count_feedback(numbers: &[u32], expected: u32, language: Language) -> Effect {
     let (en, ru) = if numbers.first() == Some(&0) || numbers.contains(&0) {
         ("Zero means no toys. Point to the first toy and say one. Let's try again.",
-         "Ноль означает, что игрушек нет. Покажи на первую игрушку и скажи: один. Попробуем ещё раз.")
+         "Ноль означает, что игрушек нет. Покажи на первую игрушку и скажи: один или раз. Попробуем ещё раз.")
     } else if numbers.is_empty() || numbers.len() == 1 && expected > 1 {
         ("I need to hear each number as you point to each toy. Start with one on the first toy.",
-         "Нужно услышать каждое число, пока ты показываешь на игрушки. Покажи на первую игрушку и скажи: один.")
+         "Нужно услышать каждое число, пока ты показываешь на игрушки. Покажи на первую игрушку и скажи: один или раз.")
     } else if numbers.first() != Some(&1) {
         (
             "For these toys, start with one on the first toy. Let's count them again.",
-            "Покажи на первую игрушку и скажи: один. Давай посчитаем ещё раз.",
+            "Покажи на первую игрушку и скажи: один или раз. Давай посчитаем ещё раз.",
         )
     } else if numbers.windows(2).any(|w| w[0] == w[1]) {
         (

@@ -44,6 +44,12 @@ remain toys in all prompts, and no tutor prompt asks for adult assistance.
 
 ## Counterexamples and expected behavior
 
+In Russian, **«раз» is accepted as «один»**: `раз, два` and repeated complete
+counts such as `раз, два, раз, два` are valid for two toys. The tutor may model
+`один`; either word is accepted. `Ещё раз` / `повтори ещё раз` requests a replay
+without becoming the numerical answer one. Zero and skipped numbers still need
+correction.
+
 A child may repeat the whole correct answer. For two toys, `1, 2, 1, 2`
 (or “один, два, один, два”) is one successful response. Each repetition must be
 a complete `1..n` count, in order, ending at the actual toy total. Repetitions

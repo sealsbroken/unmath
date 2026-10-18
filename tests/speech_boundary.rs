@@ -104,6 +104,7 @@ fn an_explicit_restart_discards_the_zero_prefix_in_the_real_listener() {
 fn repeated_complete_two_toy_answers_are_accepted_in_single_and_split_utterances() {
     for (language, utterance) in [
         (Language::Russian, "один два"),
+        (Language::Russian, "раз два"),
         (Language::English, "one two"),
     ] {
         for split in [false, true] {

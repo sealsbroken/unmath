@@ -133,6 +133,12 @@ strategy IDs and wiki page URLs stay stable; display titles and speech use toys.
 
 ## Answers and corrections
 
+In Russian, **«раз» is accepted as «один»**: `раз, два` and repeated complete
+counts such as `раз, два, раз, два` are valid for two toys. The tutor may model
+`один`; either word is accepted. `Ещё раз` / `повтори ещё раз` requests a replay
+without becoming the numerical answer one. Zero and skipped numbers still need
+correction.
+
 Counts use a complete `Numbers` event followed by the matching `Heard` event.
 A whole correct answer may repeat: `1,2,1,2` for two toys is one correct response.
 Long complete repetitions are validated in full before diagnostics are compacted.

@@ -495,3 +495,32 @@ fn an_impossible_all_complete_checkpoint_is_reset_not_announced_as_new_mastery()
         assert_ne!(s.snapshot().phase, PhaseKind::Finished);
     }
 }
+
+#[test]
+fn russian_raz_and_odin_are_equivalent_in_all_counting_lessons() {
+    use un_core::numbers::{NumberParser, NumberWords};
+    for id in ids() {
+        let mut s = counting(&id, Language::Russian);
+        let before = s.snapshot();
+        let n = before.expected_answer.unwrap();
+        let canonical: Vec<_> = (1..=n)
+            .map(|v| NumberWords::spoken(v, Language::Russian))
+            .collect();
+        let mut alternative = canonical.clone();
+        alternative[0] = "раз".into();
+        let text = format!("{}, {}", alternative.join(", "), canonical.join(", "));
+        let numbers = NumberParser::all(&text, Language::Russian);
+        assert_eq!(
+            numbers,
+            (1..=n).chain(1..=n).collect::<Vec<_>>(),
+            "{id}: {text}"
+        );
+        respond(s.as_mut(), numbers, n);
+        assert_eq!(s.snapshot().correct, before.correct + 1, "{id}");
+        assert_eq!(
+            s.snapshot().tasks_completed,
+            before.tasks_completed + 1,
+            "{id}"
+        );
+    }
+}

@@ -73,6 +73,12 @@ same task; it does not restart the lesson.
 
 ## Controls, progress, and limits
 
+In Russian, **«раз» is accepted as «один»**: `раз, два` and repeated complete
+counts such as `раз, два, раз, два` are valid for two toys. The tutor may model
+`один`; either word is accepted. `Ещё раз` / `повтори ещё раз` requests a replay
+without becoming the numerical answer one. Zero and skipped numbers still need
+correction.
+
 Say `help` / `помоги` for teaching steps; `start again` / `сначала` to repeat the
 current prompt; `stop`, `break`, `I'm tired` / `стоп`, `перерыв`, `я устал` to pause.
 Help and corrections keep completed work. Guided answers never complete an

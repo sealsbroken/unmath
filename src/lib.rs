@@ -112,7 +112,7 @@ impl CountToThree {
                 "Показывай на каждую игрушку по очереди и называй одно число. Начни с одного. После последней игрушки остановись."),
             Question::Warmup(1) => self.text(
                 "Here is one toy. Point to it. One! Say one.",
-                "Вот одна игрушка. Покажи на неё. Один! Скажи: один.",
+                "Вот одна игрушка. Покажи на неё. Один! Можно сказать: раз. Теперь ты.",
             ),
             Question::Warmup(_) => self.text(
                 "One more toy! Point to each toy. One, two! Your turn.",

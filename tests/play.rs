@@ -85,3 +85,21 @@ fn a_default_length_addition_lesson_finishes_with_a_guided_help_path() {
     assert_eq!(s.snapshot().phase, PhaseKind::Finished);
     assert_eq!(s.snapshot().tasks_completed, 9);
 }
+
+#[test]
+fn russian_repeat_request_with_raz_replays_without_scoring_an_answer() {
+    let mut s = CountToThree::new(SessionConfig {
+        language: un_core::language::Language::Russian,
+        ..Default::default()
+    });
+    s.handle(Event::Start);
+    s.handle(Event::Table(TableObservation::stable(1)));
+    for words in ["ещё раз", "еще раз", "повтори ещё раз", "повтори"]
+    {
+        let before = s.snapshot();
+        let effects = s.handle(Event::Said(words.into()));
+        assert!(effects.iter().any(|e| matches!(e, Effect::Listen { .. })));
+        assert_eq!(s.snapshot().tasks_completed, before.tasks_completed);
+        assert_eq!(s.snapshot().correct, before.correct);
+    }
+}
