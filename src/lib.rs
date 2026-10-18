@@ -90,10 +90,14 @@ impl CountToThree {
     }
     fn prompt(&self) -> String {
         let vehicle = self.place.vehicle(self.config.language);
+        let ride = match self.place {
+            Place::Forest => "Друг едет в автобусе!",
+            Place::Moon => "Друг летит в ракете!",
+        };
         match self.question {
             Question::Warmup(1) => self.text(
                 &format!("A friend rides our {vehicle}! Point to the toy. One! Say one."),
-                &format!("Друг едет в {vehicle}! Покажи на игрушку. Один! Скажи: один."),
+                &format!("{ride} Покажи на игрушку. Один! Скажи: один."),
             ),
             Question::Warmup(_) => self.text(
                 "One more friend! Point to each toy. One, two! Your turn.",
@@ -101,7 +105,7 @@ impl CountToThree {
             ),
             Question::First => self.text(
                 "Three friends! Point to each toy. Say one number for each. Start at one.",
-                "Три друга! Показывай на игрушки по одному. Каждой — своё число. Начни с одного.",
+                "Три друга! Показывай на каждую игрушку по очереди и считай. Начни с одного.",
             ),
             Question::Final => self.text(
                 "Ready to go? Point to each toy and count again!",
@@ -113,17 +117,22 @@ impl CountToThree {
             ),
             _ => self.text(
                 "Tickets! Point to each toy. Say one number for each toy. Start at one.",
-                "Билеты! Показывай на игрушки по одному. Каждой — своё число. Начни с одного.",
+                "Проверим билеты! Показывай на каждую игрушку по очереди и считай. Начни с одного.",
             ),
         }
     }
     /// Always keep the opening at one, even when extra toys are visible.
     fn setup_line(&self, n: u32) -> String {
+        let toys = match n {
+            1 => "одну игрушку",
+            2 => "две игрушки",
+            _ => "три игрушки",
+        };
         self.text(
             &format!(
                 "Put {n} toy passengers here. Keep the other toys aside. A grown-up can help."
             ),
-            &format!("Поставь сюда игрушки: {n}. Остальные пока отложи. Взрослый может помочь."),
+            &format!("Поставь сюда {toys}. Остальные пока отложи. Попроси взрослого помочь."),
         )
     }
     fn ask(&mut self) -> Vec<Effect> {
@@ -132,7 +141,7 @@ impl CountToThree {
             if n > self.config.total_objects {
                 let mut effects = vec![Effect::Say(self.text(
                     &format!("Our next stop needs {n} toy passengers. Ask a grown-up for another toy; we can continue when it is ready."),
-                    &format!("На следующей остановке нужно игрушек: {n}. Попроси взрослого найти ещё игрушку. Продолжим, когда она будет готова.")))];
+                    "Нам нужна ещё одна игрушка. Попроси взрослого её принести. Потом продолжим."))];
                 effects.extend(self.finish(false));
                 return effects;
             }
@@ -154,7 +163,7 @@ impl CountToThree {
                 effects.push(Effect::Say(format!(
                     "{}. {}",
                     words[..n as usize].join(", "),
-                    self.text("Now try by yourself.", "Теперь попробуй самостоятельно.")
+                    self.text("Now try by yourself.", "Теперь твоя очередь.")
                 )));
             }
         }
@@ -224,7 +233,7 @@ impl CountToThree {
         effects.push(Effect::Say(if mastered {
             self.text(
                 "You counted to three by yourself! Everyone has a ticket. Off to our picnic!",
-                "Ты самостоятельно посчитал до трёх! У всех есть билеты. Едем на пикник!",
+                "Отлично! Мы досчитали до трёх! У всех есть билеты. Едем на пикник!",
             )
         } else {
             self.text(
@@ -303,7 +312,7 @@ impl CountToThree {
                 Question::Total => {
                     effects.push(Effect::Say(self.text(
                         "New seats! Move the toys around. Then count again.",
-                        "Пусть три пассажира выберут новые места! Передвинь игрушки, а потом заведём мотор.",
+                        "Поменяемся местами! Передвинь игрушки. Потом посчитаем ещё раз.",
                     )));
                     Question::Final
                 }

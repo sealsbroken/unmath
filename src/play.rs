@@ -72,7 +72,9 @@ pub(crate) fn invitation(config: &SessionConfig) -> Vec<Effect> {
             Language::English => {
                 "You choose our adventure! Forest or moon? Say forest or moon.".into()
             }
-            Language::Russian => "Выбирай приключение! Лес или Луна? Скажи лес или луна.".into(),
+            Language::Russian => {
+                "Выбирай приключение! В лес или на Луну? Скажи: лес или Луна.".into()
+            }
         }),
         Effect::listen(ListenMode::Voice, config.answer_timeout),
     ]
