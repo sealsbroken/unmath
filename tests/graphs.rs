@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
-//! Structural checks for the published directed cyclic question graphs.
+//! Structural checks for the published acyclic correction paths.
 use std::collections::{BTreeMap, BTreeSet};
 fn node(s: &str) -> String {
     s.trim()
@@ -30,7 +30,7 @@ fn cycle(n: &str, edges: &BTreeMap<String, Vec<String>>, path: &mut BTreeSet<Str
     result
 }
 #[test]
-fn every_question_graph_has_a_real_cycle_reachable_nodes_and_success_rest_exits() {
+fn every_question_graph_is_acyclic_with_reachable_nodes_and_success_rest_exits() {
     let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("docs/wiki");
     let mut lessons = 0;
     for file in std::fs::read_dir(dir).unwrap() {
@@ -76,8 +76,8 @@ fn every_question_graph_has_a_real_cycle_reachable_nodes_and_success_rest_exits(
         }
         assert!(nodes.contains("Choose"));
         assert!(
-            cycle("Choose", &edges, &mut BTreeSet::new()),
-            "{} lacks a directed cycle",
+            !cycle("Choose", &edges, &mut BTreeSet::new()),
+            "{} contains a directed cycle",
             path.display()
         );
         let visited = reachable("Choose", &edges);

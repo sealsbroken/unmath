@@ -36,6 +36,7 @@ pub struct AddToFive {
     table: Option<u32>,
     sequence: CountBuffer,
     mastered: u32,
+    demo_done: bool,
     misses: u32,
     records: Vec<TaskRecord>,
 }
@@ -57,6 +58,7 @@ impl AddToFive {
             table: None,
             sequence: CountBuffer::default(),
             mastered,
+            demo_done: mastered != 0,
             misses: 0,
             records: vec![],
         }
@@ -229,8 +231,8 @@ impl AddToFive {
             } else {
                 answer == Some(sum)
             };
-        let feedback = (!correct && !skipped && sum > 0)
-            .then(|| count_feedback(&sequence, sum, self.config.language));
+        let feedback =
+            (!correct && sum > 0).then(|| count_feedback(&sequence, sum, self.config.language));
         self.records.push(TaskRecord {
             task: format!(
                 "{} + {} ({})",
@@ -319,8 +321,12 @@ impl AddToFive {
                         self.fact.0, self.fact.1
                     ),
                 ));
-                // Ask a different fact before revisiting a failed fact when possible.
-                self.index = (self.index + 1) % FACTS.len();
+                // Move past the opening demonstration only once. Later help
+                // returns to the same unfinished basket for an independent check.
+                if !self.demo_done {
+                    self.demo_done = true;
+                    self.index = (self.index + 1) % FACTS.len();
+                }
             }
             effects.extend(self.next_check());
             effects
@@ -336,7 +342,8 @@ impl AddToFive {
                     ),
                 ));
             }
-            effects.extend(self.practice());
+            // Keep the assembled basket and retry this count, not its setup.
+            effects.extend(self.prompt());
             effects
         }
     }

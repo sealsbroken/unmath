@@ -7,33 +7,73 @@ Fireflies hide pretend gates. Toys are glowing keys; your count opens each gate.
 
 Example question: “The gate needs eight glowing keys! Count from one to eight to open it.”
 
-## Directed cyclic question graph
+## Acyclic correction paths
+
+Each scored question has a forward path: first attempt, a specific correction,
+a fresh attempt, another correction, and a final attempt. A correct answer
+advances to the next question; three consecutive misses pause. Completed work
+is kept. A mistake never sends the child to the first question.
+
+The diagram expands the ordinary answer/correction route into separate attempt
+nodes, so it is acyclic. It omits table-waiting events, replay requests, and the
+optional physical-help walkthrough. Help keeps the current mission; mistakes
+during help retry the current physical stage. After help, the same mission gets
+a fresh independent check. Guided work never earns independent mastery.
+The task limit or a requested break may pause earlier than shown.
 
 ```mermaid
 flowchart TD
-    Choose["Forest or moon adventure?"] --> Intro["Firefly gates: ordered counting through ten"]
-    Intro --> Q["The gate needs eight glowing keys! Count from one to eight to open it."]
-    Q -->|"Independent success"| Reward["Swing open the pretend gate and flutter like a firefly."]
-    Reward --> Left{"Any of the six missions left?"}
-    Left -->|"Yes: choose an unfinished mission"| Q
-    Left -->|"No"| Done["Adventure complete"]
-    Q -->|"Help, wrong answer, or skip"| Setup["Prepare n glowing toy keys"]
-    Setup -->|"Required table total is stable"| Guided["Count this toy group aloud; zero is a spoken total"]
-    Guided -->|"Last stage correct"| Explain["Explain the operation; keep this mission unfinished"]
-    Explain --> Left
-    Guided -->|"Incorrect: model and restart"| Setup
-    Guided -->|"Table changed: cancel pending answer"| Setup
-    Q -->|"Three misses, task limit, or break"| Rest["Rest and save progress"]
-    Guided -->|"Three misses, task limit, or break"| Rest
-    Guided -->|"Starts at zero while toys remain"| Zero["Zero means no toys; first toy gets one"]
-    Zero --> Setup
-    Q -->|"Starts at zero with keys"| Zero
+    Choose["Choose forest or moon; prepare the current toys"] --> Q0A1
+    Q0A1["Gate 1: independently count from one to 6: attempt 1"] -->|"Correct"| Q1A1
+    Q0A1 -->|"Mistake or skip"| Q0C1["Point to each key once; start at one and count in order"]
+    Q0C1 --> Q0A2["Same question: attempt 2"]
+    Q0A2 -->|"Correct"| Q1A1
+    Q0A2 -->|"Mistake or skip"| Q0C2["Repeat the local hint; keep this question"]
+    Q0C2 --> Q0A3["Same question: attempt 3"]
+    Q0A3 -->|"Correct"| Q1A1
+    Q0A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
+    Q1A1["Gate 2: independently count from one to 7: attempt 1"] -->|"Correct"| Q2A1
+    Q1A1 -->|"Mistake or skip"| Q1C1["Point to each key once; start at one and count in order"]
+    Q1C1 --> Q1A2["Same question: attempt 2"]
+    Q1A2 -->|"Correct"| Q2A1
+    Q1A2 -->|"Mistake or skip"| Q1C2["Repeat the local hint; keep this question"]
+    Q1C2 --> Q1A3["Same question: attempt 3"]
+    Q1A3 -->|"Correct"| Q2A1
+    Q1A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
+    Q2A1["Gate 3: independently count from one to 8: attempt 1"] -->|"Correct"| Q3A1
+    Q2A1 -->|"Mistake or skip"| Q2C1["Point to each key once; start at one and count in order"]
+    Q2C1 --> Q2A2["Same question: attempt 2"]
+    Q2A2 -->|"Correct"| Q3A1
+    Q2A2 -->|"Mistake or skip"| Q2C2["Repeat the local hint; keep this question"]
+    Q2C2 --> Q2A3["Same question: attempt 3"]
+    Q2A3 -->|"Correct"| Q3A1
+    Q2A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
+    Q3A1["Gate 4: independently count from one to 9: attempt 1"] -->|"Correct"| Q4A1
+    Q3A1 -->|"Mistake or skip"| Q3C1["Point to each key once; start at one and count in order"]
+    Q3C1 --> Q3A2["Same question: attempt 2"]
+    Q3A2 -->|"Correct"| Q4A1
+    Q3A2 -->|"Mistake or skip"| Q3C2["Repeat the local hint; keep this question"]
+    Q3C2 --> Q3A3["Same question: attempt 3"]
+    Q3A3 -->|"Correct"| Q4A1
+    Q3A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
+    Q4A1["Gate 5: independently count from one to 10: attempt 1"] -->|"Correct"| Q5A1
+    Q4A1 -->|"Mistake or skip"| Q4C1["Point to each key once; start at one and count in order"]
+    Q4C1 --> Q4A2["Same question: attempt 2"]
+    Q4A2 -->|"Correct"| Q5A1
+    Q4A2 -->|"Mistake or skip"| Q4C2["Repeat the local hint; keep this question"]
+    Q4C2 --> Q4A3["Same question: attempt 3"]
+    Q4A3 -->|"Correct"| Q5A1
+    Q4A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
+    Q5A1["Gate 6: independently count from one to 10: attempt 1"] -->|"Correct"| Done
+    Q5A1 -->|"Mistake or skip"| Q5C1["Point to each key once; start at one and count in order"]
+    Q5C1 --> Q5A2["Same question: attempt 2"]
+    Q5A2 -->|"Correct"| Done
+    Q5A2 -->|"Mistake or skip"| Q5C2["Repeat the local hint; keep this question"]
+    Q5C2 --> Q5A3["Same question: attempt 3"]
+    Q5A3 -->|"Correct"| Done
+    Q5A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
+    Done["Lesson complete"]
 ```
-
-Question nodes represent the current mission, so their numbers change as the
-adventure advances. Return arrows are actual strategy transitions. Guided work
-never marks a mission complete. After help, another unfinished mission comes
-first when possible, and the helped mission returns later.
 
 ## Six missions and acceptance
 

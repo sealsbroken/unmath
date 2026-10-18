@@ -91,7 +91,7 @@ fn all_ten_lessons_register_once_and_next_eight_finish_in_default_session() {
     }
 }
 #[test]
-fn every_help_path_uses_real_toys_and_cycles_back_without_earning_mastery() {
+fn every_help_path_uses_real_toys_then_rechecks_the_same_mission() {
     for lesson in NEXT_LESSONS {
         let mut s = Adventure::new(lesson, config());
         start(&mut s);
@@ -111,12 +111,12 @@ fn every_help_path_uses_real_toys_and_cycles_back_without_earning_mastery() {
         }
         assert_eq!(s.snapshot().level, 0, "guided work never earns mastery");
         assert_eq!(s.snapshot().phase, PhaseKind::Asking);
-        assert_ne!(
+        assert_eq!(
             s.snapshot().task.unwrap(),
             original,
-            "defer helped question behind another mission"
+            "recheck the helped mission"
         );
-        // The helped mission must eventually return and pass independently.
+        // The same mission must now pass independently.
         for _ in 0..lesson.mission_count() {
             answer(&mut s, lesson);
         }
@@ -135,7 +135,9 @@ fn wrong_answers_skips_and_taps_cannot_fake_counting_or_guided_success() {
             s.handle(Event::Heard(99));
         }
         assert_eq!(s.snapshot().level, 0);
-        assert_eq!(s.snapshot().phase, PhaseKind::Performing);
+        assert_eq!(s.snapshot().phase, PhaseKind::Asking);
+        assert_eq!(s.snapshot().expected_answer, Some(n));
+        s.handle(Event::Said("help".into()));
         let target = s.snapshot().target_count.unwrap();
         s.handle(Event::Table(TableObservation::stable(target)));
         if target > 0 {
@@ -292,5 +294,36 @@ fn curriculum_answers_match_the_planned_arithmetic_and_comparison_choices() {
             s.handle(Event::Heard(answer));
         }
         assert_eq!(s.snapshot().phase, PhaseKind::Finished);
+    }
+}
+
+#[test]
+fn mistakes_preserve_the_current_mission_and_guided_stage() {
+    for lesson in NEXT_LESSONS {
+        let mut s = Adventure::new(lesson, config());
+        start(&mut s);
+        answer(&mut s, lesson);
+        let before = s.snapshot();
+        s.handle(Event::Heard(99));
+        let after = s.snapshot();
+        assert_eq!(after.task, before.task, "{lesson:?}");
+        assert_eq!(after.phase, PhaseKind::Asking);
+        assert_eq!(after.level, 1);
+        assert_eq!(after.expected_answer, before.expected_answer);
+        s.handle(Event::Said("help".into()));
+        let n = s.snapshot().target_count.unwrap();
+        s.handle(Event::Table(TableObservation::stable(n)));
+        count(&mut s, n);
+        // Most lessons have multiple physical stages. A mistake at stage two
+        // must not ask the child to build the initial group again.
+        if let Some(target) = s.snapshot().target_count {
+            s.handle(Event::Table(TableObservation::stable(target)));
+            let before = s.snapshot();
+            s.handle(Event::Heard(99));
+            assert_eq!(s.snapshot().target_count, before.target_count, "{lesson:?}");
+            assert_eq!(s.snapshot().task, before.task, "{lesson:?}");
+            assert_eq!(s.snapshot().phase, PhaseKind::Asking);
+            assert_eq!(s.snapshot().level, 1);
+        }
     }
 }

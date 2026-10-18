@@ -75,7 +75,7 @@ fn final_number_taps_and_broken_counts_do_not_complete_a_picnic_mission() {
         demo(&mut s);
         count(&mut s, &ns);
         assert_eq!(s.snapshot().level, 0);
-        assert_eq!(s.snapshot().target_count, Some(1));
+        assert_eq!(s.snapshot().target_count, Some(3));
     }
     let mut s = lesson();
     demo(&mut s);
@@ -105,15 +105,15 @@ fn full_count_is_collected_before_the_next_basket_can_be_answered() {
     assert_eq!(s.snapshot().tasks_completed, 2);
 }
 #[test]
-fn guided_success_returns_to_another_basket_but_earns_no_mastery() {
+fn explicit_help_returns_to_the_same_basket_but_earns_no_mastery() {
     let mut s = lesson();
     demo(&mut s);
-    s.handle(Event::Heard(4));
+    s.handle(Event::Said("help".into()));
     assert_eq!(s.snapshot().target_count, Some(1));
     ready(&mut s);
     count(&mut s, &[1, 2, 3]);
     assert_eq!(s.snapshot().level, 0);
-    assert!(s.snapshot().task.unwrap().contains("2 + 2"));
+    assert!(s.snapshot().task.unwrap().contains("1 + 2"));
 }
 #[test]
 fn adding_zero_needs_no_table_change_but_still_requires_counting_each_toy() {
@@ -185,4 +185,22 @@ fn russian_prompts_registration_and_silence_work() {
         s.handle(Event::NothingHeard);
     }
     assert_eq!(s.snapshot().phase, PhaseKind::Paused);
+}
+
+#[test]
+fn a_mistake_keeps_the_current_basket_and_completed_missions() {
+    let mut s = lesson();
+    demo(&mut s);
+    count(&mut s, &[1, 2, 3]);
+    ready(&mut s);
+    let before = s.snapshot();
+    count(&mut s, &[0, 1, 2, 3, 4]);
+    let after = s.snapshot();
+    assert_eq!(after.phase, PhaseKind::Asking);
+    assert_eq!(after.task, before.task);
+    assert_eq!(after.target_count, before.target_count);
+    assert_eq!(after.level, 1);
+    assert_eq!(after.tasks_completed, before.tasks_completed + 1);
+    count(&mut s, &[1, 2, 3, 4]);
+    assert_eq!(s.snapshot().level, 2);
 }

@@ -7,35 +7,73 @@ Run a toy café. Choose two guests and deal pretend treats fairly, one to each i
 
 Example question: “There are eight treats for two guests. Both must get the same. How many does EACH guest get?”
 
-## Directed cyclic question graph
+## Acyclic correction paths
+
+Each scored question has a forward path: first attempt, a specific correction,
+a fresh attempt, another correction, and a final attempt. A correct answer
+advances to the next question; three consecutive misses pause. Completed work
+is kept. A mistake never sends the child to the first question.
+
+The diagram expands the ordinary answer/correction route into separate attempt
+nodes, so it is acyclic. It omits table-waiting events, replay requests, and the
+optional physical-help walkthrough. Help keeps the current mission; mistakes
+during help retry the current physical stage. After help, the same mission gets
+a fresh independent check. Guided work never earns independent mastery.
+The task limit or a requested break may pause earlier than shown.
 
 ```mermaid
 flowchart TD
-    Choose["Forest or moon adventure?"] --> Intro["Fair-share café: equal sharing between two"]
-    Intro --> Q["There are eight treats for two guests. Both must get the same. How many does EACH guest get?"]
-    Q -->|"Independent success"| Reward["Serve both pretend guests and make happy munching sounds."]
-    Reward --> Left{"Any of the six missions left?"}
-    Left -->|"Yes: choose an unfinished mission"| Q
-    Left -->|"No"| Done["Adventure complete"]
-    Q -->|"Help, wrong answer, or skip"| Setup["Count all toy treats; guests stay outside the counting area"]
-    Setup -->|"Required table total is stable"| Guided["Count this toy group aloud; zero is a spoken total"]
-    Guided -->|"Correct; more physical stages"| Next["Deal alternately to two guests with adult help"]
-    Next --> SetupStage["Prepare the next required group"]
-    SetupStage -->|"Stable total"| Guided
-    Guided -->|"Last stage correct"| Explain["Explain the operation; keep this mission unfinished"]
-    Explain --> Left
-    Guided -->|"Incorrect: model and restart"| Setup
-    Guided -->|"Table changed: cancel pending answer"| SetupStage
-    Q -->|"Three misses, task limit, or break"| Rest["Rest and save progress"]
-    Guided -->|"Three misses, task limit, or break"| Rest
-    Guided -->|"Starts at zero while toys remain"| Zero["Zero means no toys; first toy gets one"]
-    Zero --> Setup
+    Choose["Choose forest or moon; prepare the current toys"] --> Q0A1
+    Q0A1["2 treats for two guests. How many for each?: attempt 1"] -->|"Correct"| Q1A1
+    Q0A1 -->|"Mistake or skip"| Q0C1["Deal alternately; count only ONE guest's share"]
+    Q0C1 --> Q0A2["Same question: attempt 2"]
+    Q0A2 -->|"Correct"| Q1A1
+    Q0A2 -->|"Mistake or skip"| Q0C2["Repeat the local hint; keep this question"]
+    Q0C2 --> Q0A3["Same question: attempt 3"]
+    Q0A3 -->|"Correct"| Q1A1
+    Q0A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
+    Q1A1["4 treats for two guests. How many for each?: attempt 1"] -->|"Correct"| Q2A1
+    Q1A1 -->|"Mistake or skip"| Q1C1["Deal alternately; count only ONE guest's share"]
+    Q1C1 --> Q1A2["Same question: attempt 2"]
+    Q1A2 -->|"Correct"| Q2A1
+    Q1A2 -->|"Mistake or skip"| Q1C2["Repeat the local hint; keep this question"]
+    Q1C2 --> Q1A3["Same question: attempt 3"]
+    Q1A3 -->|"Correct"| Q2A1
+    Q1A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
+    Q2A1["6 treats for two guests. How many for each?: attempt 1"] -->|"Correct"| Q3A1
+    Q2A1 -->|"Mistake or skip"| Q2C1["Deal alternately; count only ONE guest's share"]
+    Q2C1 --> Q2A2["Same question: attempt 2"]
+    Q2A2 -->|"Correct"| Q3A1
+    Q2A2 -->|"Mistake or skip"| Q2C2["Repeat the local hint; keep this question"]
+    Q2C2 --> Q2A3["Same question: attempt 3"]
+    Q2A3 -->|"Correct"| Q3A1
+    Q2A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
+    Q3A1["8 treats for two guests. How many for each?: attempt 1"] -->|"Correct"| Q4A1
+    Q3A1 -->|"Mistake or skip"| Q3C1["Deal alternately; count only ONE guest's share"]
+    Q3C1 --> Q3A2["Same question: attempt 2"]
+    Q3A2 -->|"Correct"| Q4A1
+    Q3A2 -->|"Mistake or skip"| Q3C2["Repeat the local hint; keep this question"]
+    Q3C2 --> Q3A3["Same question: attempt 3"]
+    Q3A3 -->|"Correct"| Q4A1
+    Q3A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
+    Q4A1["10 treats for two guests. How many for each?: attempt 1"] -->|"Correct"| Q5A1
+    Q4A1 -->|"Mistake or skip"| Q4C1["Deal alternately; count only ONE guest's share"]
+    Q4C1 --> Q4A2["Same question: attempt 2"]
+    Q4A2 -->|"Correct"| Q5A1
+    Q4A2 -->|"Mistake or skip"| Q4C2["Repeat the local hint; keep this question"]
+    Q4C2 --> Q4A3["Same question: attempt 3"]
+    Q4A3 -->|"Correct"| Q5A1
+    Q4A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
+    Q5A1["6 treats for two guests. How many for each?: attempt 1"] -->|"Correct"| Done
+    Q5A1 -->|"Mistake or skip"| Q5C1["Deal alternately; count only ONE guest's share"]
+    Q5C1 --> Q5A2["Same question: attempt 2"]
+    Q5A2 -->|"Correct"| Done
+    Q5A2 -->|"Mistake or skip"| Q5C2["Repeat the local hint; keep this question"]
+    Q5C2 --> Q5A3["Same question: attempt 3"]
+    Q5A3 -->|"Correct"| Done
+    Q5A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
+    Done["Lesson complete"]
 ```
-
-Question nodes represent the current mission, so their numbers change as the
-adventure advances. Return arrows are actual strategy transitions. Guided work
-never marks a mission complete. After help, another unfinished mission comes
-first when possible, and the helped mission returns later.
 
 ## Six missions and acceptance
 

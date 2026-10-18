@@ -2,6 +2,29 @@
 use super::*;
 use crate::russian::{blocks, keys, parcels, passengers, pods, toys, travelers, treats};
 impl Lesson {
+    pub(super) fn correction(self) -> Words {
+        match self {
+            Self::CaveTrain | Self::HomewardTrail => Words::new(
+                "Count only the travelers still going. Leave out the ones who stopped.",
+                "Посчитай только тех, кто едет дальше. Тех, кто остался на остановке, не считай."),
+            Self::BridgeBuilders => Words::new(
+                "Pair one block from each team. Look for blocks left without a partner. If none are left, the teams have the same amount.",
+                "Составь пары: один блок от первой команды и один от второй. Посмотри, где остались блоки без пары. Если таких нет, у команд поровну."),
+            Self::ParcelDetectives | Self::TenSeatFerry => Words::new(
+                "Think about the places still empty. Count only the NEW toys needed to fill them, not the toys already there.",
+                "Подумай, сколько мест ещё пустует. Посчитай только НОВЫЕ игрушки, которые нужно добавить. Те, что уже есть, не считай."),
+            Self::SupplyLaunch => Words::new(
+                "Both ships' pods belong together. Count all the pods from both groups, starting at one.",
+                "Объедини капсулы с обоих кораблей. Посчитай все капсулы вместе, начиная с одного."),
+            Self::FairShareCafe => Words::new(
+                "Give one treat to each guest in turn. When all are shared, count only ONE guest's treats.",
+                "Раздавай по одному угощению каждому гостю по очереди. Когда всё раздашь, посчитай угощения только ОДНОГО гостя."),
+            Self::FireflyGates => Words::new(
+                "Point to each key once. Say one number for each, starting at one.",
+                "Показывай на каждый ключ по очереди и считай. Начни с одного."),
+        }
+    }
+
     pub fn goal(self) -> &'static str {
         match self {
             Self::CaveTrain => "Drive a toy train and find how many passengers remain after some get off, within five.",

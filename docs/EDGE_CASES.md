@@ -1,7 +1,7 @@
 # Lesson and speech-boundary audit
 
-The lesson graphs are **directed cyclic graphs**. This audit tries to break their
-transitions and grading, rather than turning them into acyclic diagrams. Tests
+The lesson diagrams show **acyclic correction paths**, with distinct attempt nodes.
+Mistakes preserve the current question and completed work. Tests
 exercise all ten strategies, plus the real unengine speech/effect runtime.
 
 ## The zero counterexample
@@ -42,7 +42,7 @@ sequence check.
 
 | Input or situation | Behavior covered by tests |
 | --- | --- |
-| `0,1,2,3…`, or zero inserted in the middle | Reject; explain zero versus the first toy; enter practice |
+| `0,1,2,3…`, or zero inserted in the middle | Reject; explain zero versus the first toy; retry the same question |
 | Starts at two or another number | Reject; ask to start at one |
 | Missing a number | Reject; count again in order |
 | Repeated number | Reject; one number per toy |
@@ -62,12 +62,12 @@ sequence check.
 | Punctuation, capitalization, curly apostrophe, repeated spaces in commands | Normalize before matching supported help/restart/break/choice phrases |
 | Three invalid destination choices | Rest without recording maths mistakes |
 | Repeated silence | Rest after three timeouts; silence does not create a failed task record |
-| `help` | Begin toy practice without scoring an error |
+| `help` | Begin toy practice without scoring an error; recheck the same mission afterward |
 | Stop or a supported tired/break phrase | Pause, save progress, stop listening |
 | Skip during a question | Record a skipped attempt, never award mastery |
 | Skip while arranging toys | Pause without inventing a failed maths answer |
 | `max_tasks = 0` | Pause before asking/scoring maths |
-| Too few configured materials | Pause before asking/scoring maths in all ten lessons |
+| Too few configured materials | Pause at a task needing more toys; lesson one can begin with one available toy |
 | NaN, infinite, negative, zero, or extreme listening timeout | Use the default finite listening window |
 | Invalid/overflowing/negative saved mask or out-of-range mask bits | Reset that mask, rather than masking it into full mastery |
 | Stored all-complete mask | Reset: successful completion normally clears the checkpoint |
@@ -80,7 +80,7 @@ sequence check.
 - `tests/adversarial.rs`: mutation tests for counting and controls in all ten
   lessons, both languages, plus 40,960 seeded mixed-event steps. These include
   valid and invalid inputs, restarts, setup, and terminal states.
-- `tests/graphs.rs`: every published lesson graph has a real directed cycle;
+- `tests/graphs.rs`: every published correction graph is acyclic;
   declared nodes are reachable from the start; every nonterminal node has a path
   to success or rest; terminal exits have no outgoing edges.
 - `tests/speech_boundary.rs`: the real engine delivers a zero-prefixed count to

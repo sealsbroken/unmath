@@ -37,6 +37,7 @@ pub struct CountToThree {
     table: Option<u32>,
     sequence: CountBuffer,
     first_success: bool,
+    resume_after_practice: Question,
     attempts: u32,
     misses: u32,
     records: Vec<TaskRecord>,
@@ -68,6 +69,7 @@ impl CountToThree {
             table: None,
             sequence: CountBuffer::default(),
             first_success,
+            resume_after_practice: question,
             attempts: 0,
             misses: 0,
             records: vec![],
@@ -254,7 +256,7 @@ impl CountToThree {
             } else {
                 valid_count(&numbers, expected, answer)
             };
-        let feedback = (!correct && !skipped && self.question != Question::Total)
+        let feedback = (!correct && self.question != Question::Total)
             .then(|| count_feedback(&numbers, expected, self.config.language));
         self.records.push(TaskRecord {
             task: format!("{:?}", self.question),
@@ -308,7 +310,7 @@ impl CountToThree {
                     Question::Toys
                 }
                 Question::Practice(n) if n < 3 => Question::Practice(n + 1),
-                Question::Practice(_) => Question::First,
+                Question::Practice(_) => self.resume_after_practice,
                 Question::Toys => Question::Total,
                 Question::Total => {
                     effects.push(Effect::Say(self.text(
@@ -324,15 +326,12 @@ impl CountToThree {
             if self.misses >= 3 {
                 return self.finish(false);
             }
+            // Correct the current response without discarding the child's place.
             if self.question == Question::Total {
-                self.question = Question::Toys;
-            } else {
-                let n = match self.question {
-                    Question::Practice(n) if self.misses >= 2 => n.saturating_sub(1).max(1),
-                    Question::Practice(n) => n,
-                    _ => 1,
-                };
-                self.question = Question::Practice(n);
+                effects.push(Effect::Say(self.text(
+                    "Think of the last number you said when you counted the toys. How many are there?",
+                    "Вспомни последнее число при счёте игрушек. Сколько их всего?",
+                )));
             }
         }
         effects.extend(self.ask());
@@ -395,6 +394,9 @@ impl Strategy for CountToThree {
             }
             Event::Said(words) if wants_help(&words) && self.phase == PhaseKind::Asking => {
                 self.sequence.reset();
+                if !matches!(self.question, Question::Practice(_)) {
+                    self.resume_after_practice = self.question;
+                }
                 self.question = Question::Practice(1);
                 self.ask()
             }

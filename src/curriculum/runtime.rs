@@ -174,7 +174,7 @@ impl Adventure {
             } else {
                 number == Some(expected)
             };
-        let feedback = (!correct && !skipped && needs_sequence)
+        let feedback = (!correct && needs_sequence)
             .then(|| count_feedback(&sequence, expected, self.config.language));
         self.records.push(TaskRecord {
             task: format!(
@@ -212,6 +212,7 @@ impl Adventure {
         }
         if !correct {
             let mut effects = vec![Effect::StopListening];
+            let has_feedback = feedback.is_some();
             effects.extend(feedback);
             if guided {
                 if expected > 0 {
@@ -230,7 +231,16 @@ impl Adventure {
                     format!("Посчитаем вместе: {count}. Попробуем с игрушками ещё раз."),
                 )));
             }
-            effects.extend(self.guide());
+            // A wrong response stays at this question or this guided stage.
+            // Explicit help opens the physical walkthrough.
+            if guided {
+                effects.extend(self.guide_question());
+            } else {
+                if !has_feedback {
+                    effects.push(self.say(&self.lesson.correction()));
+                }
+                effects.extend(self.check());
+            }
             return effects;
         }
         if guided {
@@ -239,8 +249,7 @@ impl Adventure {
                 return self.prepare();
             }
             let mut effects = vec![Effect::StopListening, self.say(&self.mission().explanation)];
-            // Leave this mission unfinished; another unfinished mission comes first if possible.
-            self.index = (self.index + 1) % self.missions.len();
+            // Return to this mission for an independent answer; keep completed work.
             effects.extend(self.check());
             effects
         } else {

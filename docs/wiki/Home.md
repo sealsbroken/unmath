@@ -32,7 +32,7 @@ only establishes counting to three.
 ## Lessons
 
 Follow this single sequence; return to an earlier lesson whenever useful.
-Each link includes its questions, acceptance criteria, and directed cyclic graph.
+Each link includes its questions, acceptance criteria, and acyclic correction graph.
 
 | Lesson | Adventure | Learning goal |
 | --- | --- | --- |
@@ -69,8 +69,9 @@ are optional. Keep fair-share guests outside the camera's counting area.
 English and Russian prompts are included. The game is screen free: the child speaks, counts, and moves toys. The child
 can ask for help, restart a count, or rest; progress can be saved between sessions.
 
-Every lesson graph is **directed and cyclic**: practice returns to questions,
-independent success advances the story, and completion/rest provide exits.
+Every lesson graph shows **acyclic correction paths**: attempts are distinct nodes.
+A mistake stays at the current question, success advances, and rest preserves progress.
+Optional help and replay events are described separately from the diagrams.
 Pretend rewards are spoken invitations, not new engine animations.
 
 [Detailed curriculum and prerequisites](https://github.com/sealsbroken/unmath/blob/main/docs/CURRICULUM.md)

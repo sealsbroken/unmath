@@ -14,44 +14,74 @@ helping prepare toys. Pause whenever the child wants; there is no time pressure
 for arranging toys. One available toy is enough to begin; three are needed to
 complete. With fewer toys, progress is saved at the next stop.
 
-## Directed cyclic question graph
+## Acyclic correction paths
 
-Help loops through a smaller group and modeled practice, then returns to an
-independent count. Success and rest are reachable exits.
+Each scored question has a forward path: first attempt, a specific correction,
+a fresh attempt, another correction, and a final attempt. A correct answer
+advances to the next question; three consecutive misses pause. Completed work
+is kept. A mistake never sends the child to the first question.
+
+The diagram expands the ordinary answer/correction route into separate attempt
+nodes, so it is acyclic. It omits table-waiting events, replay requests, and the
+optional physical-help walkthrough. Help keeps the current mission; mistakes
+during help retry the current physical stage. After help, the same mission gets
+a fresh independent check. Guided work never earns independent mastery.
+The task limit or a requested break may pause earlier than shown.
 
 ```mermaid
 flowchart TD
-    Choose["Where shall we go: forest or moon?"] --> One["Put just one toy here; keep others aside"]
-    One -->|"Stable total one"| CountOne["Point: one! Say one"]
-    CountOne -->|"Full sequence"| Two["One more friend: prepare two toys"]
-    Two -->|"Stable total two"| CountTwo["Point: one, two! Your turn"]
-    CountTwo -->|"Full sequence"| Setup["One more friend: prepare three toys"]
-    CountOne -->|"Needs help"| Small
-    CountTwo -->|"Needs help"| Small
-    CountOne -->|"Starts at zero"| Zero
-    CountTwo -->|"Starts at zero"| Zero
-    Setup -->|"Stable total three"| Doors["Point to each toy; count independently to three"]
-    Doors -->|"Full sequence"| Tickets["Point to the toys one by one; count each ticket aloud"]
-    Doors -->|"Needs help"| Small["Prepare n toy passengers; first practice starts at one"]
-    Tickets -->|"Full sequence"| Total["How many passengers are coming to our picnic?"]
-    Tickets -->|"Needs help"| Small
-    Total -->|"Three"| Seats["Let the three passengers choose new seats"]
-    Total -->|"Other answer"| Tickets
-    Seats --> Engine["Point to each passenger again; count one by one to start our adventure"]
-    Engine -->|"Full sequence and earlier independent success"| Picnic["Off to the picnic! Lesson complete"]
-    Engine -->|"Needs help"| Small
-    Small -->|"Required toys ready"| Model["Tutor counts the tickets; can you try by yourself?"]
-    Model -->|"Correct; fewer than three"| More["Next stop: one more passenger"]
-    More --> Small
-    Model -->|"Correct at three"| Doors
-    Model -->|"Needs help: same set or smaller on second miss"| Small
-    Model -->|"Three consecutive misses"| Rest["Park and rest; save progress"]
-    Doors -->|"Starts at zero with toys"| Zero["Zero means no toys; first toy gets one"]
-    Tickets -->|"Starts at zero with toys"| Zero
-    Engine -->|"Starts at zero with toys"| Zero
-    Model -->|"Starts at zero with toys"| Zero
-    Zero --> Small
+    Choose["Choose forest or moon; prepare the current toys"] --> Q0A1
+    Q0A1["One toy: point and say one: attempt 1"] -->|"Correct"| Q1A1
+    Q0A1 -->|"Mistake or skip"| Q0C1["Fix the start, skipped number, or repeated number; keep the same toys"]
+    Q0C1 --> Q0A2["Same question: attempt 2"]
+    Q0A2 -->|"Correct"| Q1A1
+    Q0A2 -->|"Mistake or skip"| Q0C2["Repeat the local hint; keep this question"]
+    Q0C2 --> Q0A3["Same question: attempt 3"]
+    Q0A3 -->|"Correct"| Q1A1
+    Q0A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
+    Q1A1["Two toys: count each toy: attempt 1"] -->|"Correct"| Q2A1
+    Q1A1 -->|"Mistake or skip"| Q1C1["Fix the start, skipped number, or repeated number; keep the same toys"]
+    Q1C1 --> Q1A2["Same question: attempt 2"]
+    Q1A2 -->|"Correct"| Q2A1
+    Q1A2 -->|"Mistake or skip"| Q1C2["Repeat the local hint; keep this question"]
+    Q1C2 --> Q1A3["Same question: attempt 3"]
+    Q1A3 -->|"Correct"| Q2A1
+    Q1A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
+    Q2A1["Three toys: independent count: attempt 1"] -->|"Correct"| Q3A1
+    Q2A1 -->|"Mistake or skip"| Q2C1["Fix the start, skipped number, or repeated number; keep the same toys"]
+    Q2C1 --> Q2A2["Same question: attempt 2"]
+    Q2A2 -->|"Correct"| Q3A1
+    Q2A2 -->|"Mistake or skip"| Q2C2["Repeat the local hint; keep this question"]
+    Q2C2 --> Q2A3["Same question: attempt 3"]
+    Q2A3 -->|"Correct"| Q3A1
+    Q2A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
+    Q3A1["Tickets: count the same three toys: attempt 1"] -->|"Correct"| Q4A1
+    Q3A1 -->|"Mistake or skip"| Q3C1["Fix the start, skipped number, or repeated number; keep the same toys"]
+    Q3C1 --> Q3A2["Same question: attempt 2"]
+    Q3A2 -->|"Correct"| Q4A1
+    Q3A2 -->|"Mistake or skip"| Q3C2["Repeat the local hint; keep this question"]
+    Q3C2 --> Q3A3["Same question: attempt 3"]
+    Q3A3 -->|"Correct"| Q4A1
+    Q3A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
+    Q4A1["How many passengers altogether?: attempt 1"] -->|"Correct"| Q5A1
+    Q4A1 -->|"Mistake or skip"| Q4C1["Fix the start, skipped number, or repeated number; keep the same toys"]
+    Q4C1 --> Q4A2["Same question: attempt 2"]
+    Q4A2 -->|"Correct"| Q5A1
+    Q4A2 -->|"Mistake or skip"| Q4C2["Repeat the local hint; keep this question"]
+    Q4C2 --> Q4A3["Same question: attempt 3"]
+    Q4A3 -->|"Correct"| Q5A1
+    Q4A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
+    Q5A1["Departure: independently count three again: attempt 1"] -->|"Correct"| Done
+    Q5A1 -->|"Mistake or skip"| Q5C1["Fix the start, skipped number, or repeated number; keep the same toys"]
+    Q5C1 --> Q5A2["Same question: attempt 2"]
+    Q5A2 -->|"Correct"| Done
+    Q5A2 -->|"Mistake or skip"| Q5C2["Repeat the local hint; keep this question"]
+    Q5C2 --> Q5A3["Same question: attempt 3"]
+    Q5A3 -->|"Correct"| Done
+    Q5A3 -->|"Third consecutive miss"| Rest["Rest; save earned progress"]
+    Done["Lesson complete"]
 ```
+
 
 ## What counts as success?
 
@@ -63,7 +93,7 @@ sequence check. The uninterrupted route takes six scored questions.
 
 ## Screen-free controls and progress
 
-Say `forest` or `moon` to choose; `help` to practice with one toy; `start again`
+Say `forest` or `moon` to choose; `help` to practice with toys and then return to the current question; `start again`
 to repeat; `stop`, `break`, or `I'm tired` to rest. English and Russian are supported.
 Three consecutive misses/timeouts or the task limit pause without mastery.
 Table changes invalidate unfinished counts; pointing while the detected count

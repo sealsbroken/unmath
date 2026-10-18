@@ -61,17 +61,28 @@ fn last_number_taps_and_malformed_sequences_do_not_pass() {
     assert_eq!(s.snapshot().correct, 0);
 }
 #[test]
-fn practice_cycles_back_to_an_independent_check() {
+fn a_mistake_does_not_reset_the_counting_progression() {
     let mut s = lesson();
     start(&mut s);
+    count(&mut s, &[1]);
+    table(&mut s, 2);
+    let before = s.snapshot();
     count(&mut s, &[1, 3]);
-    for n in 1..=3 {
-        table(&mut s, n);
-        count(&mut s, &(1..=n).collect::<Vec<_>>());
-    }
+    assert_eq!(s.snapshot().target_count, Some(2));
+    assert_eq!(s.snapshot().task, before.task);
+    assert_eq!(s.snapshot().correct, 1);
+    assert_eq!(s.snapshot().phase, PhaseKind::Asking);
+    count(&mut s, &[1, 2]);
     assert_eq!(s.snapshot().target_count, Some(3));
-    assert!(s.snapshot().task.unwrap().contains("First"));
-    assert_ne!(s.snapshot().phase, PhaseKind::Finished);
+    table(&mut s, 3);
+    count(&mut s, &[1, 2, 3]);
+    let before = s.snapshot();
+    count(&mut s, &[0, 1, 2, 3]);
+    assert_eq!(s.snapshot().task, before.task);
+    assert_eq!(s.snapshot().target_count, Some(3));
+    assert_eq!(s.snapshot().correct, 3);
+    count(&mut s, &[1, 2, 3]);
+    assert!(s.snapshot().task.unwrap().contains("Total"));
 }
 #[test]
 fn unstable_table_invalidates_pending_count() {
@@ -132,7 +143,7 @@ fn registration_deduplicates_and_creates() {
 fn help_is_modeled_after_the_required_toys_arrive() {
     let mut s = lesson();
     start(&mut s);
-    let effects = count(&mut s, &[1, 3]);
+    let effects = s.handle(Event::Said("help".into()));
     assert!(effects.contains(&Effect::HighlightCount(1)));
     assert!(effects
         .iter()
@@ -270,4 +281,23 @@ fn old_five_toy_checkpoints_do_not_skip_the_new_opening() {
     start(&mut s);
     assert_eq!(s.snapshot().target_count, Some(1));
     assert_eq!(s.snapshot().correct, 0);
+}
+
+#[test]
+fn help_returns_to_the_question_where_the_child_asked() {
+    let mut s = lesson();
+    start(&mut s);
+    count(&mut s, &[1]);
+    table(&mut s, 2);
+    count(&mut s, &[1, 2]);
+    table(&mut s, 3);
+    count(&mut s, &[1, 2, 3]);
+    let original = s.snapshot().task;
+    s.handle(Event::Said("help".into()));
+    for n in 1..=3 {
+        table(&mut s, n);
+        count(&mut s, &(1..=n).collect::<Vec<_>>());
+    }
+    assert_eq!(s.snapshot().task, original);
+    assert_eq!(s.snapshot().target_count, Some(3));
 }
