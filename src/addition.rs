@@ -40,6 +40,7 @@ pub struct AddToFive {
     undo_add: bool,
     repair_return: Option<Node>,
     rechecking: bool,
+    retry_preface: bool,
     misses: u32,
     records: Vec<TaskRecord>,
 }
@@ -65,6 +66,7 @@ impl AddToFive {
             undo_add: false,
             repair_return: None,
             rechecking: false,
+            retry_preface: false,
             misses: 0,
             records: vec![],
         }
@@ -125,6 +127,11 @@ impl AddToFive {
                 "Угощения на пледе. Теперь посчитай каждую игрушку один раз, без подсказки. Начни с одного.".into()),
             Node::Check => self.say(format!("Picnic mission {} of 7! The {friends} have {a} snacks and bring {b} more. Point to the toy snacks one by one and say one number for each, starting at one, until you have counted every snack.", self.mastered.count_ones() + 1), format!("Задание для пикника {} из 7! У {friends} есть {a_treats}. Они принесли ещё {b_treats}. Показывай на каждую игрушку по очереди и считай. Начни с одного.", self.mastered.count_ones() + 1)),
             _ => return vec![],
+        };
+        let line = if matches!(self.node, Node::Count | Node::Check) {
+            crate::play::preface_retry(&mut self.retry_preface, self.config.language, line)
+        } else {
+            line
         };
         let mut effects = vec![Effect::StopListening, line];
         if self.node == Node::Count && self.repair_return.is_some() {
@@ -380,6 +387,7 @@ impl AddToFive {
             effects.extend(self.next_check());
             effects
         } else {
+            self.retry_preface = !skipped;
             let mut effects: Vec<Effect> = feedback.into_iter().collect();
             if guided {
                 effects.push(Effect::HighlightCount(sum));

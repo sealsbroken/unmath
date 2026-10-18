@@ -29,6 +29,7 @@ pub struct Adventure {
     undo_add: Option<u32>,
     taught: bool,
     paired: bool,
+    retry_preface: bool,
     mastered: u32,
     place: Place,
     table: Option<u32>,
@@ -63,6 +64,7 @@ impl Adventure {
             undo_add: None,
             taught: false,
             paired: false,
+            retry_preface: false,
             mastered,
             place,
             table: None,
@@ -88,6 +90,10 @@ impl Adventure {
     }
     fn say(&self, words: &Words) -> Effect {
         Effect::Say(words.in_language(self.config.language))
+    }
+    fn ask_retry(&mut self, words: &Words) -> Effect {
+        let question = self.say(words);
+        crate::play::preface_retry(&mut self.retry_preface, self.config.language, question)
     }
     fn target(&self) -> Option<u32> {
         matches!(self.node, Node::Prepare | Node::Guide).then(|| {
@@ -170,7 +176,7 @@ impl Adventure {
     fn pair_question(&mut self) -> Vec<Effect> {
         self.node = Node::Pair;
         self.sequence.reset();
-        vec![Effect::StopListening, self.say(&Words::new(
+        vec![Effect::StopListening, self.ask_retry(&Words::new(
             "Ask a grown-up to keep both rows beside the table. Pair one block from the first team with one from the second. Which team has blocks WITHOUT a partner? Say first, second, or same if none are left.",
             "Попроси взрослого оставить оба ряда рядом со столом. Составь пары: один блок первой команды и один второй. У какой команды остались блоки БЕЗ пары? Скажи: первая, вторая или поровну, если таких блоков нет.")),
             Effect::listen(ListenMode::Voice, self.config.answer_timeout)]
@@ -188,7 +194,7 @@ impl Adventure {
         };
         vec![
             Effect::StopListening,
-            self.say(&words),
+            self.ask_retry(&words),
             Effect::listen(ListenMode::Voice, self.config.answer_timeout),
         ]
     }
@@ -197,7 +203,7 @@ impl Adventure {
         self.sequence.reset();
         vec![
             Effect::StopListening,
-            self.say(&self.mission().followup(self.lesson)),
+            self.ask_retry(&self.mission().followup(self.lesson)),
             Effect::listen(
                 if matches!(self.mission().answer, Answer::Sequence(_)) {
                     ListenMode::Counting
@@ -231,7 +237,7 @@ impl Adventure {
         self.sequence.reset();
         let n = self.target().expect("a guide always has a target");
         vec![
-            self.say(&if n == 0 {
+            self.ask_retry(&if n == 0 {
                 Words::new(
                     "Nothing is here now. How many is that?",
                     "Теперь здесь ничего нет. Сколько это?",
@@ -313,6 +319,7 @@ impl Adventure {
             return self.finish(false);
         }
         if !correct {
+            self.retry_preface = !skipped;
             let mut effects = vec![Effect::StopListening];
             let has_feedback = feedback.is_some();
             effects.extend(feedback);

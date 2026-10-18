@@ -9,6 +9,10 @@ Example question: “First team has two blocks. Second team has four. Which has 
 
 ## Acyclic teaching and correction paths
 
+After an incorrect spoken answer, the next teaching question begins with
+**“А ты уверен?”** in Russian (**“Are you sure?”** in English). The prefix is
+spoken once, after any setup wait; skips and silence do not trigger it.
+
 A wrong answer opens the teaching branch below automatically. Each box is a
 child action or a smaller question; it is not a replay of the original stem.
 The child keeps completed missions. A failed guided response stays at that

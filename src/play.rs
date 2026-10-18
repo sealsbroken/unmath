@@ -149,3 +149,18 @@ pub(crate) fn undo_added_toys(language: Language) -> String {
         Language::Russian => "Игрушек добавилось слишком много. Убери со стола ВСЕ новые игрушки. Те, что были здесь раньше, оставь. Попроси взрослого помочь.",
     }.into()
 }
+
+/// Attach the reassurance question once, immediately before the next teaching question.
+pub(crate) fn preface_retry(pending: &mut bool, language: Language, question: Effect) -> Effect {
+    match question {
+        Effect::Say(text) if *pending => {
+            *pending = false;
+            let prefix = match language {
+                Language::English => "Are you sure?",
+                Language::Russian => "А ты уверен?",
+            };
+            Effect::Say(format!("{prefix} {text}"))
+        }
+        effect => effect,
+    }
+}

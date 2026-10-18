@@ -41,6 +41,7 @@ pub struct CountToThree {
     resume_after_practice: Question,
     repair_return: Question,
     rechecking: bool,
+    retry_preface: bool,
     attempts: u32,
     misses: u32,
     records: Vec<TaskRecord>,
@@ -75,6 +76,7 @@ impl CountToThree {
             resume_after_practice: question,
             repair_return: question,
             rechecking: false,
+            retry_preface: false,
             attempts: 0,
             misses: 0,
             records: vec![],
@@ -189,8 +191,11 @@ impl CountToThree {
                 )));
             }
         }
+        let question = Effect::Say(self.prompt());
+        let question =
+            crate::play::preface_retry(&mut self.retry_preface, self.config.language, question);
         effects.extend(vec![
-            Effect::Say(self.prompt()),
+            question,
             Effect::listen(
                 if self.question == Question::Total {
                     ListenMode::Voice
@@ -355,6 +360,7 @@ impl CountToThree {
             if self.misses >= 3 {
                 return self.finish(false);
             }
+            self.retry_preface = !skipped;
             // Teach one-to-one counting with this group; never shrink it or
             // award an independent success for the tutor-modeled count.
             if !matches!(self.question, Question::Repair(_) | Question::Practice(_)) {

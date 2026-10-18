@@ -183,6 +183,10 @@ See the [physical correction graph](https://github.com/sealsbroken/unmath/wiki/L
 
 ## Integration behavior
 
+After an incorrect spoken answer, the next teaching question begins with
+**“А ты уверен?”** in Russian (**“Are you sure?”** in English). The prefix is
+spoken once, after any setup wait; skips and silence do not trigger it.
+
 `unmath::ID` and `unmath::ADDITION_ID` expose the first two strategy IDs. Registration includes all ten
 lessons. Choose a destination by saying `forest` / `moon` (`лес` / `луна`).
 Destination choices never score as maths answers. Help requests
