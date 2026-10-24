@@ -80,13 +80,15 @@ fn adding_three_instead_of_two_requires_undo_then_a_fresh_addition() {
             ..Default::default()
         };
         cfg.extra
-            .insert("unmath.lesson2.one_by_one.v3".into(), "1".into());
+            .insert("unmath.lesson2.graph.v4.index".into(), "1".into());
         let mut s = AddToFive::new(cfg);
         s.handle(Event::Start);
+        count(&mut s, 2); // speech check
         table(&mut s, 1);
         assert_eq!(s.snapshot().target_count, Some(3)); // one original; add two
         check_reset(&mut s, 1, 3, language);
         count(&mut s, 3);
+        s.handle(Event::Heard(3));
         assert_eq!(s.snapshot().level, 2);
     }
 }
@@ -126,9 +128,10 @@ fn guided_additions_and_missing_quantities_undo_without_losing_the_guided_stage(
 fn zero_addition_overshoot_can_be_undone_and_paused_without_inventing_a_score() {
     let mut cfg = SessionConfig::default();
     cfg.extra
-        .insert("unmath.lesson2.one_by_one.v3".into(), "63".into());
+        .insert("unmath.lesson2.graph.v4.index".into(), "6".into());
     let mut s = AddToFive::new(cfg);
     s.handle(Event::Start);
+    count(&mut s, 2); // speech check
     table(&mut s, 3); // plus zero; already listening
     let effects = table(&mut s, 4);
     assert!(words(&effects).contains("ALL the toys"));
@@ -174,9 +177,10 @@ fn overshoot_discards_a_pending_count_and_can_be_corrected_repeatedly() {
         ..Default::default()
     };
     cfg.extra
-        .insert("unmath.lesson2.one_by_one.v3".into(), "1".into());
+        .insert("unmath.lesson2.graph.v4.index".into(), "1".into());
     let mut s = AddToFive::new(cfg);
     s.handle(Event::Start);
+    count(&mut s, 2); // speech check
     table(&mut s, 1);
     table(&mut s, 3);
     s.handle(Event::Numbers(vec![1, 2, 3]));
@@ -191,5 +195,6 @@ fn overshoot_discards_a_pending_count_and_can_be_corrected_repeatedly() {
     s.handle(Event::Heard(3)); // trailing answer from the canceled count
     assert_eq!(s.snapshot().tasks_completed, 0);
     count(&mut s, 3);
+    s.handle(Event::Heard(3));
     assert_eq!(s.snapshot().level, 2);
 }

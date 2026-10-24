@@ -95,6 +95,10 @@ fn all_ten_lessons_start_directly_and_use_only_real_toys_without_adult_prompts()
                 };
                 let mut s = registry.create(&info.id, &cfg).unwrap();
                 inspect(s.handle(Event::Start), &info.id);
+                if info.id == unmath::ADDITION_ID {
+                    s.handle(Event::Numbers(vec![1, 2]));
+                    s.handle(Event::Heard(2));
+                }
                 assert_ne!(
                     s.snapshot().phase,
                     PhaseKind::Meeting,

@@ -149,3 +149,13 @@ Cycles involving help, repeat, arranging toys, or chatter can continue while the
 child plays. The graphs guarantee reachable exits, not forced termination for
 every infinite input stream. Stop/break exits remain available; setup has no
 forced time limit. Human usability and retention still need observation.
+
+## Lesson two: supplied graph refactor
+
+The speech check is unscored and allows one retry. Eight ordered examples each
+require counting plus a separate total. Counting and total errors enter a
+modeled count, then a fresh independent recount; a final failed recount pauses.
+Setup errors and camera interruptions never score. Overshoot requires undoing
+all newly added toys. Checkpoints store completed examples only. The lesson
+tests cover both languages, silence, zero addition, repeated answers, stale
+tails, exact setup feedback, answer budgets, and pause/resume.

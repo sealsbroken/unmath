@@ -52,3 +52,8 @@ spoken controls. No lesson asks the child to use a screen or seek adult help.
 The lesson pages show acyclic teaching paths with explicit correction episodes.
 Camera totals cannot verify individual touches, toy identity, or off-table pairing.
 Session summaries describe demonstrated tasks, not exhaustive arithmetic mastery.
+
+Lesson two follows eight ordered examples (1+1, 1+2, 2+2, 2+3, 3+1, 1+4, 3+0,
+1+1). Count each toy, then give the total. Its bounded correction path models
+the current group and asks for an independent recount; a failed final recount
+pauses with completed examples saved. A brief speech check precedes the toys.

@@ -40,11 +40,10 @@ fn old_destinations_are_ignored_and_completed_additions_survive_pause() {
         .insert("unmath.lesson2.place".into(), "moon".into());
     let mut s = AddToFive::new(config);
     s.handle(Event::Start);
-    assert_eq!(s.snapshot().phase, PhaseKind::Performing);
+    count(&mut s, 2); // speech check
     prepare(&mut s);
-    count(&mut s, 2); // guided opening
-    prepare(&mut s);
-    count(&mut s, 3); // independent 1+2
+    count(&mut s, 2);
+    s.handle(Event::Heard(2)); // total: complete first example
     let summary = s
         .handle(Event::Stop)
         .into_iter()
@@ -62,28 +61,30 @@ fn old_destinations_are_ignored_and_completed_additions_survive_pause() {
     assert!(!config.extra.contains_key("unmath.lesson2.mastered"));
     let mut resumed = AddToFive::new(config);
     resumed.handle(Event::Start);
-    assert_ne!(resumed.snapshot().phase, PhaseKind::Meeting);
+    count(&mut resumed, 2);
     assert_eq!(resumed.snapshot().level, 1);
     prepare(&mut resumed);
-    assert_eq!(resumed.snapshot().expected_answer, Some(2)); // first remaining task is 1+1
+    assert_eq!(resumed.snapshot().expected_answer, Some(3));
 }
 #[test]
-fn a_default_length_addition_lesson_finishes_with_a_guided_help_path() {
-    let mut s = AddToFive::new(SessionConfig::default());
+fn addition_finishes_with_a_guided_help_path_with_sufficient_answer_budget() {
+    let mut s = AddToFive::new(SessionConfig {
+        max_tasks: 40,
+        ..Default::default()
+    });
     s.handle(Event::Start);
-    prepare(&mut s);
     count(&mut s, 2);
     prepare(&mut s);
     s.handle(Event::Said("help".into()));
-    prepare(&mut s);
-    count(&mut s, 3);
-    for _ in 0..7 {
+    count(&mut s, 2);
+    count(&mut s, 2);
+    for _ in 0..14 {
         prepare(&mut s);
         let n = s.snapshot().expected_answer.unwrap();
         count(&mut s, n);
     }
     assert_eq!(s.snapshot().phase, PhaseKind::Finished);
-    assert_eq!(s.snapshot().tasks_completed, 9);
+    assert_eq!(s.snapshot().tasks_completed, 16);
 }
 
 #[test]

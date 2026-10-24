@@ -34,11 +34,10 @@ fn all_ten_lessons_teach_after_a_mistake_before_a_fresh_followup() {
             let mut s = registry.create(&info.id, &cfg).unwrap();
             s.handle(Event::Start);
 
-            ready(s.as_mut());
             if info.id == unmath::ADDITION_ID {
-                count(s.as_mut(), 2); // opening demo is not an independent mission
-                ready(s.as_mut());
-            }
+                count(s.as_mut(), 2);
+            } // unscored speech check
+            ready(s.as_mut());
             let before = s.snapshot();
             let original = s.handle(Event::RepeatRequested);
             let original_prompt = spoken(&original).last().unwrap().to_string();

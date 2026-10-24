@@ -35,6 +35,10 @@ fn an_incorrect_answer_prefaces_the_next_question_once_in_every_lesson() {
                     .unwrap();
                 let mut initial = s.handle(Event::Start);
 
+                if s.snapshot().phase == PhaseKind::Meeting {
+                    s.handle(Event::Numbers(vec![1, 2]));
+                    s.handle(Event::Heard(2));
+                }
                 ready(s.as_mut(), &mut initial);
                 assert!(!spoken(&initial).iter().any(|line| line.contains(prefix)));
                 let before = s.snapshot();

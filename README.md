@@ -63,7 +63,7 @@ plugin; existing prebuilt apps must be rebuilt with it.
 
 ## Arithmetic with toys
 
-The lessons start directly with toys. There is no forest/moon choice, no request
+Lessons start directly with toys; lesson two first checks speech with “one, two, over.” There is no forest/moon choice, no request
 for grown-up help, and no assumption that toys represent food, characters, or
 other objects. English and Russian prompts talk only about toys and toy groups.
 Everything is screen free: the child speaks, points, and moves toys.
@@ -94,22 +94,35 @@ flowchart TD
 
 ### Lesson 2: Add toys up to five
 
-Join toy groups with totals up to five and count the combined group.
+Speech check, then eight ordered examples: **1+1, 1+2, 2+2, 2+3, 3+1, 1+4,
+3+0, 1+1**. Each needs a full count and a separate total. Errors keep the same
+toy group, teach with a model, then ask for an independent recount. A failed
+final recount pauses with completed examples saved. Use `max_tasks: 40` for a
+whole lesson with room for corrections (a clean run uses 16 responses).
 
 ```mermaid
 flowchart TD
-    Start["Join toy groups with totals up to five and count the combined group."] -->|"Independent success"| Done["Keep progress; next question or finish"]
-    Start -->|"Malformed count or total only"| E0["Use one-to-one counting with this same combined toy group"]
-    E0 --> S0
-    S0["Keep the assembled toy group; count each toy once with a model"] -->|"Guided success; no mastery credit"| Follow
-    S0 -->|"Mistake here"| H0["Model this settled toy group; say one number per toy"]
-    H0 --> R0["Fresh guided attempt at this same step"]
-    R0 -->|"Guided success"| Follow
-    R0 -->|"More teaching needed"| Continue["Next correction episode; retain learned steps"]
-    Follow["Fresh full count of the same toy group without a model"] -->|"Independent success"| Done
-    Follow -->|"Still needs help"| Continue
-    Start -->|"Break or budget reached"| Rest["Rest; save progress"]
-    Continue -->|"Break, task limit, or three consecutive misses"| Rest
+    Start["Speech check: one, two, over"] -->|"Recognized"| Setup["Set up this example's exact starting group"]
+    Start -->|"Not recognized"| LinkRetry["One speech-check retry"]
+    LinkRetry -->|"Any result"| Setup
+    Setup --> Add["Add the requested toys; verify stable total"]
+    Add --> Count["Count every toy aloud from one"]
+    Count -->|"Complete count"| Total["How many toys altogether?"]
+    Total -->|"Correct total"| Done["Save completed example; next example or finish"]
+    Count -->|"Incorrect count or silence"| E0["Keep this toy group; model its count"]
+    Total -->|"Incorrect total or silence"| E0
+    E0 --> Guided["Child counts with the model; no completion credit"]
+    Guided -->|"Correct"| Final["Independent recount of the same group"]
+    Guided -->|"Incorrect or silence"| Model["Tutor models the whole group once more"]
+    Model --> Final
+    Final -->|"Complete independent count"| Done
+    Final -->|"Incorrect or silence"| Rest["Break; save completed examples"]
+    Start -->|"Break or skip"| Rest
+    Setup -->|"Break or skip"| Rest
+    Add -->|"Break or skip"| Rest
+    Count -->|"Break, skip or answer budget"| Rest
+    Total -->|"Break, skip or answer budget"| Rest
+    Guided -->|"Break, skip or answer budget"| Rest
 ```
 
 ## All ten lessons
@@ -153,8 +166,10 @@ undoing ALL new toys, restoring the original group, and retrying the addition.
 The tutor never asks a beginner to subtract the excess.
 
 Say `help` / `помоги`, `start again` / `сначала`, or `stop` / `стоп`. Three
-consecutive misses/timeouts or the task limit pause. Silence does not invent a
-failed task record; skip during setup pauses. Physical setup has no timeout.
+consecutive misses/timeouts or the task limit pause in the other lessons. Lesson two
+instead uses the bounded correction path above: silence follows the same teaching
+steps and is recorded as an unanswered attempt. Skip during setup pauses. Physical
+setup has no timeout.
 
 ## Integration and saved progress
 

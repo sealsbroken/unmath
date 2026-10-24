@@ -30,6 +30,10 @@ fn prepare(s: &mut dyn Strategy) {
 fn start(s: &mut dyn Strategy) {
     s.handle(Event::Start);
 
+    if s.snapshot().phase == PhaseKind::Meeting {
+        s.handle(Event::Numbers(vec![1, 2]));
+        s.handle(Event::Heard(2));
+    }
     prepare(s);
 }
 fn counting(id: &str, language: Language) -> Box<dyn Strategy> {
@@ -239,7 +243,7 @@ fn recognizer_punctuation_case_whitespace_and_curly_apostrophes_do_not_trap_chil
         assert!(
             matches!(
                 s.snapshot().phase,
-                PhaseKind::Performing | PhaseKind::Asking
+                PhaseKind::Performing | PhaseKind::Asking | PhaseKind::Meeting
             ),
             "{id}"
         );
@@ -347,7 +351,9 @@ fn obsolete_destination_words_do_not_create_a_choice_or_score() {
         for word in ["forest", "moon", "лес"] {
             assert!(s.handle(Event::Said(word.into())).is_empty());
         }
-        assert_ne!(s.snapshot().phase, PhaseKind::Meeting, "{id}");
+        if id != unmath::ADDITION_ID {
+            assert_ne!(s.snapshot().phase, PhaseKind::Meeting, "{id}");
+        }
         assert_eq!(s.snapshot().tasks_completed, before.tasks_completed);
         assert_eq!(s.snapshot().task, before.task);
     }
@@ -460,7 +466,7 @@ fn deterministic_event_stress_preserves_score_and_terminal_invariants() {
                             for record in summary.records.iter().filter(|r| r.correct) {
                                 assert!(!record.skipped);
                                 assert_eq!(record.answers.last().copied(), record.expected);
-                                if id == unmath::ADDITION_ID
+                                if (id == unmath::ADDITION_ID && !record.task.contains("(total)"))
                                     || (id == unmath::ID && record.task != "Total")
                                     || (id == "unmath-count-to-ten" && record.expected != Some(0))
                                 {
