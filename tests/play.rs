@@ -1,20 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 use un_core::strategy::*;
-use unmath::{AddToFive, CountToThree};
-fn prepare(s: &mut dyn Strategy) {
-    for _ in 0..3 {
-        if s.snapshot().phase != PhaseKind::Performing {
-            break;
-        }
-        s.handle(Event::Table(TableObservation::stable(
-            s.snapshot().target_count.unwrap(),
-        )));
-    }
-}
-fn count(s: &mut dyn Strategy, n: u32) {
-    s.handle(Event::Numbers((1..=n).collect()));
-    s.handle(Event::Heard(n));
-}
+use unmath::CountToThree;
 #[test]
 fn counting_starts_with_one_real_toy_and_keeps_spoken_help_and_break() {
     let mut s = CountToThree::new(SessionConfig::default());
@@ -29,64 +15,6 @@ fn counting_starts_with_one_real_toy_and_keeps_spoken_help_and_break() {
     s.handle(Event::Said("I'm tired".into()));
     assert_eq!(s.snapshot().phase, PhaseKind::Paused);
 }
-#[test]
-fn old_destinations_are_ignored_and_completed_additions_survive_pause() {
-    let mut config = SessionConfig::default();
-    config
-        .extra
-        .insert("unmath.lesson2.mastered".into(), "2097151".into());
-    config
-        .extra
-        .insert("unmath.lesson2.place".into(), "moon".into());
-    let mut s = AddToFive::new(config);
-    s.handle(Event::Start);
-    count(&mut s, 2); // speech check
-    prepare(&mut s);
-    count(&mut s, 2);
-    s.handle(Event::Heard(2)); // total: complete first example
-    let summary = s
-        .handle(Event::Stop)
-        .into_iter()
-        .find_map(|e| {
-            if let Effect::SessionEnded(s) = e {
-                Some(s)
-            } else {
-                None
-            }
-        })
-        .unwrap();
-    let mut config = SessionConfig::default();
-    summary.apply_remembered(&mut config.extra);
-    assert!(!config.extra.contains_key("unmath.lesson2.place"));
-    assert!(!config.extra.contains_key("unmath.lesson2.mastered"));
-    let mut resumed = AddToFive::new(config);
-    resumed.handle(Event::Start);
-    count(&mut resumed, 2);
-    assert_eq!(resumed.snapshot().level, 1);
-    prepare(&mut resumed);
-    assert_eq!(resumed.snapshot().expected_answer, Some(3));
-}
-#[test]
-fn addition_finishes_with_a_guided_help_path_with_sufficient_answer_budget() {
-    let mut s = AddToFive::new(SessionConfig {
-        max_tasks: 40,
-        ..Default::default()
-    });
-    s.handle(Event::Start);
-    count(&mut s, 2);
-    prepare(&mut s);
-    s.handle(Event::Said("help".into()));
-    count(&mut s, 2);
-    count(&mut s, 2);
-    for _ in 0..14 {
-        prepare(&mut s);
-        let n = s.snapshot().expected_answer.unwrap();
-        count(&mut s, n);
-    }
-    assert_eq!(s.snapshot().phase, PhaseKind::Finished);
-    assert_eq!(s.snapshot().tasks_completed, 16);
-}
-
 #[test]
 fn russian_repeat_request_with_raz_replays_without_scoring_an_answer() {
     let mut s = CountToThree::new(SessionConfig {

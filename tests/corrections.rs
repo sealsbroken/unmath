@@ -25,6 +25,9 @@ fn all_ten_lessons_teach_after_a_mistake_before_a_fresh_followup() {
     let mut registry = StrategyRegistry::default();
     unmath::register(&mut registry);
     for info in registry.infos() {
+        if info.id == unmath::ADDITION_ID {
+            continue; // the bus lesson's own paths: tests/addition.rs
+        }
         for language in [Language::English, Language::Russian] {
             let cfg = SessionConfig {
                 language,
@@ -33,10 +36,6 @@ fn all_ten_lessons_teach_after_a_mistake_before_a_fresh_followup() {
             };
             let mut s = registry.create(&info.id, &cfg).unwrap();
             s.handle(Event::Start);
-
-            if info.id == unmath::ADDITION_ID {
-                count(s.as_mut(), 2);
-            } // unscored speech check
             ready(s.as_mut());
             let before = s.snapshot();
             let original = s.handle(Event::RepeatRequested);

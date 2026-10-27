@@ -1,36 +1,57 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
-//! Lesson two follows the supplied eight-example graph, with bounded correction paths.
-use crate::answers::{count_feedback, safe_config, saved_mask, valid_count, CountBuffer};
-use crate::play::{toy_amount, wants_break, wants_help, wants_restart};
-use crate::russian::{toy_group, toys};
+//! Lesson two follows the supplied bus graph («Lesson 2_3»): a warm-up, then two rounds on a
+//! sheet of paper (the bus) with chips (the passengers). Round one is completion: one chip, make
+//! three, say how many got on (2). Round two is addition: add two more, say how many ride (5).
+use crate::answers::safe_config;
+use crate::play::{wants_break, wants_help, wants_restart};
 use std::sync::Arc;
-use un_core::{language::Language, numbers::NumberWords, strategy::*};
+use un_core::{language::Language, strategy::*};
 
 pub const ADDITION_ID: &str = "unmath-add-to-five";
-const PROGRESS: &str = "unmath.lesson2.graph.v4.index";
-const OLD_PROGRESS: &str = "unmath.lesson2.one_by_one.v3";
-const FACTS: [(u32, u32); 8] = [
-    (1, 1),
-    (1, 2),
-    (2, 2),
-    (2, 3),
-    (3, 1),
-    (1, 4),
-    (3, 0),
-    (1, 1),
+/// Keys of earlier versions of this lesson, cleared when a session ends.
+const OLD_KEYS: [&str; 5] = [
+    "unmath.lesson2.graph.v4.index",
+    "unmath.lesson2.one_by_one.v3",
+    "unmath.lesson2.picnic.v2",
+    "unmath.lesson2.place",
+    "unmath.lesson2.mastered",
 ];
-const SETUP_REMINDER: u64 = 200;
+/// Round one: one passenger, three in the end, so two got on.
+const START: u32 = 1;
+const GOAL: u32 = 3;
+/// Round two: two more get on, five ride.
+const MORE: u32 = 2;
+const TOTAL: u32 = GOAL + MORE;
+/// The silent pause once the chips are right, so hands can leave the table before it counts.
+const HOLD: u64 = 201;
+const HOLD_START: f64 = 3.0;
+const HOLD_ADD: f64 = 4.0;
+/// Repeats the instruction while the table stays wrong.
+const REMINDER: u64 = 200;
+/// How long the warm-up waits for the child to say something to the driver.
+const WARMUP_SECONDS: f64 = 7.0;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum Node {
     Idle,
-    Link,
-    Base,
+    /// "Say something to the driver": any speech or 7 s of silence goes on.
+    Warmup,
+    /// One chip on the paper.
+    Start,
+    /// Make three, the child works out how many to add.
+    Goal,
+    /// How many got on? (2)
+    Joined,
+    /// Was one, now three: count the new chips with your finger.
+    JoinedHelp,
+    /// Two more get on: add two chips.
     Add,
-    Count,
+    /// Too many: take the new chips off, back to three.
+    Undo,
+    /// How many ride now? (5)
     Total,
-    Guided,
-    Final,
+    /// We had three, two more came... that is...
+    TotalHelp,
     Paused,
     Finished,
 }
@@ -38,57 +59,23 @@ enum Node {
 pub struct AddToFive {
     config: SessionConfig,
     node: Node,
-    index: usize,
     table: Option<u32>,
-    sequence: CountBuffer,
-    link_retry: bool,
-    undo_add: bool,
-    retry_preface: bool,
-    /// Resume the same spoken question after a camera interruption.
-    interrupted: Option<Node>,
-    last_setup_count: Option<u32>,
+    /// The chips have been right since the hold timer started.
+    holding: bool,
+    /// The reminder timer is running.
+    reminding: bool,
     records: Vec<TaskRecord>,
 }
 impl AddToFive {
     pub fn new(config: SessionConfig) -> Self {
-        let config = safe_config(config);
-        let index = config
-            .extra
-            .get(PROGRESS)
-            .and_then(|s| s.parse::<usize>().ok())
-            .filter(|n| *n < FACTS.len())
-            .unwrap_or_else(|| {
-                // Keep the contiguous completed prefix from the previous seven-fact course.
-                let mask = saved_mask(config.extra.get(OLD_PROGRESS), 127);
-                if mask == 0 {
-                    return 0;
-                }
-                let mut index = 1; // the previous opening demonstration was already completed
-                while index < 7 && mask & (1 << index) != 0 {
-                    index += 1;
-                }
-                index
-            });
         Self {
-            config,
+            config: safe_config(config),
             node: Node::Idle,
-            index,
             table: None,
-            sequence: CountBuffer::default(),
-            link_retry: false,
-            undo_add: false,
-            retry_preface: false,
-            interrupted: None,
-            last_setup_count: None,
+            holding: false,
+            reminding: false,
             records: vec![],
         }
-    }
-    fn fact(&self) -> (u32, u32) {
-        FACTS[self.index.min(FACTS.len() - 1)]
-    }
-    fn sum(&self) -> u32 {
-        let (a, b) = self.fact();
-        a + b
     }
     fn say(&self, en: impl Into<String>, ru: impl Into<String>) -> Effect {
         Effect::Say(match self.config.language {
@@ -99,37 +86,48 @@ impl AddToFive {
     fn speaking(&self) -> bool {
         matches!(
             self.node,
-            Node::Link | Node::Count | Node::Total | Node::Guided | Node::Final
+            Node::Warmup | Node::Joined | Node::JoinedHelp | Node::Total | Node::TotalHelp
         )
     }
     fn active(&self) -> bool {
         !matches!(self.node, Node::Idle | Node::Paused | Node::Finished)
     }
     fn target(&self) -> Option<u32> {
-        if self.undo_add {
-            return Some(self.fact().0);
-        }
         match self.node {
-            Node::Base => Some(self.fact().0),
-            Node::Add | Node::Count | Node::Total | Node::Guided | Node::Final => Some(self.sum()),
+            Node::Start => Some(START),
+            Node::Goal | Node::Undo => Some(GOAL),
+            Node::Add => Some(TOTAL),
             _ => None,
+        }
+    }
+    fn expected(&self) -> Option<u32> {
+        match self.node {
+            Node::Joined | Node::JoinedHelp => Some(GOAL - START),
+            Node::Total | Node::TotalHelp => Some(TOTAL),
+            _ => None,
+        }
+    }
+    fn round(&self) -> u32 {
+        match self.node {
+            Node::Idle
+            | Node::Warmup
+            | Node::Start
+            | Node::Goal
+            | Node::Joined
+            | Node::JoinedHelp => 0,
+            Node::Finished => 2,
+            _ => 1,
         }
     }
     fn phase(&self) -> PhaseKind {
         match self.node {
             Node::Idle => PhaseKind::Idle,
-            Node::Link => PhaseKind::Meeting,
-            Node::Base | Node::Add => PhaseKind::Performing,
+            Node::Warmup => PhaseKind::Meeting,
+            Node::Start | Node::Goal | Node::Add | Node::Undo => PhaseKind::Performing,
             Node::Paused => PhaseKind::Paused,
             Node::Finished => PhaseKind::Finished,
             _ => PhaseKind::Asking,
         }
-    }
-    fn model(&self) -> String {
-        (1..=self.sum())
-            .map(|n| NumberWords::spoken(n, self.config.language))
-            .collect::<Vec<_>>()
-            .join(", ")
     }
     fn reminder_interval(&self) -> f64 {
         if self.config.nudge_interval.is_finite() {
@@ -138,85 +136,189 @@ impl AddToFive {
             10.0
         }
     }
+    /// Cancels the running timers. Only running ones: the engine drops the next start of a
+    /// timer whose cancel came while it was not running.
+    fn cancel_timers(&mut self) -> Vec<Effect> {
+        let mut es = vec![];
+        if std::mem::take(&mut self.reminding) {
+            es.push(Effect::CancelTimer(REMINDER));
+        }
+        if std::mem::take(&mut self.holding) {
+            es.push(Effect::CancelTimer(HOLD));
+        }
+        es
+    }
+    /// The current node's line, then what it waits for.
     fn prompt(&mut self) -> Vec<Effect> {
-        self.sequence.reset();
-        let mut es = vec![Effect::StopListening, Effect::CancelTimer(SETUP_REMINDER)];
-        if self.undo_add {
-            es.push(Effect::Say(crate::play::undo_added_toys(
-                self.config.language,
-            )));
-            return es;
-        }
-        let (a, b) = self.fact();
-        let sum = self.sum();
-        let line = match self.node {
-            Node::Link if self.link_retry => self.say("I couldn't hear clearly. Let's try once more: one, two, over.", "Не удалось расслышать. Скажи ещё раз спокойно: один, два, приём."),
-            Node::Link => self.say("Hello! I'm Unnum. Let's check that I can hear you. Repeat: one, two, over.", "Привет! Я Уннум. Проверим, как я тебя слышу. Повтори: один, два, приём."),
-            Node::Base => self.say(format!("Leave exactly {} on the table. Put the other toys aside and move your hands away.", toy_amount(a)), format!("Оставь на столе ровно {}. Остальные игрушки убери в сторону и убери руки.", toys(a))),
-            Node::Add if b == 0 => self.say("Add zero toys: leave the toys as they are.", "Добавь ноль игрушек: оставь всё как есть."),
-            Node::Add => self.say(format!("The starting group is ready. Add {} to make {} altogether, then move your hands away.", toy_amount(b), toy_amount(sum)), format!("Начальная группа готова. Добавь ещё {}, чтобы всего получилось {}. Убери руки.", toys(b), toy_group(sum))),
-            Node::Count => self.say("Point to each toy one by one and count them all aloud, starting at one.", "Показывай на каждую игрушку по очереди и считай вслух. Начни с одного."),
-            Node::Total => self.say("How many toys are there altogether?", "Сколько всего игрушек на столе?"),
-            Node::Guided => self.say(format!("Let's count this same group together: {}. Point once to each toy. Your turn.", self.model()), format!("Посчитаем эту же группу вместе: {}. Покажи на каждую игрушку один раз. Теперь твоя очередь.", self.model())),
-            Node::Final => self.say("Now count this same group again, all by yourself, starting at one.", "А теперь посчитай эту же группу самостоятельно, с самого начала. Начни с одного."),
+        let mut es = vec![Effect::StopListening];
+        es.extend(self.cancel_timers());
+        es.push(match self.node {
+            Node::Warmup => self.say(
+                "Vroom! Our bus has started its engine. Say something to the driver, for example: let's go!",
+                "Дрррм! Наш автобус завёл мотор. Скажи что-нибудь водителю, например: поехали!",
+            ),
+            Node::Start => self.say(
+                "One passenger is sitting in the bus. Put one chip on the paper.",
+                "В автобусе сидит один пассажир. Положи одну фишку.",
+            ),
+            Node::Goal => self.say(
+                "At the bus stop the driver said: there must be three passengers in the bus altogether. Make it three.",
+                "На остановке водитель сказал: всего в автобусе должно стать три пассажира. Сделай так, чтобы их стало три.",
+            ),
+            Node::Joined => self.say(
+                "I can see three chips. You did it. Now tell me: how many passengers just got on the bus?",
+                "Датчики видят три фишки. Ты выполнил задание. А теперь ответь: сколько именно пассажиров сейчас зашло в автобус?",
+            ),
+            Node::JoinedHelp => self.say(
+                "Let's check. There was one... now there are three. How many did you add? Count the new chips with your finger.",
+                "Давай проверим. Был один... Стало три. Сколько ты добавил? Считай пальчиком новые фишки.",
+            ),
+            Node::Add => self.say(
+                "At the next stop two more passengers got on. Add two chips.",
+                "На следующей остановке зашли ещё два пассажира. Добавь две фишки.",
+            ),
+            Node::Undo => self.say(
+                "Oops, my window has fogged up. Take off the table the new chips you just put down.",
+                "Ой, у меня запотело стекло. Убери со стола новые фишки, которые ты сейчас положил.",
+            ),
+            Node::Total => self.say(
+                "The bus is off! How many passengers are riding in the bus now? Count them and say the whole number.",
+                "Автобус поехал! Сколько теперь пассажиров едет в автобусе? Посчитай и назови общее число.",
+            ),
+            Node::TotalHelp => self.say(
+                "The driver lost count. Let's do it together: we had three, and two more came... That makes...",
+                "Водитель сбился со счёта. Давай вместе: у нас было три, и пришло ещё два... Это...",
+            ),
             _ => return vec![],
-        };
-        es.push(crate::play::preface_retry(
-            &mut self.retry_preface,
-            self.config.language,
-            line,
-        ));
-        if self.speaking() {
-            es.push(Effect::listen(
-                if self.node == Node::Total {
-                    ListenMode::Voice
-                } else {
-                    ListenMode::Counting
-                },
+        });
+        match self.node {
+            Node::Warmup => es.push(Effect::listen(ListenMode::Voice, WARMUP_SECONDS)),
+            Node::Joined | Node::JoinedHelp => es.push(Effect::listen(
+                ListenMode::Voice,
                 self.config.answer_timeout,
-            ));
-        } else if self.node == Node::Base {
-            es.push(Effect::StartTimer {
-                token: SETUP_REMINDER,
-                seconds: self.reminder_interval(),
-            });
+            )),
+            // Counting aloud up to five is welcome; the last number is the answer.
+            Node::Total | Node::TotalHelp => es.push(Effect::listen(
+                ListenMode::Counting,
+                self.config.answer_timeout,
+            )),
+            _ => {
+                self.reminding = true;
+                es.push(Effect::StartTimer {
+                    token: REMINDER,
+                    seconds: self.reminder_interval(),
+                });
+                es.extend(self.check_table());
+            }
         }
         es
     }
-    fn setup(&mut self) -> Vec<Effect> {
-        self.node = Node::Base;
-        self.undo_add = false;
-        self.interrupted = None;
-        self.last_setup_count = None;
-        let mut es = self.prompt();
-        es.extend(self.settle());
-        es
+    fn go(&mut self, node: Node) -> Vec<Effect> {
+        self.node = node;
+        self.prompt()
     }
-    fn settle(&mut self) -> Vec<Effect> {
-        if self.table != self.target() {
+    /// Camera nodes: the right chips start the silent pause; anything else waits (and cancels it).
+    fn check_table(&mut self) -> Vec<Effect> {
+        let Some(target) = self.target() else {
             return vec![];
+        };
+        if self.node == Node::Add && self.table.is_some_and(|n| n > TOTAL) {
+            return self.go(Node::Undo);
         }
-        if self.undo_add {
-            self.undo_add = false;
-            let mut es = self.prompt();
-            if self.fact().1 == 0 {
-                es.extend(self.settle());
+        if self.table == Some(target) {
+            if self.holding {
+                return vec![];
             }
-            return es;
-        }
-        if self.node == Node::Base {
-            self.node = Node::Add;
-            let mut es = self.prompt();
-            if self.fact().1 == 0 {
-                es.extend(self.settle());
+            self.holding = true;
+            let seconds = match self.node {
+                Node::Start => HOLD_START,
+                Node::Undo => 0.0,
+                _ => HOLD_ADD,
+            };
+            if seconds == 0.0 {
+                return self.held();
             }
-            return es;
+            return vec![Effect::StartTimer {
+                token: HOLD,
+                seconds,
+            }];
         }
-        if self.node == Node::Add {
-            self.node = self.interrupted.take().unwrap_or(Node::Count);
-            return self.prompt();
+        if self.holding {
+            self.holding = false;
+            return vec![Effect::CancelTimer(HOLD)];
         }
         vec![]
+    }
+    /// The pause is over and the chips are still right.
+    fn held(&mut self) -> Vec<Effect> {
+        self.holding = false;
+        match self.node {
+            Node::Start => self.go(Node::Goal),
+            Node::Goal => self.go(Node::Joined),
+            Node::Undo => self.go(Node::Add),
+            Node::Add => self.go(Node::Total),
+            _ => vec![],
+        }
+    }
+    fn record(&mut self, n: Option<u32>, skipped: bool) -> bool {
+        let expected = self.expected();
+        let correct = !skipped && n.is_some() && n == expected;
+        self.records.push(TaskRecord {
+            task: match self.node {
+                Node::Joined => "1 + ? = 3 (how many got on)",
+                Node::JoinedHelp => "1 + ? = 3 (guided)",
+                Node::Total => "3 + 2 (how many ride)",
+                _ => "3 + 2 (guided)",
+            }
+            .into(),
+            answers: n.into_iter().collect(),
+            expected,
+            correct,
+            skipped,
+        });
+        correct
+    }
+    fn answer(&mut self, n: Option<u32>, skipped: bool) -> Vec<Effect> {
+        if self.node == Node::Warmup {
+            let mut es = vec![
+                Effect::StopListening,
+                self.say(
+                    "Great, off we go! Our bus is the sheet of paper on the table.",
+                    "Отлично, едем! Наш автобус — это лист бумаги на столе.",
+                ),
+            ];
+            es.extend(self.go(Node::Start));
+            return es;
+        }
+        let correct = self.record(n, skipped);
+        match self.node {
+            Node::Joined if !correct => self.go(Node::JoinedHelp),
+            Node::Joined | Node::JoinedHelp => {
+                let line = if correct {
+                    self.say(
+                        "Exactly, two! The radar has recorded what you did. Let's move on.",
+                        "Точно, два! Радар зафиксировал твоё действие. Двигаемся дальше.",
+                    )
+                } else {
+                    self.say(
+                        "Two passengers got on: one and two. Let's move on.",
+                        "Зашло два пассажира: раз и два. Двигаемся дальше.",
+                    )
+                };
+                let mut es = vec![
+                    Effect::StopListening,
+                    line,
+                    self.say(
+                        "You already know that three passengers are riding in the bus now. They are in their seats.",
+                        "Ты уже знаешь, что сейчас в автобусе едут три пассажира. Они сидят на местах.",
+                    ),
+                ];
+                es.extend(self.go(Node::Add));
+                es
+            }
+            Node::Total if !correct => self.go(Node::TotalHelp),
+            _ => self.finish(true),
+        }
     }
     fn finish(&mut self, success: bool) -> Vec<Effect> {
         self.node = if success {
@@ -227,259 +329,71 @@ impl AddToFive {
         let mut summary = SessionSummary {
             tasks_completed: self.records.len() as u32,
             correct: self.records.iter().filter(|r| r.correct).count() as u32,
-            final_level: self.index as u32,
+            final_level: self.round(),
             records: self.records.clone(),
             paused: !success,
             ..Default::default()
         };
-        for key in [
-            "unmath.lesson2.place",
-            "unmath.lesson2.mastered",
-            "unmath.lesson2.picnic.v2",
-            OLD_PROGRESS,
-        ] {
+        for key in OLD_KEYS {
             summary.remember.insert(key.into(), String::new());
         }
-        summary.remember.insert(
-            PROGRESS.into(),
-            if success {
-                String::new()
-            } else {
-                self.index.to_string()
-            },
-        );
-        let mut es = vec![Effect::StopListening, Effect::CancelTimer(SETUP_REMINDER)];
+        let mut es = vec![Effect::StopListening];
+        es.extend(self.cancel_timers());
         if success {
             es.push(Effect::Celebrate);
-        }
-        es.push(if success {
-            let name = self
-                .config
-                .child_name
-                .as_deref()
-                .filter(|n| !n.trim().is_empty())
-                .map(|n| format!(", {n}"))
-                .unwrap_or_default();
-            self.say(
-                format!("All eight examples are complete! Well done{name}. Goodbye!"),
-                format!("Все восемь примеров решены! Отличная работа{name}. Пока!"),
-            )
+            es.push(self.say(
+                "Five! Everyone is here. You did great today: you worked out how many passengers got on, and you counted them all at the end of the ride. Goodbye!",
+                "Пять! Все на месте. Сегодня ты отлично справился: сам угадал, сколько пассажиров зашло, и правильно сосчитал их в конце поездки. Пока!",
+            ));
         } else {
-            self.say(
-                "Let's take a break. Your progress is saved; we can continue next time.",
-                "Давай сделаем перерыв и отдохнём. Прогресс сохранён. В следующий раз продолжим.",
-            )
-        });
+            es.push(self.say(
+                "Let's take a break. We can ride the bus again next time.",
+                "Давай сделаем перерыв и отдохнём. В следующий раз снова покатаемся на автобусе.",
+            ));
+        }
         es.push(Effect::SessionEnded(summary));
         es
     }
-    fn budget_reached(&self) -> bool {
-        self.records.len() as u32 >= self.config.max_tasks
-    }
-    fn answer(&mut self, n: Option<u32>, skipped: bool) -> Vec<Effect> {
-        let numbers = self.sequence.take().unwrap_or_default();
-        if self.node == Node::Link {
-            if !skipped && valid_count(&numbers, 2, n) || self.link_retry {
-                return self.setup();
-            }
-            self.link_retry = true;
-            return self.prompt();
-        }
-        let sum = self.sum();
-        let correct = !skipped
-            && if self.node == Node::Total {
-                n == Some(sum)
-                    && (numbers.is_empty()
-                        || numbers.iter().all(|v| *v == sum)
-                        || valid_count(&numbers, sum, n))
-            } else {
-                valid_count(&numbers, sum, n)
-            };
-        let node = self.node;
-        self.records.push(TaskRecord {
-            task: format!(
-                "{} + {} ({})",
-                self.fact().0,
-                self.fact().1,
-                match node {
-                    Node::Guided => "guided",
-                    Node::Final => "independent recount",
-                    Node::Total => "total",
-                    _ => "independent count",
-                }
-            ),
-            answers: if node == Node::Total && numbers.is_empty() {
-                n.into_iter().collect()
-            } else {
-                numbers.clone()
-            },
-            expected: Some(sum),
-            correct,
-            skipped,
-        });
-        if correct && matches!(node, Node::Total | Node::Final) {
-            self.index += 1;
-            if self.index == FACTS.len() {
-                return self.finish(true);
-            }
-            if self.budget_reached() {
-                return self.finish(false);
-            }
-            let mut es = vec![self.say(
-                "Correct! Let's try the next example.",
-                "Верно! Переходим к следующему примеру.",
-            )];
-            es.extend(self.setup());
-            return es;
-        }
-        if self.budget_reached() {
-            return self.finish(false);
-        }
-        if correct {
-            self.node = if node == Node::Count {
-                Node::Total
-            } else {
-                Node::Final
-            };
-            return self.prompt();
-        }
-        if node == Node::Final {
-            return self.finish(false);
-        }
-        self.retry_preface = !skipped;
-        let mut es = if node == Node::Total {
-            vec![self.say(
-                "Let's check how many there are by counting each toy again.",
-                "Проверим, сколько получилось: посчитаем каждую игрушку ещё раз.",
-            )]
-        } else {
-            vec![count_feedback(&numbers, sum, self.config.language)]
-        };
-        if node == Node::Guided {
-            es.push(self.say(
-                format!(
-                    "Watch and listen while I count this group: {}.",
-                    self.model()
-                ),
-                format!(
-                    "Посмотри и послушай, как я считаю эту группу: {}.",
-                    self.model()
-                ),
-            ));
-            self.node = Node::Final;
-        } else {
-            self.node = Node::Guided;
-        }
-        es.extend(self.prompt());
-        es
-    }
     fn observe(&mut self, t: TableObservation) -> Vec<Effect> {
-        if !t.is_stable && t.count.is_some() && t.count == self.table {
-            return vec![];
-        }
         self.table = if t.is_stable { t.count } else { None };
-        if !self.active() || self.node == Node::Link {
-            return vec![];
-        }
-        if !self.undo_add && self.node != Node::Base && self.table.is_some_and(|n| n > self.sum()) {
-            if self.speaking() {
-                self.interrupted = Some(Node::Count);
-            }
-            self.node = Node::Add;
-            self.undo_add = true;
-            return self.prompt();
-        }
-        if self.speaking() && self.table != self.target() {
-            self.interrupted = Some(self.node);
-            self.node = Node::Add;
-            self.sequence.reset();
-            return vec![Effect::StopListening];
-        }
-        if self.node == Node::Base && self.table != self.target() {
-            if let Some(n) = self.table {
-                if self.last_setup_count != Some(n) {
-                    self.last_setup_count = Some(n);
-                    return self.setup_feedback(n);
-                }
-            }
-        }
-        if matches!(self.node, Node::Base | Node::Add) {
-            self.settle()
+        if self.target().is_some() {
+            self.check_table()
         } else {
             vec![]
         }
     }
-    fn setup_feedback(&self, n: u32) -> Vec<Effect> {
-        let a = self.fact().0;
-        vec![if n < a {
-            self.say(
-                format!(
-                    "There are too few toys. Add toys until there are {} on the table.",
-                    toy_amount(a)
-                ),
-                format!(
-                    "Игрушек пока мало. Добавь игрушки, чтобы на столе {}.",
-                    if a == 1 {
-                        "была одна игрушка".to_owned()
-                    } else {
-                        format!("было {}", toy_group(a))
-                    }
-                ),
-            )
-        } else {
-            self.say(format!("There are too many toys. Leave only {} on the table and put the others aside.", toy_amount(a)), format!("Игрушек слишком много. Оставь на столе только {}, а остальные убери в сторону.", toys(a)))
-        }]
-    }
 }
 impl Strategy for AddToFive {
     fn handle(&mut self, event: Event) -> Vec<Effect> {
-        if matches!(&event, Event::Heard(n) if self.sequence.ignore_discarded_tail(*n)) {
-            return vec![];
-        }
         if matches!(&event, Event::Said(s) if wants_restart(s)) {
             return self.handle(Event::RepeatRequested);
         }
         match event {
             Event::Start if self.node == Node::Idle => {
-                if self.config.max_tasks == 0 || self.config.total_objects < 5 {
+                if self.config.max_tasks == 0 || self.config.total_objects < TOTAL {
                     return self.finish(false);
                 }
-                self.node = Node::Link;
-                self.prompt()
+                self.go(Node::Warmup)
             }
             Event::Stop if self.active() => self.finish(false),
             Event::Said(s) if self.active() && wants_break(&s) => self.finish(false),
-            Event::Said(s) if self.speaking() && wants_help(&s) => {
-                if self.node == Node::Link {
-                    self.link_retry = true;
-                } else {
-                    self.node = Node::Guided;
-                }
-                self.prompt()
+            // Anything said to the driver starts the ride.
+            Event::Said(_) if self.node == Node::Warmup => self.answer(None, false),
+            Event::Said(s) if wants_help(&s) && self.node == Node::Joined => {
+                self.go(Node::JoinedHelp)
+            }
+            Event::Said(s) if wants_help(&s) && self.node == Node::Total => {
+                self.go(Node::TotalHelp)
             }
             Event::Table(t) => self.observe(t),
-            Event::Numbers(ns) if self.speaking() => {
-                self.sequence.set(ns);
-                vec![]
-            }
             Event::Heard(n) if self.speaking() => self.answer(Some(n), false),
             Event::NothingHeard if self.speaking() => self.answer(None, true),
             Event::SkipRequested if self.active() => self.finish(false),
-            Event::RepeatRequested if self.active() => {
-                let mut es = self.prompt();
-                es.extend(self.settle());
-                es
-            }
-            Event::TimerFired(SETUP_REMINDER) if self.node == Node::Base => {
-                let mut es = self
-                    .table
-                    .map(|n| self.setup_feedback(n))
-                    .unwrap_or_default();
-                es.push(Effect::StartTimer {
-                    token: SETUP_REMINDER,
-                    seconds: self.reminder_interval(),
-                });
-                es
+            Event::RepeatRequested if self.active() => self.prompt(),
+            Event::TimerFired(HOLD) if self.holding && self.table == self.target() => self.held(),
+            Event::TimerFired(REMINDER) if self.reminding && self.target().is_some() => {
+                self.reminding = false;
+                self.prompt()
             }
             _ => vec![],
         }
@@ -487,31 +401,23 @@ impl Strategy for AddToFive {
     fn snapshot(&self) -> StrategySnapshot {
         StrategySnapshot {
             phase: self.phase(),
-            level: self.index as u32,
-            level_count: FACTS.len() as u32 + 1,
+            level: self.round(),
+            level_count: 2,
             tasks_completed: self.records.len() as u32,
             correct: self.records.iter().filter(|r| r.correct).count() as u32,
-            task: Some(if self.node == Node::Link {
-                "Lesson 2: speech check".into()
-            } else {
-                format!(
-                    "Lesson 2: {} + {} ({})",
-                    self.fact().0,
-                    self.fact().1,
-                    match self.node {
-                        Node::Guided => "guided",
-                        Node::Final => "independent recount",
-                        Node::Total => "total",
-                        _ => "independent count",
-                    }
-                )
-            }),
+            task: Some(
+                match self.node {
+                    Node::Warmup => "Lesson 2: the bus starts",
+                    Node::Start => "Lesson 2: one passenger",
+                    Node::Goal => "Lesson 2: make three",
+                    Node::Joined | Node::JoinedHelp => "Lesson 2: 1 + ? = 3",
+                    Node::Add | Node::Undo => "Lesson 2: two more get on",
+                    _ => "Lesson 2: 3 + 2",
+                }
+                .into(),
+            ),
             target_count: self.target(),
-            expected_answer: if self.node == Node::Link {
-                Some(2)
-            } else {
-                self.speaking().then_some(self.sum())
-            },
+            expected_answer: self.expected(),
         }
     }
 }
@@ -521,8 +427,8 @@ impl StrategyFactory for AddToFiveFactory {
     fn info(&self) -> StrategyInfo {
         StrategyInfo {
             id: ADDITION_ID.into(),
-            title: "Lesson 2: add toys up to five".into(),
-            description: "Join toy groups, count every toy, and say how many there are altogether."
+            title: "Lesson 2: the bus (adding to five)".into(),
+            description: "Make three passengers from one and say how many got on, then add two and say how many ride."
                 .into(),
             languages: vec![Language::English, Language::Russian],
             license: "LGPL-3.0-or-later".into(),

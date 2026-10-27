@@ -18,6 +18,9 @@ fn an_incorrect_answer_prefaces_the_next_question_once_in_every_lesson() {
     let mut registry = StrategyRegistry::default();
     unmath::register(&mut registry);
     for info in registry.infos() {
+        if info.id == unmath::ADDITION_ID {
+            continue; // the bus lesson's own paths: tests/addition.rs
+        }
         for (language, prefix) in [
             (Language::Russian, "А ты уверен?"),
             (Language::English, "Are you sure?"),

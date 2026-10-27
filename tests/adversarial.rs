@@ -6,6 +6,14 @@ fn ids() -> Vec<String> {
     unmath::register(&mut r);
     r.infos().into_iter().map(|i| i.id).collect()
 }
+/// The counting lessons. Lesson two (the bus) asks for single numbers, takes any speech in its
+/// warm-up and waits out a silent pause on the camera: tests/addition.rs holds its rules.
+fn counting_ids() -> Vec<String> {
+    ids()
+        .into_iter()
+        .filter(|id| id != unmath::ADDITION_ID)
+        .collect()
+}
 fn make(id: &str, config: SessionConfig) -> Box<dyn Strategy> {
     let mut r = StrategyRegistry::default();
     unmath::register(&mut r);
@@ -56,7 +64,7 @@ fn respond(s: &mut dyn Strategy, ns: Vec<u32>, tail: u32) -> Vec<Effect> {
 }
 #[test]
 fn zero_start_is_rejected_and_explained_in_both_languages_in_all_ten_lessons() {
-    for id in ids() {
+    for id in counting_ids() {
         for language in [Language::English, Language::Russian] {
             let mut s = counting(&id, language);
             let n = s.snapshot().expected_answer.unwrap();
@@ -78,7 +86,7 @@ fn zero_start_is_rejected_and_explained_in_both_languages_in_all_ten_lessons() {
 }
 #[test]
 fn malformed_count_edits_are_rejected_but_complete_answer_repetitions_are_legal() {
-    for id in ids() {
+    for id in counting_ids() {
         let template = counting(&id, Language::English);
         let n = template.snapshot().expected_answer.unwrap();
         let good: Vec<_> = (1..=n).collect();
@@ -140,7 +148,7 @@ fn malformed_count_edits_are_rejected_but_complete_answer_repetitions_are_legal(
 }
 #[test]
 fn repeated_complete_answers_score_once_across_all_lessons_and_languages() {
-    for id in ids() {
+    for id in counting_ids() {
         for language in [Language::English, Language::Russian] {
             for times in [2, 3, 100] {
                 let mut s = counting(&id, language);
@@ -160,7 +168,7 @@ fn repeated_complete_answers_score_once_across_all_lessons_and_languages() {
 }
 #[test]
 fn partial_chunks_never_score_and_pause_split_complete_counts_score_once() {
-    for id in ids() {
+    for id in counting_ids() {
         let mut s = counting(&id, Language::English);
         let n = s.snapshot().expected_answer.unwrap();
         let before = s.snapshot();
@@ -182,7 +190,7 @@ fn partial_chunks_never_score_and_pause_split_complete_counts_score_once() {
 }
 #[test]
 fn repeat_restart_and_table_changes_discard_the_known_old_heard_tail() {
-    for id in ids() {
+    for id in counting_ids() {
         for cancel in [
             Event::RepeatRequested,
             Event::Said("Start again!".into()),
@@ -344,7 +352,7 @@ fn invalid_timeouts_do_not_emit_panicking_duration_inputs() {
 }
 #[test]
 fn obsolete_destination_words_do_not_create_a_choice_or_score() {
-    for id in ids() {
+    for id in counting_ids() {
         let mut s = make(&id, config(Language::English));
         s.handle(Event::Start);
         let before = s.snapshot();
@@ -361,7 +369,7 @@ fn obsolete_destination_words_do_not_create_a_choice_or_score() {
 
 #[test]
 fn paused_and_finished_lessons_ignore_late_answers_and_repeated_stop() {
-    for id in ids() {
+    for id in counting_ids() {
         for finish in [false, true] {
             let mut s = make(&id, config(Language::English));
             start(s.as_mut());
@@ -505,7 +513,7 @@ fn an_impossible_all_complete_checkpoint_is_reset_not_announced_as_new_mastery()
 #[test]
 fn russian_raz_and_odin_are_equivalent_in_all_counting_lessons() {
     use un_core::numbers::{NumberParser, NumberWords};
-    for id in ids() {
+    for id in counting_ids() {
         let mut s = counting(&id, Language::Russian);
         let before = s.snapshot();
         let n = before.expected_answer.unwrap();

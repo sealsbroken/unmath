@@ -17,7 +17,7 @@ task, without choosing a destination. The child speaks, points, and moves toys.
 | Lesson | Goal |
 | --- | --- |
 | [1: Count three toys](https://github.com/sealsbroken/unmath/wiki/Lesson-1-Count-to-three) | Start with one toy, add one at a time to three, and count every toy. |
-| [2: Add toys up to five](https://github.com/sealsbroken/unmath/wiki/Lesson-2-Add-up-to-five) | Join toy groups with totals up to five and count the combined group. |
+| [2: The bus, adding to five](https://github.com/sealsbroken/unmath/wiki/Lesson-2-Add-up-to-five) | Make three passengers from one and say how many got on; add two and say how many ride. |
 | [3: Take toys away up to five](https://github.com/sealsbroken/unmath/wiki/Lesson-3-Cave-train) | Take toys away within five and count those remaining, including zero. |
 | [4: Compare toy groups](https://github.com/sealsbroken/unmath/wiki/Lesson-4-Bridge-builders) | Compare two toy groups within five: more, fewer, or equal. |
 | [5: Add missing toys up to five](https://github.com/sealsbroken/unmath/wiki/Lesson-5-Parcel-detectives) | Find how many toys must be added to reach a target up to five. |
@@ -53,7 +53,7 @@ The lesson pages show acyclic teaching paths with explicit correction episodes.
 Camera totals cannot verify individual touches, toy identity, or off-table pairing.
 Session summaries describe demonstrated tasks, not exhaustive arithmetic mastery.
 
-Lesson two follows eight ordered examples (1+1, 1+2, 2+2, 2+3, 3+1, 1+4, 3+0,
-1+1). Count each toy, then give the total. Its bounded correction path models
-the current group and asks for an independent recount; a failed final recount
-pauses with completed examples saved. A brief speech check precedes the toys.
+Lesson two is a bus ride (the supplied graph «Lesson 2_3»): one passenger,
+make three and say how many got on (1 + ? = 3), then two more get on and say how
+many ride (3 + 2). Each wrong answer or silence gets one hint, then the ride goes
+on. A warm-up ("say something to the driver") precedes the chips.

@@ -53,7 +53,7 @@ The lesson pages show acyclic teaching paths with explicit correction episodes.
 Camera totals cannot verify individual touches, toy identity, or off-table pairing.
 Session summaries describe demonstrated tasks, not exhaustive arithmetic mastery.
 
-Lesson two follows eight ordered examples (1+1, 1+2, 2+2, 2+3, 3+1, 1+4, 3+0,
-1+1). Count each toy, then give the total. Its bounded correction path models
-the current group and asks for an independent recount; a failed final recount
-pauses with completed examples saved. A brief speech check precedes the toys.
+Lesson two is a bus ride (the supplied graph «Lesson 2_3»): one passenger,
+make three and say how many got on (1 + ? = 3), then two more get on and say how
+many ride (3 + 2). Each wrong answer or silence gets one hint, then the ride goes
+on. A warm-up ("say something to the driver") precedes the chips.

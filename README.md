@@ -63,9 +63,9 @@ plugin; existing prebuilt apps must be rebuilt with it.
 
 ## Arithmetic with toys
 
-Lessons start directly with toys; lesson two first checks speech with “one, two, over.” There is no forest/moon choice, no request
+Lessons start directly with toys. There is no forest/moon choice, no request
 for grown-up help, and no assumption that toys represent food, characters, or
-other objects. English and Russian prompts talk only about toys and toy groups.
+other objects, except lesson two, a bus ride in which chips are passengers.
 Everything is screen free: the child speaks, points, and moves toys.
 
 ### Lesson 1: Count three toys
@@ -92,37 +92,43 @@ flowchart TD
     Continue -->|"Break, task limit, or three consecutive misses"| Rest
 ```
 
-### Lesson 2: Add toys up to five
+### Lesson 2: The bus (adding to five)
 
-Speech check, then eight ordered examples: **1+1, 1+2, 2+2, 2+3, 3+1, 1+4,
-3+0, 1+1**. Each needs a full count and a separate total. Errors keep the same
-toy group, teach with a model, then ask for an independent recount. A failed
-final recount pauses with completed examples saved. Use `max_tasks: 40` for a
-whole lesson with room for corrections (a clean run uses 16 responses).
+Follows the supplied graph «Lesson 2_3». A sheet of paper on the table is the bus
+and chips (or toys) are its passengers. The bus starts its engine and the child
+says anything to the driver (seven seconds of silence also go on). Round one is
+completion: one passenger, then "make it three", then "how many got on?" (2).
+Round two is addition: two more get on, then "how many ride now?" (5); counting
+aloud to five answers it too. After a wrong answer or silence the tutor gives one
+hint, then the ride goes on whatever the answer. Adding too many chips in round
+two asks for the new chips to be taken off, back to three, then the same
+addition again. The camera waits silently for the exact chips, then a silent
+pause (3 s for the first chip, 4 s after adding) lets hands leave the table.
+Each ride starts from the beginning; nothing is saved between sessions.
 
 ```mermaid
 flowchart TD
-    Start["Speech check: one, two, over"] -->|"Recognized"| Setup["Set up this example's exact starting group"]
-    Start -->|"Not recognized"| LinkRetry["One speech-check retry"]
-    LinkRetry -->|"Any result"| Setup
-    Setup --> Add["Add the requested toys; verify stable total"]
-    Add --> Count["Count every toy aloud from one"]
-    Count -->|"Complete count"| Total["How many toys altogether?"]
-    Total -->|"Correct total"| Done["Save completed example; next example or finish"]
-    Count -->|"Incorrect count or silence"| E0["Keep this toy group; model its count"]
-    Total -->|"Incorrect total or silence"| E0
-    E0 --> Guided["Child counts with the model; no completion credit"]
-    Guided -->|"Correct"| Final["Independent recount of the same group"]
-    Guided -->|"Incorrect or silence"| Model["Tutor models the whole group once more"]
-    Model --> Final
-    Final -->|"Complete independent count"| Done
-    Final -->|"Incorrect or silence"| Rest["Break; save completed examples"]
-    Start -->|"Break or skip"| Rest
-    Setup -->|"Break or skip"| Rest
-    Add -->|"Break or skip"| Rest
-    Count -->|"Break, skip or answer budget"| Rest
-    Total -->|"Break, skip or answer budget"| Rest
-    Guided -->|"Break, skip or answer budget"| Rest
+    Start["Bus starts: say something to the driver"] -->|"Any speech or 7 s of silence"| Paper["Our bus is the sheet of paper"]
+    Paper --> One["One passenger: put one chip"]
+    One -->|"Exactly 1, steady for 3 s"| Goal["Make it three passengers"]
+    Goal -->|"Exactly 3, steady for 4 s"| Joined["How many passengers got on?"]
+    Joined -->|"Two"| Next["Exactly, two! Let's move on"]
+    Joined -->|"Wrong or silence"| Hint1["Was one, now three: count the new chips"]
+    Hint1 -->|"Any answer"| Next
+    Next --> Add["Three are riding; two more get on: add two chips"]
+    Add -->|"More than 5"| Undo["Window fogged: take the new chips off"]
+    Undo -->|"Back to 3"| Again["Add two chips again"]
+    Again -->|"Exactly 5, steady for 4 s"| Total
+    Add -->|"Exactly 5, steady for 4 s"| Total["How many ride now? Count and say the number"]
+    Total -->|"Five"| Done["Five! Everyone is here. Goodbye!"]
+    Total -->|"Wrong or silence"| Hint2["We had three, two more came... that makes..."]
+    Hint2 -->|"Any answer"| Done
+    One -->|"Break, skip or stop"| Rest["Break"]
+    Goal -->|"Break, skip or stop"| Rest
+    Joined -->|"Break, skip or stop"| Rest
+    Add -->|"Break, skip or stop"| Rest
+    Undo -->|"Break, skip or stop"| Rest
+    Total -->|"Break, skip or stop"| Rest
 ```
 
 ## All ten lessons
@@ -130,7 +136,7 @@ flowchart TD
 | Lesson | Strategy ID | Goal |
 | --- | --- | --- |
 | [1: Count three toys](https://github.com/sealsbroken/unmath/wiki/Lesson-1-Count-to-three) | `unmath-count-to-three` | Start with one toy, add one at a time to three, and count every toy. |
-| [2: Add toys up to five](https://github.com/sealsbroken/unmath/wiki/Lesson-2-Add-up-to-five) | `unmath-add-to-five` | Join toy groups with totals up to five and count the combined group. |
+| [2: The bus, adding to five](https://github.com/sealsbroken/unmath/wiki/Lesson-2-Add-up-to-five) | `unmath-add-to-five` | Make three passengers from one and say how many got on; add two and say how many ride. |
 | [3: Take toys away up to five](https://github.com/sealsbroken/unmath/wiki/Lesson-3-Cave-train) | `unmath-subtract-to-five` | Take toys away within five and count those remaining, including zero. |
 | [4: Compare toy groups](https://github.com/sealsbroken/unmath/wiki/Lesson-4-Bridge-builders) | `unmath-compare-to-five` | Compare two toy groups within five: more, fewer, or equal. |
 | [5: Add missing toys up to five](https://github.com/sealsbroken/unmath/wiki/Lesson-5-Parcel-detectives) | `unmath-missing-to-five` | Find how many toys must be added to reach a target up to five. |
@@ -167,9 +173,8 @@ The tutor never asks a beginner to subtract the excess.
 
 Say `help` / `помоги`, `start again` / `сначала`, or `stop` / `стоп`. Three
 consecutive misses/timeouts or the task limit pause in the other lessons. Lesson two
-instead uses the bounded correction path above: silence follows the same teaching
-steps and is recorded as an unanswered attempt. Skip during setup pauses. Physical
-setup has no timeout.
+instead gives one hint per question and goes on: silence is recorded as an
+unanswered attempt. Skip during setup pauses. Physical setup has no timeout.
 
 ## Integration and saved progress
 

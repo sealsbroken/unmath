@@ -150,12 +150,16 @@ child plays. The graphs guarantee reachable exits, not forced termination for
 every infinite input stream. Stop/break exits remain available; setup has no
 forced time limit. Human usability and retention still need observation.
 
-## Lesson two: supplied graph refactor
+## Lesson two: the bus graph
 
-The speech check is unscored and allows one retry. Eight ordered examples each
-require counting plus a separate total. Counting and total errors enter a
-modeled count, then a fresh independent recount; a final failed recount pauses.
-Setup errors and camera interruptions never score. Overshoot requires undoing
-all newly added toys. Checkpoints store completed examples only. The lesson
-tests cover both languages, silence, zero addition, repeated answers, stale
-tails, exact setup feedback, answer budgets, and pause/resume.
+The warm-up accepts any speech, a number, or seven seconds of silence, and is not
+scored. The camera waits silently for the exact stable chips; unstable frames,
+hands, and a chip moved during the silent pause cancel the pause. Round one
+waits for exactly three, however many are added or removed on the way. In round
+two more than five asks for the new chips to be taken off; only exactly three
+unlocks the same addition again. Each question gets one hint after a wrong answer
+or silence, then the ride goes on; records keep the wrong answers. Break, skip and
+stop pause at any point, and a paused ride ignores late events. Fewer than five
+toys owned pauses at once. Old lesson-two checkpoints are cleared. The tests
+cover both languages, every hint path, the overshoot during the pause, counting
+aloud to five, and spoken text free of screen or grown-up requests.
